@@ -7,7 +7,7 @@
           :value="searchQuery"
           @input="$emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
           type="text"
-          placeholder="Search by name or email…"
+          placeholder="Search farmers by name or crop…"
           class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
         />
       </div>
@@ -24,21 +24,20 @@
             <option value="Active">Active</option>
             <option value="Pending">Pending</option>
             <option value="Suspended">Suspended</option>
-            <option value="Banned">Banned</option>
           </select>
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-2">Trust Score</label>
+          <label class="text-xs font-semibold text-gray-600 block mb-2">Match Status</label>
           <select
-            :value="filterTrust"
-            @change="$emit('update:filterTrust', ($event.target as HTMLSelectElement).value)"
+            :value="filterMatch"
+            @change="$emit('update:filterMatch', ($event.target as HTMLSelectElement).value)"
             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
           >
-            <option value="">All Scores</option>
-            <option value="high">High (80+)</option>
-            <option value="mid">Medium (50-79)</option>
-            <option value="low">Low (0-49)</option>
+            <option value="">All Matches</option>
+            <option value="matched">Matched</option>
+            <option value="unmatched">Unmatched</option>
+            <option value="seeking">Seeking Match</option>
           </select>
         </div>
 
@@ -52,8 +51,7 @@
             <option value="name">Name (A-Z)</option>
             <option value="trust-desc">Trust Score (High-Low)</option>
             <option value="trust-asc">Trust Score (Low-High)</option>
-            <option value="orders-desc">Orders (Most)</option>
-            <option value="rating-desc">Rating (Highest)</option>
+            <option value="yield-desc">Est. Yield (High-Low)</option>
           </select>
         </div>
 
@@ -72,90 +70,102 @@
       <table class="w-full">
         <thead>
           <tr class="border-b border-gray-100 bg-gray-50">
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">User</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Email</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Farmer</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Main Crop</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Location</th>
             <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Trust</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Orders</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Rating</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Province</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Match Status</th>
             <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="users.length === 0">
-            <td colspan="8" class="px-5 py-12">
+          <tr v-if="farmers.length === 0">
+            <td colspan="7" class="px-5 py-12">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
                   <UserX class="w-6 h-6 text-gray-300" />
                 </div>
-                <p class="text-sm font-medium text-gray-500">No users found</p>
+                <p class="text-sm font-medium text-gray-500">No farmers found</p>
               </div>
             </td>
           </tr>
 
           <tr
-            v-for="user in users"
-            :key="user.id"
+            v-for="farmer in farmers"
+            :key="farmer.id"
             class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
           >
             <td class="px-5 py-4">
               <div class="flex items-center gap-3">
                 <div
                   class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  :class="roleAvatarClass(user.role)"
+                  :class="roleAvatarClass('Farmer')"
                 >
-                  {{ initials(user.name) }}
+                  {{ initials(farmer.name) }}
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-semibold text-gray-900 truncate">{{ user.name }}</p>
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ farmer.name }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ farmer.phone }}</p>
                 </div>
               </div>
             </td>
 
             <td class="px-5 py-4">
-              <p class="text-sm text-gray-600 truncate">{{ user.email }}</p>
+              <div class="flex items-center gap-2">
+                <Leaf class="w-4 h-4 text-green-600" />
+                <span class="text-sm text-gray-700 font-medium">{{ farmer.mainCrop }}</span>
+              </div>
             </td>
 
             <td class="px-5 py-4">
-              <span class="inline-flex text-xs font-medium px-2.5 py-1 rounded-lg" :class="statusClass(user.status)">
-                {{ user.status }}
+              <p class="text-sm text-gray-600 truncate">{{ farmer.location }}</p>
+            </td>
+
+            <td class="px-5 py-4 text-center">
+              <p class="text-sm font-bold" :class="trustScoreColor(farmer.trustScore)">{{ farmer.trustScore }}</p>
+            </td>
+
+            <td class="px-5 py-4">
+              <span class="inline-flex text-xs font-medium px-2.5 py-1 rounded-lg" :class="statusClass(farmer.status)">
+                {{ farmer.status }}
               </span>
             </td>
 
             <td class="px-5 py-4 text-center">
-              <p class="text-sm font-bold" :class="trustScoreColor(user.trustScore)">{{ user.trustScore }}</p>
-            </td>
-
-            <td class="px-5 py-4 text-center">
-              <p class="text-sm font-semibold text-gray-900">{{ user.orders }}</p>
-            </td>
-
-            <td class="px-5 py-4 text-center">
-              <p class="text-sm font-semibold">
-                <span class="text-gray-900">{{ user.rating }}</span><span class="text-amber-400">★</span>
-              </p>
-            </td>
-
-            <td class="px-5 py-4">
-              <p class="text-sm text-gray-600">{{ user.province }}</p>
+              <span 
+                class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border"
+                :class="farmer.matchStatus === 'Matched' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : farmer.matchStatus === 'Seeking' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-gray-50 text-gray-700 border-gray-200'"
+              >
+                <Link2 class="w-3.5 h-3.5" v-if="farmer.matchStatus === 'Matched'" />
+                <Search class="w-3.5 h-3.5" v-else-if="farmer.matchStatus === 'Seeking'" />
+                <Unlink class="w-3.5 h-3.5" v-else />
+                {{ farmer.matchStatus }}
+              </span>
             </td>
 
             <td class="px-5 py-4">
               <div class="flex items-center justify-center gap-2">
                 <button
-                  @click="$emit('openUser', user)"
+                  @click="$emit('openFarmer', farmer)"
                   class="p-2 rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
                   title="View Profile"
                 >
                   <Eye class="w-4 h-4" />
                 </button>
                 <button
-                  @click="$emit('banUser', user)"
-                  class="p-2 rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100"
-                  title="Ban User"
+                  @click="$emit('matchFarmer', farmer)"
+                  class="p-2 rounded-lg bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100"
+                  title="Match with Buyer"
                 >
-                  <ShieldX class="w-4 h-4" />
+                  <ArrowRightLeft class="w-4 h-4" />
+                </button>
+                <button
+                  @click="$emit('suspendFarmer', farmer)"
+                  class="p-2 rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                  title="Suspend Farmer"
+                >
+                  <ShieldOff class="w-4 h-4" />
                 </button>
               </div>
             </td>
@@ -167,13 +177,13 @@
 </template>
 
 <script setup lang="ts">
-import { Eye, Search, ShieldX, UserX } from 'lucide-vue-next'
+import { Eye, Search, ShieldOff, UserX, Leaf, Link2, Unlink, ArrowRightLeft } from 'lucide-vue-next'
 
 defineProps<{
-  users: any[]
+  farmers: any[]
   searchQuery: string
   filterStatus: string
-  filterTrust: string
+  filterMatch: string
   sortBy: string
   statusClass: (s: string) => string
   trustScoreColor: (s: number) => string
@@ -184,10 +194,11 @@ defineProps<{
 defineEmits([
   'update:searchQuery',
   'update:filterStatus',
-  'update:filterTrust',
+  'update:filterMatch',
   'update:sortBy',
   'resetFilters',
-  'openUser',
-  'banUser',
+  'openFarmer',
+  'matchFarmer',
+  'suspendFarmer',
 ])
 </script>
