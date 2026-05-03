@@ -62,7 +62,11 @@
                 <div>
                     <div class="flex justify-between text-xs text-slate-500">
                     <label>PASSWORD</label>
-                    <span class="text-emerald-700 cursor-pointer">FORGOT?</span>
+
+					<NuxtLink to="/auth/forgot-password" class="text-emerald-700 font-semibold">
+					Forgot Password?
+					</NuxtLink>
+				    
                     </div>
                     <input
                     v-model="form.password"

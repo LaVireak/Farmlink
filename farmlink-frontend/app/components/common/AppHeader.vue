@@ -7,7 +7,7 @@
           <img 
             alt="Farm Link Logo" 
             class="h-16 w-auto object-contain" 
-            src="https://lh3.googleusercontent.com/aida/ADBb0uhni3CwKaQP_0YGcMW1Xv4XJwx1i-Tv9h91apgs26EWpeFy1g_W6E-OCoX8SmxqAdGtLWyb2aDgu_whdvk4Y3WFlQ05UlQUuORPVRfE3g7VadYtIS8YtXN0c2A9R2m2eoywY8VT2Ec51DML6XivZTG_1pqhtdP8ZBDScbR2lFSYHu3Zhvd-OcO5042N-DZ8bpw2-pTSl8NrH7dPhNYP5s6_3BjrrNmTkMFkCuQyur9-k41npTHiZ9n6GzqY7YeH7KEHMZF06VLZxg"
+            src="assets\images\logo1.png"
           />
         </NuxtLink>
       </div>
