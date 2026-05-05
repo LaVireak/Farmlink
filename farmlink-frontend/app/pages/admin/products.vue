@@ -1,11 +1,8 @@
 <template>
-    <div class="p-6 space-y-6">
+    <div class="p-10 space-y-6 bg-[#f7fdf4]">
+        <AdminHeader title="Product Management" />
 
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-xl font-bold text-gray-900">Product Management</h1>
-                <p class="text-sm text-gray-400 mt-0.5">Review, approve and moderate farmer product submissions</p>
-            </div>
+        <div class="flex items-end justify-end">
             <div class="flex items-center gap-2">
                 <button
                     @click="exportCSV"

@@ -1,23 +1,7 @@
 <template>
-  <div class="bg-[#f6f8f3] min-h-screen flex flex-col">
+  <div class="bg-[#f7fdf4] min-h-screen flex flex-col">
 
-    <!-- HEADER -->
-    <header class="flex justify-between items-center p-6 bg-white shadow">
-      <div class="flex items-center gap-3">
-        <!-- <img src="/images/logo.png" alt="FarmLink Logo" class="h-10" /> -->
-        <nav class="hidden md:flex gap-6 text-gray-700 font-medium">
-          <a href="#">Home</a>
-          <a href="#">Products</a>
-          <a href="#">Farmers</a>
-          <a href="#">About</a>
-        </nav>
-      </div>
-      <div class="flex items-center gap-4">
-        <input type="text" placeholder="Search..." class="border rounded-full px-4 py-1 text-sm" />
-        <button><i class="fas fa-shopping-cart"></i></button>
-        <button><i class="fas fa-user"></i></button>
-      </div>
-    </header>
+    <CommonAppHeader />
 
     <!-- HERO -->
     <section class="relative text-center text-white">
@@ -139,18 +123,7 @@
 </section>
 
     <!-- FOOTER -->
-    <footer class="bg-white py-8 mt-12 border-t">
-      <div class="flex flex-col md:flex-row justify-between items-center px-10 gap-6">
-        <div class="flex gap-6 text-gray-600">
-          <a href="#">Support</a>
-          <a href="#">Account</a>
-          <a href="#">Contact</a>
-        </div>
-        <!-- <div>
-          <img src="/images/qr.png" alt="App QR Code" class="h-24" />
-        </div> -->
-      </div>
-    </footer>
+    <CommonAppFooter />
 
   </div>
 </template>

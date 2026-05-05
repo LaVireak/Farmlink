@@ -1,10 +1,6 @@
 <template>
-    <div class="p-6 space-y-6">
-
-        <div>
-            <h1 class="text-xl font-bold text-gray-900">Order Management</h1>
-            <p class="text-sm text-gray-400 mt-0.5">Review and manage customer orders across the platform</p>
-        </div>
+    <div class="p-10 space-y-6 bg-[#f7fdf4]">
+        <AdminHeader title="Order Management" />
 
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <template v-if="loadingStats">

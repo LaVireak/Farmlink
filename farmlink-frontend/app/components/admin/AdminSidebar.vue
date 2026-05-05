@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <button v-show="!isOpen" class="menu-toggle" @click="isOpen = true">
       <Menu class="w-5 h-5" />
     </button>
@@ -12,6 +13,7 @@
       </button>
 
       <nav>
+        <img src="/assets/images/logo.png" alt="FarmLink Logo"/>
         <NuxtLink
           v-for="item in navItems"
           :key="item.label"
@@ -49,7 +51,7 @@ const navItems = [
   { label: 'Product', to: '/admin/products', icon: Box },
   { label: 'User', to: '/admin/users', icon: Users },
   { label: 'Farmer', to: '/admin/farmer', icon: Tractor },
-  { label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
+  //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
 ]
 </script>
 
@@ -116,7 +118,7 @@ nav {
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight:bold;
   color: #4b5563;
   text-decoration: none;
   transition: all 0.2s;

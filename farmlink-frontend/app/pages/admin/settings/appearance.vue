@@ -1,78 +1,10 @@
 <template>
   <div class="min-h-screen bg-[#f7fdf4] flex font-sans text-slate-900">
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col p-6 sticky top-0 h-screen">
-      <div class="flex items-center gap-2 mb-10 px-2">
-        <div class="w-8 h-8 bg-[#00c853] rounded-lg flex items-center justify-center text-white">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
-        <span class="text-xl font-black text-[#0a4d1e] tracking-tight">FarmLink</span>
-      </div>
-
-      <nav class="space-y-2 flex-1">
-        <a v-for="item in navItems" :key="item.name" href="#" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all"
-           :class="item.active ? 'bg-[#0a4d1e] text-white shadow-lg shadow-green-900/20' : 'text-gray-400 hover:bg-gray-50 hover:text-[#0a4d1e]'">
-          <component :is="item.icon" class="w-5 h-5" />
-          {{ item.name }}
-        </a>
-      </nav>
-
-      <div class="bg-[#f9fcf7] rounded-3xl p-5 border border-gray-100 space-y-4">
-        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Status Overview</p>
-        <div v-for="status in statusOverview" :key="status.label" class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div :class="status.bg" class="w-8 h-8 rounded-full flex items-center justify-center">
-              <component :is="status.icon" class="w-4 h-4" :class="status.text" />
-            </div>
-            <div>
-              <p class="text-[11px] font-bold text-gray-800 leading-tight">{{ status.label }}</p>
-              <p class="text-[9px] text-gray-400">{{ status.sub }}</p>
-            </div>
-          </div>
-          <span class="text-sm font-black text-gray-800" :class="status.label === 'System Health' ? 'text-green-500' : ''">
-            {{ status.value }}
-          </span>
-        </div>
-      </div>
-    </aside>
-
     <main class="flex-1 p-10">
-      <header class="flex justify-between items-center mb-10">
-        <h1 class="text-3xl font-black text-[#0a4d1e]">Setting Profile</h1>
-        <div class="flex items-center gap-6">
-          <div class="relative">
-            <input type="text" placeholder="Search" class="bg-white border-none rounded-xl py-3 pl-12 pr-6 w-80 shadow-sm text-sm focus:ring-2 focus:ring-[#0a4d1e]/10" />
-            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </div>
-          <button class="relative p-2 text-gray-400 hover:text-[#0a4d1e]">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#f7fdf4]"></span>
-          </button>
-          <div class="flex items-center gap-3 pl-4 border-l border-gray-200 cursor-pointer group">
-            <img src="https://i.pravatar.cc/100?img=12" class="w-10 h-10 rounded-full border-2 border-white shadow-md" />
-            <div class="text-left">
-              <p class="text-sm font-black text-gray-800 flex items-center gap-1">
-                Channary Sok
-                <svg class="w-4 h-4 text-gray-400 group-hover:text-[#0a4d1e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <AdminHeader/>
       <div class="grid grid-cols-12 gap-10">
-        <div class="col-span-3 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-50 h-fit">
-          <nav class="space-y-1">
-            <a v-for="sub in settingsNav" :key="sub.name" href="#" 
-               class="block px-6 py-4 rounded-2xl font-bold text-sm transition-all"
-               :class="sub.active ? 'bg-[#0a4d1e] text-white' : 'text-gray-400 hover:text-[#0a4d1e]'">
-              {{ sub.name }}
-            </a>
-          </nav>
-        </div>
-
         <div class="col-span-9 bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-50">
-          <h2 class="text-2xl font-black text-[#0a4d1e] mb-10">Appearance</h2>
+          <h2 class="text-2xl font-black text-[#15803d] mb-10">Appearance</h2>
 
           <div class="space-y-12">
             <div>
@@ -150,25 +82,12 @@
 <script setup>
 import { h } from 'vue'
 
+definePageMeta({
+  layout: 'admin'
+})
+
 const activeTheme = ref('light')
 const selectedCurrency = ref('usd')
-
-const navItems = [
-  { name: 'Dashboard', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-5 h-5' }, [h('path', { 'stroke-width': '2', d: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' })]), active: false },
-  { name: 'Order', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-width': '2', d: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' })]), active: false },
-  { name: 'Product', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-width': '2', d: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' })]), active: false },
-  { name: 'User', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-width': '2', d: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197' })]), active: false },
-  { name: 'Farmer', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-width': '2', d: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' })]), active: false },
-  { name: 'Setting Profile', icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }), h('circle', { cx: '12', cy: '12', r: '3', 'stroke-width': '2' })]), active: true },
-]
-
-const settingsNav = [
-  { name: 'Personal Info', active: false },
-  { name: 'Security', active: false },
-  { name: 'Notifications', active: false },
-  { name: 'Appearance', active: true },
-  { name: 'Team', active: false },
-]
 
 const themes = [
   { id: 'light', name: 'Light Mode', preview: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=400' },

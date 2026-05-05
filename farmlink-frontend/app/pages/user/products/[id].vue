@@ -1,12 +1,16 @@
 <template>
-  <AppHeader />
 
-  <div class="bg-[#f6f8f3] min-h-screen p-6">
+  <CommonAppHeader />
+
+  <div class="bg-[#f7fdf4] min-h-screen p-6">
 
     <!-- BACK -->
-    <button @click="$router.back()" class="mb-4 text-green-700 font-medium">
+    <button class="bg-green-600 mb-4 text-white font-medium px-4 py-2 rounded-full border-2 border-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
+      <NuxtLink to="/user/products">
       ← Back
+    </NuxtLink>
     </button>
+    
 
     <!-- PRODUCT DETAIL -->
     <div class="grid md:grid-cols-2 gap-10 bg-white p-6 rounded-2xl shadow">
@@ -15,7 +19,7 @@
       <div>
         <img
           :src="product.image"
-          class="w-full h-80 object-cover rounded-2xl"
+          class="w-full h-[750px] object-cover rounded-2xl"
         />
 
         <div class="flex gap-4 mt-4">
@@ -55,7 +59,7 @@
         <!-- ADD TO CART -->
        <button
   @click="addToCart"
-  class="mt-6 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 text-sm"
+  class="bg-green-600 mb-4 mt-6 text-white font-medium px-4 py-2 rounded-full border-2 border-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all"
 >
   Add to Cart
 </button>
@@ -96,7 +100,9 @@
 
   </div>
 
-  <AppFooter />
+  <CommonAppFooter />
+  
+
 </template>
 
 <script setup>
