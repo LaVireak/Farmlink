@@ -1,11 +1,7 @@
 <template>
-    <div class="p-6 space-y-6">
-
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-xl font-bold text-gray-900">Farmers Management</h1>
-                <p class="text-sm text-gray-400 mt-0.5">Manage agricultural partners and match them with buyers</p>
-            </div>
+    <div class="p-10 bg-[#f7fdf4]">
+        <AdminHeader title="Farmer Management"/>
+        <div class="flex flex-col mb-6 md:flex-row md:items-center justify-end gap-4">
             <div class="flex items-center gap-2">
                 <button
                     @click="addFarmerModal.visible = true"

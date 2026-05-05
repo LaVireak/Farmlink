@@ -1,55 +1,16 @@
 <template>
-    <div class="min-h-screen flex bg-gray-50 font-sans text-gray-800">
-      <main class="flex-grow px-12 py-10">
-        <h1 class="text-2xl font-semibold mb-10 text-gray-900">Personal Profile</h1>
-        <div class="flex border rounded-lg bg-white shadow-sm overflow-hidden max-w-6xl">
-          <nav class="w-48 border-r border-gray-200 bg-gray-50">
-            <ul class="flex flex-col space-y-1 py-6 px-4 text-gray-700 text-sm font-semibold">
-              <li>
-                <button
-                  @click="activeTab = 'personal'"
-                  :class="activeTab === 'personal' ? 'bg-green-100 text-green-700 rounded-md px-3 py-2' : 'hover:bg-gray-100 rounded-md px-3 py-2'"
-                  class="w-full text-left"
-                >Personal Info</button>
-              </li>
-              <li>
-                <button
-                  @click="activeTab = 'security'"
-                  :class="activeTab === 'security' ? 'bg-green-100 text-green-700 rounded-md px-3 py-2' : 'hover:bg-gray-100 rounded-md px-3 py-2'"
-                  class="w-full text-left"
-                >Security</button>
-              </li>
-              <li>
-                <button
-                  @click="activeTab = 'notifications'"
-                  :class="activeTab === 'notifications' ? 'bg-green-100 text-green-700 rounded-md px-3 py-2' : 'hover:bg-gray-100 rounded-md px-3 py-2'"
-                  class="w-full text-left"
-                >Notifications</button>
-              </li>
-              <li>
-                <button
-                  @click="activeTab = 'appearance'"
-                  :class="activeTab === 'appearance' ? 'bg-green-100 text-green-700 rounded-md px-3 py-2' : 'hover:bg-gray-100 rounded-md px-3 py-2'"
-                  class="w-full text-left"
-                >Appearance</button>
-              </li>
-              <li>
-                <button
-                  @click="activeTab = 'team'"
-                  :class="activeTab === 'team' ? 'bg-green-100 text-green-700 rounded-md px-3 py-2' : 'hover:bg-gray-100 rounded-md px-3 py-2'"
-                  class="w-full text-left"
-                >Team</button>
-              </li>
-            </ul>
-          </nav>
-  
-          <section class="flex-1 p-10">
-            <template v-if="activeTab === 'personal'">
-              <h2 class="font-semibold text-lg mb-8 text-gray-900">Personal Information</h2>
+    <div class="min-h-screen flex bg-[#f7fdf4] font-sans text-gray-800">
+      <main class="flex-1 p-10">
+        <AdminHeader/>
+        <div class="grid grid-cols-12 gap-10">
+          
+        <div class="col-span-9 bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-50">
+          <section class="flex-1">
+              <h2 class="text-2xl font-black text-[#15803d] mb-10">Personal Information</h2>
   
               <div class="flex flex-col items-center space-y-3 mb-8">
                 <img
-                  src=""
+                  src="/images/farmer.jpg"
                   alt="Profile Photo"
                   class="rounded-full w-24 h-24 shadow-md"
                 />
@@ -94,12 +55,8 @@
                   </button>
                 </div>
               </form>
-            </template>
-  
-            <template v-else>
-              <p class="text-gray-500 italic">Content for {{ activeTab }} tab coming soon...</p>
-            </template>
           </section>
+        </div>
         </div>
       </main>
     </div>
@@ -111,7 +68,6 @@
 definePageMeta({
   layout: 'admin'
 })
-  const activeTab = ref('personal')
   
   const form = ref({
     firstName: 'Channary',
