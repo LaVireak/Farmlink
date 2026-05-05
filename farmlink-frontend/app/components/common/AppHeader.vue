@@ -21,12 +21,14 @@
         </NuxtLink>
 
         <div class="relative" id="product-menu">
-          <button @click.stop="toggleProduct" class="flex items-center space-x-1 cursor-pointer group focus:outline-none">
-            <span class="nav-link uppercase text-xs">Product</span>
-            <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
-          </button>
+          <div class="flex items-center space-x-1">
+            <NuxtLink to="/user/products/products" class="nav-link uppercase text-xs">Product</NuxtLink>
+            <button @click.stop="toggleProduct" class="flex items-center cursor-pointer group focus:outline-none">
+              <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
+          </div>
 
           <div v-show="productOpen" class="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div class="p-3 border-b">

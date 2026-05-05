@@ -1,4 +1,6 @@
 <template>
+  <AppHeader />
+
   <div class="bg-[#f6f8f3] min-h-screen p-6">
 
     <!-- BACK -->
@@ -93,9 +95,13 @@
     </div>
 
   </div>
+
+  <AppFooter />
 </template>
 
 <script setup>
+import AppHeader from '~/components/common/AppHeader.vue'
+import AppFooter from '~/components/common/AppFooter.vue'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 
@@ -106,107 +112,110 @@ const products = [
   {
     id: 1,
     name: 'Fresh Green Beans',
-    price: 4.00,
-    category: 'Vegetables',
+    price: 4.5,
+    category: 'Vegetable',
     image: '/images/beans.jpg',
-    gallery: [
-      '/images/beans.jpg',
-      '/images/beans2.jpg',
-      '/images/beans3.jpg'
-    ],
-    description:
-      'Crisp, organic green beans harvested daily from local farms. Perfect for healthy meals.'
+    gallery: ['/images/beans.jpg', '/images/beans2.jpg'],
+    description: 'Crisp, organic green beans harvested daily from local farms. Perfect for healthy meals.'
   },
   {
     id: 2,
     name: 'Fresh Broccoli',
     price: 3.75,
-    category: 'Vegetables',
+    category: 'Vegetable',
     image: '/images/broccoli.jpg',
-    gallery: [
-      '/images/broccoli.jpg',
-      '/images/broccoli2.jpg'
-    ],
-    description:
-      'Fresh broccoli packed with vitamins and nutrients. Great for steaming or stir-fry.'
+    gallery: ['/images/broccoli.jpg', '/images/broccoli2.jpg'],
+    description: 'Fresh broccoli packed with vitamins and nutrients. Great for steaming or stir-fry.'
   },
   {
     id: 3,
     name: 'Fresh Bell Peppers',
-    price: 2.10,
-    category: 'Vegetables',
+    price: 2.1,
+    category: 'Vegetable',
     image: '/images/pepper.jpg',
-    gallery: [
-      '/images/pepper.jpg',
-      '/images/pepper2.jpg'
-    ],
-    description:
-      'Colorful bell peppers full of flavor and crunch. Ideal for salads and cooking.'
+    gallery: ['/images/pepper.jpg', '/images/pepper2.jpg'],
+    description: 'Colorful bell peppers full of flavor and crunch. Ideal for salads and cooking.'
   },
   {
     id: 4,
-    name: 'Heirloom Garden Carrots',
-    price: 4.95,
-    category: 'Vegetables',
-    image: '/images/carrot.jpg',
-    gallery: [
-      '/images/carrot.jpg',
-      '/images/carrot2.jpg'
-    ],
-    description:
-      'Naturally sweet heirloom carrots grown with care. Perfect for snacks and dishes.'
+    name: 'Fresh Cucumbers',
+    price: 2.5,
+    category: 'Vegetable',
+    image: '/images/cucumber.jpg',
+    gallery: ['/images/cucumber.jpg', '/images/cucumber2.jpg'],
+    description: 'Fresh, crispy cucumbers perfect for salads and refreshing drinks.'
   },
   {
     id: 5,
-    name: 'Organic Oranges',
-    price: 5.20,
-    category: 'Fruits',
-    image: '/images/orange.jpg',
-    gallery: [
-      '/images/orange.jpg',
-      '/images/orange2.jpg'
-    ],
-    description:
-      'Juicy organic oranges rich in vitamin C. Refreshing and naturally sweet.'
+    name: 'Fresh Grapes',
+    price: 5.5,
+    category: 'Fruit',
+    image: '/images/grape.jpg',
+    gallery: ['/images/grape.jpg', '/images/grape2.jpg'],
+    description: 'Sweet and juicy grapes freshly picked from local farms.'
   },
   {
     id: 6,
-    name: 'Honeycrisp Apples',
-    price: 4.40,
-    category: 'Fruits',
+    name: 'Fresh Apples',
+    price: 3.99,
+    category: 'Fruit',
     image: '/images/apple.jpg',
-    gallery: [
-      '/images/apple.jpg',
-      '/images/apple2.jpg'
-    ],
-    description:
-      'Crisp and sweet Honeycrisp apples. Perfect for snacking or baking.'
+    gallery: ['/images/apple.jpg', '/images/apple2.jpg'],
+    description: 'Crisp and sweet apples. Perfect for snacking or baking.'
   },
   {
     id: 7,
-    name: 'Fresh Grapes',
-    price: 7.80,
-    category: 'Fruits',
-    image: '/images/grape.jpg',
-    gallery: [
-      '/images/grape.jpg',
-      '/images/grape2.jpg'
-    ],
-    description:
-      'Sweet and juicy grapes freshly picked from local farms.'
+    name: 'Fresh Oranges',
+    price: 4.2,
+    category: 'Fruit',
+    image: '/images/orange.jpg',
+    gallery: ['/images/orange.jpg', '/images/orange2.jpg'],
+    description: 'Juicy organic oranges rich in vitamin C. Refreshing and naturally sweet.'
   },
   {
     id: 8,
-    name: 'Fresh Dragon Fruit',
-    price: 6.50,
-    category: 'Fruits',
-    image: '/images/dragon.jpg',
-    gallery: [
-      '/images/dragon.jpg',
-      '/images/dragon2.jpg'
-    ],
-    description:
-      'Exotic dragon fruit with vibrant color and refreshing taste.'
+    name: 'Fresh Bananas',
+    price: 2.8,
+    category: 'Fruit',
+    image: '/images/bananas.jpg',
+    gallery: ['/images/bananas.jpg', '/images/bananas2.jpg'],
+    description: 'Fresh bananas packed with potassium and energy.'
+  },
+  {
+    id: 9,
+    name: 'Organic Tomatoes',
+    price: 5.2,
+    category: 'Organic',
+    image: '/images/tomatoes.jpg',
+    gallery: ['/images/tomatoes.jpg', '/images/tomatoes2.jpg'],
+    description: 'Organic tomatoes rich in flavor and nutrients.'
+  },
+  {
+    id: 10,
+    name: 'Organic Cabbage',
+    price: 3.5,
+    category: 'Organic',
+    image: '/images/cabbage.jpg',
+    gallery: ['/images/cabbage.jpg', '/images/cabbage2.jpg'],
+    description: 'Fresh organic cabbage perfect for salads and cooked dishes.'
+  },
+  {
+    id: 11,
+    name: 'Organic Lettuce',
+    price: 4.0,
+    category: 'Organic',
+    image: '/images/lettuce.jpg',
+    gallery: ['/images/lettuce.jpg', '/images/lettuce2.jpg'],
+    description: 'Crisp organic lettuce perfect for healthy salads.'
+  },
+  {
+    id: 12,
+    name: 'Heirloom Carrots',
+    price: 4.95,
+    category: 'Organic',
+    image: '/images/carrot.jpg',
+    gallery: ['/images/carrot.jpg', '/images/carrot2.jpg'],
+    description: 'Naturally sweet heirloom carrots grown with care.'
   }
 ]
 
