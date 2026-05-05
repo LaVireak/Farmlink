@@ -3,7 +3,7 @@
 
   <div class="min-h-screen bg-[#eef6ea] flex">
 
-    <!-- ================= LEFT FILTER ================= -->
+    
     <aside class="w-64 bg-white p-5 shadow-md rounded-xl m-4 h-fit">
       
       <h2 class="font-bold text-lg mb-4">CATEGORY</h2>
@@ -41,7 +41,7 @@
       <p class="text-sm mt-1">Max: ${{ price }}</p>
     </aside>
 
-    <!-- ================= PRODUCT GRID ================= -->
+    
     <main class="flex-1 p-6">
 
       <div class="grid grid-cols-4 gap-6">
@@ -83,11 +83,11 @@ import AppHeader from '~/components/common/AppHeader.vue'
 import AppFooter from '~/components/common/AppFooter.vue'
 import { ref, computed } from "vue"
 
-/* ================= FILTER STATE ================= */
+
 const selectedCategories = ref([])
 const price = ref(100)
 
-/* ================= SAMPLE PRODUCTS ================= */
+
 const products = ref([
   {
     id: 1,
@@ -175,7 +175,7 @@ const products = ref([
   }
 ])
 
-/* ================= FILTER LOGIC ================= */
+
 const filteredProducts = computed(() => {
   return products.value.filter(p => {
     
