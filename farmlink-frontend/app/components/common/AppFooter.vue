@@ -2,11 +2,11 @@
   <footer class="w-full bg-cream border-t border-black/5" data-purpose="footer-container">
     <div class="max-w-[1920px]  px-[100px] py-8 flex flex-col md:flex-row justify-between items-start" data-purpose="footer-flex-container">
       
-      <div class="flex flex-col gap-5 w-full md:max-w-[300px] ml-10">
+      <div class="flex flex-col w-full md:max-w-[300px] ml-10">
         <NuxtLink to="/">
           <img 
             alt="FarmLink Logo" 
-            class="h-10 w-auto object-contain self-start" 
+            class="h-24 w-auto object-contain self-start" 
             src="assets\images\logo1.png"
           />
         </NuxtLink>
