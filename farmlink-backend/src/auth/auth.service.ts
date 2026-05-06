@@ -42,7 +42,6 @@ export class AuthService {
 
     const token = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
-      { secret: 'farm-jwt-secret-2026' },
     );
 
     return { access_token: token };
