@@ -3,9 +3,8 @@
 
   <div class="min-h-screen bg-[#eef6ea] flex">
 
-    
+    <!-- Sidebar -->
     <aside class="w-64 bg-white p-5 shadow-md rounded-xl m-4 h-fit">
-      
       <h2 class="font-bold text-lg mb-4">CATEGORY</h2>
 
       <div class="space-y-2 mb-6">
@@ -23,36 +22,25 @@
           <input type="checkbox" value="Vegetable" v-model="selectedCategories" />
           Vegetable
         </label>
-
-        
       </div>
 
-      <h2 class="font-bold text-lg mb-2">REVIEW</h2>
-      <div class="mb-6 text-green-500">★★★★★</div>
-
       <h2 class="font-bold text-lg mb-2">PRICE RANGE</h2>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        v-model="price"
-        class="w-full"
-      />
+      <input type="range" min="0" max="100" v-model="price" class="w-full" />
       <p class="text-sm mt-1">Max: ${{ price }}</p>
     </aside>
 
-    
+    <!-- Product Grid -->
     <main class="flex-1 p-6">
-
       <div class="grid grid-cols-4 gap-6">
 
         <NuxtLink
-          v-for="product in filteredProducts"
+          v-for="product in products"
           :key="product.id"
           :to="`/user/products/${product.id}`"
-          class="bg-white rounded-xl shadow-md overflow-hidden hover:scale-105 transition cursor-pointer"
+          class="bg-white rounded-xl shadow-md overflow-hidden hover:scale-105 transition"
         >
-          <img :src="product.image" alt="product.name" class="w-full h-40 object-cover" />
+          <img :src="product.image" class="w-full h-40 object-cover" />
+
           <div class="p-3">
             <p class="text-xs text-green-600 font-semibold">
               {{ product.category }}
@@ -60,9 +48,10 @@
 
             <h3 class="font-bold">{{ product.name }}</h3>
 
-            <div class="flex justify-between items-center mt-2">
-              <p class="text-green-700 font-bold">${{ product.price }}</p>
-
+            <div class="flex justify-between mt-2">
+              <p class="text-green-700 font-bold">
+                ${{ product.price }}
+              </p>
               <button class="bg-green-600 text-white w-7 h-7 rounded-full">
                 +
               </button>
@@ -71,7 +60,6 @@
         </NuxtLink>
 
       </div>
-
     </main>
   </div>
 
@@ -81,111 +69,40 @@
 <script setup>
 import AppHeader from '~/components/common/AppHeader.vue'
 import AppFooter from '~/components/common/AppFooter.vue'
-import { ref, computed } from "vue"
+import { ref, watch, onMounted } from "vue"
 
-
+// state
 const selectedCategories = ref([])
 const price = ref(100)
+const products = ref([])
 
+// ✅ FIXED BACKEND URL (IMPORTANT)
+const API_URL = "http://localhost:3001/api/products"
 
-const products = ref([
-  {
-    id: 1,
-    name: "Fresh Green Beans",
-    category: "Vegetable",
-    price: 4.5,
-    image: "/images/beans.jpg"
-  },
-  {
-    id: 2,
-    name: "Fresh Broccoli",
-    category: "Vegetable",
-    price: 3.75,
-    image: "/images/broccoli.jpg"
-  },
-  {
-    id: 3,
-    name: "Fresh Bell Peppers",
-    category: "Vegetable",
-    price: 2.1,
-    image: "/images/pepper.jpg"
-  },
-  {
-    id: 4,
-    name: "Fresh Cucumbers",
-    category: "Vegetable",
-    price: 2.5,
-    image: "/images/cucumber.jpg"
-  },
-  {
-    id: 5,
-    name: "Fresh Grapes",
-    category: "Fruit",
-    price: 5.5,
-    image: "/images/grape.jpg"
-  },
-  {
-    id: 6,
-    name: "Fresh Apples",
-    category: "Fruit",
-    price: 3.99,
-    image: "/images/apple.jpg"
-  },
-  {
-    id: 7,
-    name: "Fresh Oranges",
-    category: "Fruit",
-    price: 4.2,
-    image: "/images/orange.jpg"
-  },
-  {
-    id: 8,
-    name: "Fresh Bananas",
-    category: "Fruit",
-    price: 2.8,
-    image: "/images/bananas.jpg"
-  },
-  {
-    id: 9,
-    name: "Organic Tomatoes",
-    category: "Organic",
-    price: 5.2,
-    image: "/images/tomatoes.jpg"
-  },
-  {
-    id: 10,
-    name: "Organic Cabbage",
-    category: "Organic",
-    price: 3.5,
-    image: "/images/cabbage.jpg"
-  },
-  {
-    id: 11,
-    name: "Organic Lettuce",
-    category: "Organic",
-    price: 4.0,
-    image: "/images/lettuce.jpg"
-  },
-  {
-    id: 12,
-    name: "Heirloom Carrots",
-    category: "Organic",
-    price: 4.95,
-    image: "/images/carrot.jpg"
+// fetch function
+const fetchProducts = async () => {
+  try {
+    const categoryQuery = selectedCategories.value.length
+      ? selectedCategories.value.join(',')
+      : ''
+
+    const url = `${API_URL}?category=${categoryQuery}&maxPrice=${price.value}`
+
+    const res = await fetch(url)
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
+
+    products.value = await res.json()
+  } catch (err) {
+    console.error("Fetch error:", err)
   }
-])
+}
 
+// initial load
+onMounted(fetchProducts)
 
-const filteredProducts = computed(() => {
-  return products.value.filter(p => {
-    
-    const matchCategory =
-      selectedCategories.value.length === 0 ||
-      selectedCategories.value.includes(p.category)
-
-    const matchPrice = p.price <= price.value
-
-    return matchCategory && matchPrice
-  })
-})
+// re-fetch when filters change
+watch([selectedCategories, price], fetchProducts)
 </script>

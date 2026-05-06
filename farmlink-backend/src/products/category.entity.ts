@@ -9,20 +9,20 @@ import {
 @Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ name: 'name_en', length: 100 })
-  nameEn: string;
+  nameEn!: string;
 
   @Column({ name: 'name_km', length: 100, nullable: true })
-  nameKm: string;
+  nameKm?: string;
 
   @Column({ name: 'icon_url', length: 500, nullable: true })
-  iconUrl: string;
+  iconUrl?: string;
 
   @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  createdAt!: Date;
 }
