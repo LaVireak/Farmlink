@@ -33,12 +33,16 @@
             >
           </div>
 
-          <button type="button" class="verify-btn" :disabled="!isCodeComplete" @click="verifyCode">
-            Verify Code
+          <p v-if="errorMessage" class="error-text">
+            {{ errorMessage }}
+          </p>
+
+          <button type="button" class="verify-btn" :disabled="!isCodeComplete || loading" @click="verifyCode">
+            {{ loading ? 'Verifying...' : 'Verify Code' }}
           </button>
 
           <p class="resend-copy">Didn't receive the email?</p>
-          <button type="button" class="resend-btn" :disabled="countdown > 0" @click="resendCode">
+          <button type="button" class="resend-btn" :disabled="countdown > 0 || loading" @click="resendCode">
             {{ countdown > 0 ? `Resend code in 0:${countdownText}` : 'Resend code now' }}
           </button>
 
@@ -52,13 +56,17 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuth } from '../../composables/useAuth';
 
 const route = useRoute();
 const router = useRouter();
+const { verifySignupOtp, resendSignupOtp, getPostSignInRoute } = useAuth();
 
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
 const inputRefs = ref<Array<HTMLInputElement | null>>([]);
 const countdown = ref(59);
+const loading = ref(false);
+const errorMessage = ref('');
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const emailText = computed(() => {
@@ -128,13 +136,46 @@ const startCountdown = () => {
   }, 1000);
 };
 
-const resendCode = () => {
-  startCountdown();
+const resendCode = async () => {
+  errorMessage.value = '';
+  const email = typeof route.query.email === 'string' ? route.query.email : '';
+  if (!email) {
+    errorMessage.value = 'Missing email address.';
+    return;
+  }
+
+  try {
+    await resendSignupOtp(email);
+    startCountdown();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Unable to resend code.';
+  }
 };
 
 const verifyCode = async () => {
-  // TODO: call backend endpoint to validate code, then route with secure reset token.
-  await router.push('/auth/reset-password');
+  errorMessage.value = '';
+  const email = typeof route.query.email === 'string' ? route.query.email : '';
+  if (!email) {
+    errorMessage.value = 'Missing email address.';
+    return;
+  }
+
+  if (!isCodeComplete.value) {
+    errorMessage.value = 'Please enter the full code.';
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    const code = codeDigits.value.join('');
+    const result = await verifySignupOtp(email, code);
+    await router.push(getPostSignInRoute(result.user.role));
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Verification failed.';
+  } finally {
+    loading.value = false;
+  }
 };
 
 const goBack = async () => {
@@ -203,7 +244,7 @@ onBeforeUnmount(() => {
 
 .lock-badge {
   position: absolute;
-  right: -16px;
+  right: -16px; 
   bottom: -12px;
   width: 84px;
   height: 84px;
@@ -273,6 +314,12 @@ onBeforeUnmount(() => {
 .verify-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.error-text {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 14px;
 }
 
 .resend-copy {

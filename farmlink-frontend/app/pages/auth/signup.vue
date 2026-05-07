@@ -127,7 +127,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
 
 const router = useRouter();
-const { signUp, getPostSignInRoute } = useAuth();
+const { requestSignupOtp } = useAuth();
 
 const submitting = ref(false);
 const errorMessage = ref('');
@@ -151,14 +151,15 @@ const onSubmit = async () => {
 	submitting.value = true;
 
 	try {
-		const result = await signUp({
+		await requestSignupOtp({
 			firstName: form.firstName,
 			lastName: form.lastName,
 			email: form.email,
 			password: form.password,
+			role: 'customer',
 		});
 
-		await router.push(getPostSignInRoute(result.user.role));
+		await router.push(`/auth/verify-code?email=${encodeURIComponent(form.email)}`);
 	} catch {
 		errorMessage.value = 'Signup failed';
 	} finally {

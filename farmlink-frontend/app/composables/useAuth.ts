@@ -8,7 +8,9 @@ export const useAuth = () => {
   const ensureHydrated = () => auth.hydrate();
 
   const signIn = (payload: SignInPayload) => auth.signIn(payload);
-  const signUp = (payload: SignUpPayload) => auth.signUp(payload);
+  const requestSignupOtp = (payload: SignUpPayload) => auth.requestSignupOtp(payload);
+  const verifySignupOtp = (email: string, code: string) => auth.verifySignupOtp(email, code);
+  const resendSignupOtp = (email: string) => auth.resendSignupOtp(email);
 
   const signOut = async () => {
     auth.signOut();
@@ -19,7 +21,9 @@ export const useAuth = () => {
     isAuthenticated: computed(() => auth.isAuthenticated),
     ensureHydrated,
     signIn,
-    signUp,
+    requestSignupOtp,
+    verifySignupOtp,
+    resendSignupOtp,
     signOut,
     getPostSignInRoute: auth.getPostSignInRoute,
   };

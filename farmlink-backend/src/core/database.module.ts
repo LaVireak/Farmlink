@@ -24,6 +24,7 @@ import { MarketPrice } from '../support/market-price.entity';
 import { CropHealthTip } from '../support/crop-health-tip.entity';
 import { KnowledgeArticle } from '../support/knowledge-article.entity';
 import { RefreshToken } from '../auth/refresh-token.entity';
+import { EmailOtp } from '../auth/email-otp.entity';
 
 export const ALL_ENTITIES = [
   User,
@@ -47,6 +48,7 @@ export const ALL_ENTITIES = [
   CropHealthTip,
   KnowledgeArticle,
   RefreshToken,
+  EmailOtp,
 ];
 
 @Module({

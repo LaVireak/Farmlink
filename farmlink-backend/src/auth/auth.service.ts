@@ -1,4 +1,282 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import { randomInt } from 'crypto';
+import { IsNull, Repository } from 'typeorm';
+import { UserRole } from '../common/enums/role.enum';
+import { UserStatus } from '../common/enums/user-status.enum';
+import { User } from '../users/user.entity';
+import { EmailOtp, OtpPurpose } from './email-otp.entity';
+import { RefreshToken } from './refresh-token.entity';
+import { RequestSignupOtpDto } from './dto/request-signup-otp.dto';
+import { ResendSignupOtpDto } from './dto/resend-signup-otp.dto';
+import { SignInDto } from './dto/signin.dto';
+import { VerifySignupOtpDto } from './dto/verify-signup-otp.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { GmailMailerService } from './gmail-mailer.service';
+
+const OTP_CODE_LENGTH = 6;
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const parseDurationToMs = (value: string): number => {
+    const raw = value.trim();
+    if(/^\d+$/.test(raw)) {
+        return Number(raw)*1000;
+    }
+    const match = /^(\d+)([smhd])$/.exec(raw);
+    if(!match) return 0;
+
+    const amount = Number(match[1]);
+    const unit = match[2];
+    switch(unit) {
+        case 's': return amount * 1000;
+        case 'm': return amount * 60 * 1000;
+        case 'h': return amount * 60 * 60 * 1000;
+        case 'd': return amount * 24 * 60 * 60 * 1000;
+        default: return 0;
+    }
+};
 
 @Injectable()
-export class AuthService {}
+export class AuthService {
+    constructor(
+        @InjectRepository(User)
+        private readonly users: Repository<User>,
+
+        @InjectRepository(RefreshToken)
+        private readonly refreshTokens: Repository<RefreshToken>,
+
+        @InjectRepository(EmailOtp)
+        private readonly otps: Repository<EmailOtp>,
+        private readonly jwt: JwtService,
+        private readonly mailer: GmailMailerService, // Updated name
+        private readonly config: ConfigService
+    ) {}
+
+    async requestSignupOtp(dto: RequestSignupOtpDto) {
+        const email = normalizeEmail(dto.email);
+        const existing = await this.users.findOne({ where: { email } });
+
+        if (existing && existing.status === UserStatus.ACTIVE) {
+            throw new ConflictException('Email already registered');
+        }
+
+        let user = existing;
+        const passwordHash = await bcrypt.hash(dto.password, 10);
+        const role = dto.role ?? UserRole.CONSUMER;
+
+        if (!user) {
+            user = this.users.create({
+                email,
+                passwordHash,
+                role,
+                status: UserStatus.PENDING,
+                firstName: dto.firstName,
+                lastName: dto.lastName,
+            });
+        } else {
+            user.passwordHash = passwordHash;
+            user.role = user.role ?? role;
+            user.firstName = dto.firstName ?? user.firstName;
+            user.lastName = dto.lastName ?? user.lastName;
+            user.status = UserStatus.PENDING;
+        }
+        await this.users.save(user);
+
+        const code = await this.createOtp(email, OtpPurpose.SIGNUP);
+        await this.mailer.sendOtpEmail(email, code);
+
+        return { message: 'OTP sent' };
+    }
+
+    async resendSignupOtp(dto: ResendSignupOtpDto) {
+        const email = normalizeEmail(dto.email);
+        const user = await this.users.findOne({ where: { email } });
+        if (!user) {
+            throw new NotFoundException('Account not found');
+        }
+        if (user.status !== UserStatus.PENDING) {
+            throw new BadRequestException('Account is already verified');
+        }
+
+        const code = await this.createOtp(email, OtpPurpose.SIGNUP);
+        await this.mailer.sendOtpEmail(email, code);
+
+        return { message: 'OTP resent' };
+    }
+
+    async verifySignupOtp(dto: VerifySignupOtpDto) {
+        const email = normalizeEmail(dto.email);
+        const user = await this.users.findOne({ where: { email } });
+
+        if (!user) {
+            throw new NotFoundException('Account not found');
+        }
+
+        const otp = await this.otps.findOne({
+            where: {
+                email,
+                purpose: OtpPurpose.SIGNUP,
+                consumedAt: IsNull(),
+            },
+            order: { createdAt: 'DESC' },
+        });
+
+        if (!otp) {
+            throw new BadRequestException('Verification code not found');
+        }
+        if (otp.expiresAt <= new Date()) {
+            throw new BadRequestException('Verification code expired');
+        }
+        if (otp.attempts >= otp.maxAttempts) {
+            throw new BadRequestException('Too many attempts');
+        }
+
+        const matches = await bcrypt.compare(dto.code, otp.codeHash);
+        if (!matches) {
+            otp.attempts += 1;
+            await this.otps.save(otp);
+            throw new BadRequestException('Invalid verification code');
+        }
+
+        otp.consumedAt = new Date();
+        await this.otps.save(otp);
+
+        user.status = UserStatus.ACTIVE;
+        await this.users.save(user);
+
+        return this.issueTokens(user);
+    }
+
+    async signIn(dto: SignInDto) {
+        const email = normalizeEmail(dto.email);
+        const user = await this.users.findOne({ where: { email } });
+
+        if (!user) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+        if (user.status !== UserStatus.ACTIVE) {
+            throw new UnauthorizedException('Account not verified');
+        }
+
+        const matches = await bcrypt.compare(dto.password, user.passwordHash);
+        if (!matches) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return this.issueTokens(user);
+    }
+
+    async refresh(dto: RefreshTokenDto) {
+        const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET', 'dev-refresh-secret');
+        let payload: { sub: string };
+
+        try {
+            payload = this.jwt.verify(dto.refreshToken, { secret: refreshSecret });
+        } catch {
+            throw new UnauthorizedException('Invalid refresh token');
+        }
+
+        const stored = await this.refreshTokens.findOne({
+            where: { userId: payload.sub, isRevoked: false },
+            order: { createdAt: 'DESC' },
+        });
+
+        if (!stored || stored.expiresAt <= new Date()) {
+            throw new UnauthorizedException('Refresh token expired');
+        }
+
+        const matches = await bcrypt.compare(dto.refreshToken, stored.tokenHash);
+        if (!matches) {
+            throw new UnauthorizedException('Refresh token mismatch');
+        }
+
+        stored.isRevoked = true;
+        await this.refreshTokens.save(stored);
+
+        const user = await this.users.findOne({ where: { id: payload.sub } });
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        return this.issueTokens(user);
+    }
+
+    private async createOtp(email: string, purpose: OtpPurpose): Promise<string> {
+        const ttlMinutes = Number(this.config.get('OTP_TTL_MINUTES', 10));
+        const maxAttempts = Number(this.config.get('OTP_MAX_ATTEMPTS', 5));
+        const code = randomInt(0, 10 ** OTP_CODE_LENGTH).toString().padStart(OTP_CODE_LENGTH, '0');
+        const codeHash = await bcrypt.hash(code, 10);
+
+        await this.otps.update(
+            { email, purpose, consumedAt: IsNull() },
+            { consumedAt: new Date() },
+        );
+
+        const otp = this.otps.create({
+            email,
+            purpose,
+            codeHash,
+            maxAttempts,
+            expiresAt: new Date(Date.now() + ttlMinutes * 60 * 1000),
+        });
+
+        await this.otps.save(otp);
+        return code;
+    }
+
+    private async issueTokens(user: User) {
+        const accessSecret = this.config.get<string>('JWT_ACCESS_SECRET', 'dev-access-secret');
+        const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET', 'dev-refresh-secret');
+        const accessTtl = this.config.get<string>('JWT_ACCESS_TTL', '15m');
+        const refreshTtl = this.config.get<string>('JWT_REFRESH_TTL', '7d');
+        const accessExpiresIn = Math.floor(parseDurationToMs(accessTtl) / 1000) || 900;
+        const refreshExpiresIn = Math.floor(parseDurationToMs(refreshTtl) / 1000) || 604800;
+
+        const accessToken = this.jwt.sign(
+            { sub: user.id, email: user.email, role: user.role },
+            { secret: accessSecret, expiresIn: accessExpiresIn },
+        );
+
+        const refreshToken = this.jwt.sign(
+            { sub: user.id },
+            { secret: refreshSecret, expiresIn: refreshExpiresIn },
+        );
+
+        await this.refreshTokens.update(
+            { userId: user.id, isRevoked: false },
+            { isRevoked: true },
+        );
+
+        const tokenHash = await bcrypt.hash(refreshToken, 10);
+        const expiresAt = new Date(Date.now() + parseDurationToMs(refreshTtl));
+
+        await this.refreshTokens.save(
+            this.refreshTokens.create({ userId: user.id, tokenHash, expiresAt }),
+        );
+
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            },
+        };
+    }
+}
