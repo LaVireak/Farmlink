@@ -1,8 +1,6 @@
 <template>
-    <div class="pt-8 px-6 pb-6 space-y-6">
-        <div class="mb-1">
-            <h1 class="text-xl font-bold text-gray-900">Main Dashboard</h1>
-        </div>
+    <div class="p-10 space-y-6 bg-[#f7fdf4]">
+        <AdminHeader title="Dashboard" />
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4 ">
             <AdminStatsCard title="Users" :value="totalUsers" :percent="userGrowth" :icon="Users" />
             <AdminStatsCard title="Orders" :value="totalOrders" :percent="orderGrowth" :icon="ShoppingCart" />
