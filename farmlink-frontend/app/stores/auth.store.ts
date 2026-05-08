@@ -66,11 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     const signIn = async (payload : SignInPayload) => {
         const result = await authService.signin(payload);
-
-        if(payload.expectedRole && result.user.role !== payload.expectedRole) {
-            throw new Error(`This account is not a ${payload.expectedRole}.`);
-        }
-        
         applySession(result);
 
         return result;

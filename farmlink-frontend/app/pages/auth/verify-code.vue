@@ -57,10 +57,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
+import type { FarmerOnboardingPayload } from '../../types/auth.type';
 
 const route = useRoute();
 const router = useRouter();
-const { verifySignupOtp, resendSignupOtp, getPostSignInRoute } = useAuth();
+const { verifySignupOtp, resendSignupOtp, getPostSignInRoute, submitFarmerOnboarding } = useAuth();
+const FARMER_ONBOARDING_KEY = 'farmlink.farmer.onboarding';
 
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
 const inputRefs = ref<Array<HTMLInputElement | null>>([]);
@@ -170,6 +172,16 @@ const verifyCode = async () => {
   try {
     const code = codeDigits.value.join('');
     const result = await verifySignupOtp(email, code);
+
+    if (result.user.role === 'farmer') {
+      const raw = sessionStorage.getItem(FARMER_ONBOARDING_KEY);
+      if (raw) {
+        const payload = JSON.parse(raw) as FarmerOnboardingPayload;
+        await submitFarmerOnboarding(payload);
+        sessionStorage.removeItem(FARMER_ONBOARDING_KEY);
+      }
+    }
+
     await router.push(getPostSignInRoute(result.user.role));
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Verification failed.';

@@ -1,4 +1,5 @@
 import type {
+    FarmerOnboardingPayload,
     SignInPayload,
     SignInResult,
     SignUpPayload,
@@ -78,5 +79,12 @@ export const authService = {
         });
 
         return normalizeResult(result);
+    },
+
+    async submitFarmerOnboarding(payload: FarmerOnboardingPayload): Promise<{ message: string }> {
+        return apiFetch('/farmers/onboarding', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
     },
 };

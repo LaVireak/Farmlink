@@ -28,11 +28,27 @@ export interface VerifyOtpPayload {
 export interface SignInPayload {
     email: string;
     password: string;
-    expectedRole?: 'farmer' | 'consumer';
 }
 
 export interface AuthResponse {
     user: AuthUser;
     accessToken: string;
     refreshToken: string;
+}
+
+export interface UploadedImagePayload {
+    name: string;
+    type: string;
+    dataUrl: string;
+}
+
+export interface FarmerOnboardingPayload {
+    email: string;
+    phone?: string;
+    address?: string;
+    farmName?: string;
+    tags?: string[];
+    idPhoto?: UploadedImagePayload | null;
+    farmDeed?: UploadedImagePayload | null;
+    profilePhoto?: UploadedImagePayload | null;
 }
