@@ -134,11 +134,12 @@
           <span class="text-green-700">${{ total.toFixed(2) }}</span>
         </div>
 
-        <button
-          class="w-full mt-6 bg-green-700 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition"
+        <NuxtLink
+          to="/user/checkout/PaymentErrorPage"
+          class="mt-6 block w-full text-center bg-green-700 text-white py-3 rounded-lg font-bold hover:bg-green-800 transition"
         >
           Proceed to Checkout
-        </button>
+        </NuxtLink>
 
         <p class="text-xs text-gray-500 mt-4">
           Harvesting and delivery typically takes 24–48 hours.

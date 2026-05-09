@@ -72,7 +72,7 @@
           </svg>
           Retry Payment
         </button>
-        <NuxtLink to="/cart" class="text-[#0a4d1e] font-bold text-sm hover:underline decoration-2 underline-offset-4">
+        <NuxtLink to="/user/cart" class="text-[#0a4d1e] font-bold text-sm hover:underline decoration-2 underline-offset-4">
           Back to Cart
         </NuxtLink>
       </div>
