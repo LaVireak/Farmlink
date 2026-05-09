@@ -6,36 +6,35 @@
         <NuxtLink to="/">
           <img 
             alt="Farm Link Logo" 
-            class="h-16 w-auto object-contain" 
-            src="https://lh3.googleusercontent.com/aida/ADBb0uhni3CwKaQP_0YGcMW1Xv4XJwx1i-Tv9h91apgs26EWpeFy1g_W6E-OCoX8SmxqAdGtLWyb2aDgu_whdvk4Y3WFlQ05UlQUuORPVRfE3g7VadYtIS8YtXN0c2A9R2m2eoywY8VT2Ec51DML6XivZTG_1pqhtdP8ZBDScbR2lFSYHu3Zhvd-OcO5042N-DZ8bpw2-pTSl8NrH7dPhNYP5s6_3BjrrNmTkMFkCuQyur9-k41npTHiZ9n6GzqY7YeH7KEHMZF06VLZxg"
+            class="h-24 w-auto object-contain" 
+            src="assets\images\logo1.png"
           />
         </NuxtLink>
       </div>
 
       <nav class="hidden lg:flex items-center space-x-8">
-        <NuxtLink 
-          to="/" 
-          class="bg-primary-yellow px-6 py-2 rounded-full border-2 border-black nav-link uppercase text-xs"
-        >
+        <NuxtLink to="/" class="nav-link uppercase text-xs">
           Home
         </NuxtLink>
 
         <div class="relative" id="product-menu">
-          <button @click.stop="toggleProduct" class="flex items-center space-x-1 cursor-pointer group focus:outline-none">
-            <span class="nav-link uppercase text-xs">Product</span>
-            <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
-          </button>
+          <div class="flex items-center space-x-1">
+            <NuxtLink to="/user/products/products" class="nav-link uppercase text-xs">Product</NuxtLink>
+            <button @click.stop="toggleProduct" class="flex items-center cursor-pointer group focus:outline-none">
+              <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
+          </div>
 
           <div v-show="productOpen" class="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div class="p-3 border-b">
               <div class="text-xs font-bold text-gray-700">Categories:</div>
               <ul class="mt-2">
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Vegetables</NuxtLink></li>
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Fruits</NuxtLink></li>
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Seeds & Seedlings</NuxtLink></li>
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Tools & Equipment</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Vegetables</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Fruits</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Seeds & Seedlings</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Tools & Equipment</NuxtLink></li>
               </ul>
             </div>
             <div class="p-3">
@@ -102,21 +101,36 @@
             </svg>
           </button>
           <button aria-label="Shopping Cart">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
+            <NuxtLink to="/user/checkout/cart">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </NuxtLink>
           </button>
         </div>
 
-        <button class="bg-primary-yellow px-8 py-3 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
+        <button class="bg-[#1f7a2e] text-white px-8 py-3 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
           Shop Now
         </button>
 
-        <button class="w-12 h-12 rounded-full bg-primary-yellow border-2 border-black flex items-center justify-center overflow-hidden">
-          <svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
-          </svg>
-        </button>
+        <div class="relative" id="user-menu">
+          <button @click.stop="toggleUserMenu" class="bg-[#1f7a2e] text-white px-2 py-2 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
+            </svg>
+          </button>
+          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-25 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <div class="p-2 border-b">
+              <ul>
+                <li><NuxtLink to="/user/settings/profile" class="block px-2 py-1 hover:bg-gray-100">Settings</NuxtLink></li>
+                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">SignIn</NuxtLink></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+
+
       </div>
     </div>
   </header>
@@ -127,22 +141,39 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const farmOpen = ref(false)
 const productOpen = ref(false)
+const userMenuOpen = ref(false)
 
 const toggleFarm = () => {
   farmOpen.value = !farmOpen.value
-  if (farmOpen.value) productOpen.value = false
+  if (farmOpen.value) {
+    productOpen.value = false
+    userMenuOpen.value = false
+  }
 }
 
 const toggleProduct = () => {
   productOpen.value = !productOpen.value
-  if (productOpen.value) farmOpen.value = false
+  if (productOpen.value) {
+    farmOpen.value = false
+    userMenuOpen.value = false
+  }
+}
+
+const toggleUserMenu = () => {
+  userMenuOpen.value = !userMenuOpen.value
+  if (userMenuOpen.value) {
+    farmOpen.value = false
+    productOpen.value = false
+  }
 }
 
 const onClickOutside = (e) => {
   const farmEl = document.getElementById('farm-menu')
   const productEl = document.getElementById('product-menu')
+  const userMenuEl = document.getElementById('user-menu')
   if (farmEl && !farmEl.contains(e.target)) farmOpen.value = false
   if (productEl && !productEl.contains(e.target)) productOpen.value = false
+  if (userMenuEl && !userMenuEl.contains(e.target)) userMenuOpen.value = false
 }
 
 onMounted(() => document.addEventListener('click', onClickOutside))
@@ -154,9 +185,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 .bg-cream {
   background-color: #FFF7DA;
 }
-.bg-primary-yellow {
-  background-color: #EFCF4F;
-}
 .header-height {
   height: 100px;
 }
@@ -166,7 +194,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 .nav-link {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  color: #1a1a1a;
   letter-spacing: 0.05em;
 }
 .search-input::placeholder {

@@ -91,6 +91,12 @@
         >
           Initialize Partner Account
         </button>
+        <p class="text-center text-sm text-slate-600 mt-6">
+					Already have an account?
+					<NuxtLink to="/auth/signin" class="text-emerald-700 font-semibold">
+						Log in here
+					</NuxtLink>
+				</p>
       </div>
     </div>
   </div>
@@ -140,26 +146,60 @@ const onSubmit = async () => {
 
 <style scoped>
 .input {
-  @apply w-full px-3 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-emerald-500;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.875rem;
+  outline: none;
 }
 
 .card {
-  @apply bg-white p-4 rounded-2xl shadow-sm mt-4;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  margin-top: 1rem;
 }
 
 .section-title {
-  @apply text-sm font-semibold text-slate-700;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
 }
 
 .upload-box {
-  @apply border-2 border-dashed border-slate-300 rounded-xl h-24 flex items-center justify-center text-sm text-slate-400;
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  height: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #94a3b8;
 }
 
 .btn-secondary {
-  @apply bg-slate-200 px-4 py-2 rounded-xl text-sm hover:bg-slate-300;
+  background: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
 }
 
 .tag {
-  @apply bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs;
+  background: #d1fae5;
+  color: #047857;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+}
+
+.input:focus {
+  box-shadow: 0 0 0 2px #10b981;
 }
 </style>

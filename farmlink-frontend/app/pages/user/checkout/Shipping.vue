@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-[#f7fdf4] py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+  <CommonAppHeader />
+
+  <div class="bg-[#f7fdf4]">
+  <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
     
        <!-- Progress -->
     <div class="flex items-center gap-4 mb-8 text-sm">
@@ -9,13 +12,13 @@
       </div>
       <div class="flex-1 h-px bg-gray-300"></div>
 
-      <div class="flex items-center gap-2 text-gray-400">
+      <div class="flex items-center gap-2 text-green-700 font-semibold">
         <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-700 text-white">2</span>
         Shipping
       </div>
       <div class="flex-1 h-px bg-gray-300"></div>
 
-      <div class="flex items-center gap-2 text-green-700 font-semibold">
+      <div class="flex items-center gap-2 text-gray-400">
         <span class="w-6 h-6 flex items-center justify-center rounded-full border">3</span>
         Payment
       </div>
@@ -26,6 +29,11 @@
         <div class="lg:col-span-7 space-y-8">
           
           <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-50">
+            <button class="mb-6  bg-green-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-800 transition">
+              <NuxtLink to="/user/checkout/cart" class="text-white no-underline">
+                Back
+              </NuxtLink>
+            </button>
             <div class="flex items-center gap-4 mb-8">
               <div class="w-12 h-12 bg-[#e8f5e9] rounded-2xl flex items-center justify-center text-[#0a4d1e]">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +157,9 @@
             </div>
 
             <button class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-95 group">
-              Place Order
+              <Nuxt-link to="/user/checkout/payment" class="text-white no-underline"> 
+                Place Order
+              </Nuxt-link>
               <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
@@ -163,10 +173,13 @@
       </div>
     </div>
 
+    <CommonAppFooter />
+  </div>
+
 </template>
 
 <script setup>
-import { h } from 'vue'
+import { Comment, h } from 'vue'
 
 const selectedPayment = ref('cod')
 

@@ -2,7 +2,7 @@
   <div class="dashboard-layout">
     <FarmerSideBar />
     <div class="main-wrapper">
-
+      <FarmerHeader/>
       <!-- Top Nav Bar -->
       <header class="flex items-center justify-between px-8 py-4 bg-[#f5f7f3] sticky top-0 z-10">
         <div class="flex-1 max-w-xl">
@@ -362,7 +362,6 @@ function rejectOrder(id) {
 <style scoped>
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
   background: #f5f7f3;
   font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
 }

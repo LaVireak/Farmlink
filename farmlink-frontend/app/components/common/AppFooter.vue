@@ -2,12 +2,12 @@
   <footer class="w-full bg-cream border-t border-black/5" data-purpose="footer-container">
     <div class="max-w-[1920px]  px-[100px] py-8 flex flex-col md:flex-row justify-between items-start" data-purpose="footer-flex-container">
       
-      <div class="flex flex-col gap-5 w-full md:max-w-[300px] ml-10">
+      <div class="flex flex-col w-full md:max-w-[300px] ml-10">
         <NuxtLink to="/">
           <img 
             alt="FarmLink Logo" 
-            class="h-10 w-auto object-contain self-start" 
-            src="https://lh3.googleusercontent.com/aida/ADBb0uhni3CwKaQP_0YGcMW1Xv4XJwx1i-Tv9h91apgs26EWpeFy1g_W6E-OCoX8SmxqAdGtLWyb2aDgu_whdvk4Y3WFlQ05UlQUuORPVRfE3g7VadYtIS8YtXN0c2A9R2m2eoywY8VT2Ec51DML6XivZTG_1pqhtdP8ZBDScbR2lFSYHu3Zhvd-OcO5042N-DZ8bpw2-pTSl8NrH7dPhNYP5s6_3BjrrNmTkMFkCuQyur9-k41npTHiZ9n6GzqY7YeH7KEHMZF06VLZxg"
+            class="h-24 w-auto object-contain self-start" 
+            src="assets\images\logo1.png"
           />
         </NuxtLink>
         
@@ -45,21 +45,21 @@
         <div class="flex flex-col gap-3 min-w-[150px]">
           <h3 class="footer-heading italic uppercase">Account</h3>
           <ul class="flex flex-col gap-3 footer-text">
-            <li><NuxtLink class="hover:underline" to="/account">My account</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/login">Login / Sign up</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/cart">Cart</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/favorites">Favorite</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/shop">Shop</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/user/settings/profile">My account</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/auth/signin">Login / Sign up</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/user/cart">Cart</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/user/favorites">Favorite</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/user/products">Shop</NuxtLink></li>
           </ul>
         </div>
 
         <div class="flex flex-col gap-3 min-w-[150px]">
           <h3 class="footer-heading italic uppercase">Quick Link</h3>
           <ul class="flex flex-col gap-3 footer-text">
-            <li><NuxtLink class="hover:underline" to="/privacy">Privacy policy</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/terms">Term of Use</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/faq">FAQ</NuxtLink></li>
-            <li><NuxtLink class="hover:underline" to="/contact">Contact</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/about">Privacy policy</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/shipping">Term of Use</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/about#faq">FAQ</NuxtLink></li>
+            <li><NuxtLink class="hover:underline" to="/contacts">Contact</NuxtLink></li>
           </ul>
         </div>
 
