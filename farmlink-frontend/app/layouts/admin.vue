@@ -1,6 +1,6 @@
 <template>
-  <div class="flex">
-    <AdminSidebar />
+  <div class="flex ">
+    <AdminSidebar class="w-50"/>
 
     <main class="flex-1">
       <slot />

@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-green-50 p-4 md:p-8 text-gray-800">
+  <CommonAppHeader />
+  <div class="bg-[#f7fdf4]">
+  <div class="h-auto max-w-7xl mx-auto p-4 md:p-8 text-gray-800">
     <!-- Progress -->
     <div class="flex items-center gap-4 mb-8 text-sm">
       <div class="flex items-center gap-2 text-gray-400">
@@ -25,6 +27,11 @@
       <div class="lg:col-span-2 space-y-6">
         <!-- Card Info -->
         <div class="bg-white p-6 rounded-xl shadow-sm">
+          <button class="mb-6 bg-green-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-800 transition">
+            <NuxtLink to="/user/checkout/shipping" class="text-white no-underline">
+              Back
+            </NuxtLink>
+          </button>
           <h2 class="text-xl font-semibold text-green-800 mb-6">
             Card Information
           </h2>
@@ -116,13 +123,6 @@
             </label>
           </div>
         </div>
-
-        <!-- Footer badges -->
-        <div class="flex flex-wrap gap-6 text-xs text-gray-500">
-          <span>🔒 SSL ENCRYPTED</span>
-          <span>🛡️ SECURE GATEWAY</span>
-          <span>🌿 CERTIFIED ORGANIC</span>
-        </div>
       </div>
 
       <!-- RIGHT -->
@@ -157,18 +157,13 @@
             Confirm Payment →
           </button>
 
-          <p class="text-xs text-green-200 mt-4">
-            By clicking, you agree to the FarmLink terms.
-          </p>
-        </div>
-
-        <!-- Image Banner -->
-        <div class="h-40 rounded-xl bg-green-200 flex items-end p-4 text-white font-semibold">
-          Supporting local farmers with every harvest
         </div>
       </div>
     </div>
   </div>
+  </div>
+  <CommonAppFooter />
+  
 </template>
 
 <script setup lang="ts">
