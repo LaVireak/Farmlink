@@ -157,7 +157,7 @@
             </div>
 
             <button class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-95 group">
-              <Nuxt-link to="/user/checkout/payment" class="text-white no-underline"> 
+              <Nuxt-link :to="checkoutRoute" class="text-white no-underline"> 
                 Place Order
               </Nuxt-link>
               <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,9 +179,9 @@
 </template>
 
 <script setup>
-import { Comment, h } from 'vue'
+import { Comment, computed, h } from 'vue'
 
-const selectedPayment = ref('cod')
+const selectedPayment = ref('aba_qr')
 
 const form = reactive({
   name: 'Johnathan Doe',
@@ -227,10 +227,16 @@ const MobileIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBo
 ])
 
 const paymentMethods = [
+  { id: 'aba_qr', title: 'ABA / Bakong QR', subtitle: 'Dynamic QR with auto confirmation', icon: MobileIcon, bgColor: 'bg-[#0a4d1e]' },
   { id: 'cod', title: 'Cash on Delivery', subtitle: 'Pay at your doorstep', icon: CashIcon, bgColor: 'bg-yellow-600' },
   { id: 'card', title: 'Credit/Debit Card', subtitle: 'Secure online payment', icon: CardIcon, bgColor: 'bg-gray-400' },
   { id: 'mobile', title: 'Mobile Payment', subtitle: 'Apple Pay, Google Pay', icon: MobileIcon, bgColor: 'bg-green-400' }
 ]
+
+const checkoutRoute = computed(() => {
+  if (selectedPayment.value === 'aba_qr') return '/user/checkout/QRPaymentPage'
+  return '/user/checkout/payment'
+})
 </script>
 
 <style scoped>
