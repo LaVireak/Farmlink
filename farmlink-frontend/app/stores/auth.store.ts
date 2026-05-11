@@ -71,6 +71,12 @@ export const useAuthStore = defineStore('auth', () => {
         return result;
     };
 
+    const signInWithGoogle = async (idToken: string) => {
+        const result = await authService.googleSignIn(idToken);
+        applySession(result);
+        return result;
+    };
+
     const requestSignupOtp = async (payload: SignUpPayload) => {
         await authService.requestSignupOtp(payload);
         return { email: payload.email };
@@ -102,6 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
         hydrate,
         hydrated,
         signIn,
+        signInWithGoogle,
         requestSignupOtp,
         verifySignupOtp,
         resendSignupOtp,

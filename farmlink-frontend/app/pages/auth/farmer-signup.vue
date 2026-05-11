@@ -179,11 +179,6 @@
           Initialize Partner Account
         </button>
 
-        <div class="enterprise-block">
-          <div class="enterprise-title">Enterprise Authentication</div>
-          <button type="button" class="enterprise-btn">Google Sync</button>
-        </div>
-
         <p class="text-center text-sm text-slate-600 mt-6">
           Existing Partner?
           <NuxtLink to="/auth/signin" class="text-emerald-700 font-semibold">

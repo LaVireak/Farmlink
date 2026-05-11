@@ -15,7 +15,7 @@
 
 			<div>
 				<span class="bg-emerald-800 text-white text-xs px-3 py-1 rounded-full">
-					JOIN THE HARVEST
+					Register as a Customer
 				</span>
 
 				<h1 class="text-4xl font-serif mt-3 text-green-900">
@@ -73,6 +73,17 @@
 						>
 					</div>
 
+					<div>
+						<label class="text-xs text-slate-500">CONFIRM PASSWORD</label>
+						<input
+							v-model="form.confirmPassword"
+							type="password"
+							class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
+							placeholder="••••••••"
+							required
+						>
+					</div>
+
 					<label class="flex items-start gap-2 text-sm text-slate-600">
 						<input v-model="form.agree" type="checkbox" class="mt-1 accent-emerald-700">
 						<span>
@@ -92,7 +103,7 @@
 						:disabled="submitting"
 						class="w-full bg-green-900 text-white py-3 rounded-full text-sm font-semibold hover:bg-green-800 transition"
 					>
-						{{ submitting ? 'Creating...' : 'Harvest My Account' }}
+						{{ submitting ? 'Creating...' : 'Create Your Account' }}
 					</button>
 
 					<div class="flex items-center gap-3 my-4">
@@ -101,13 +112,15 @@
 						<div class="flex-1 h-px bg-slate-300"></div>
 					</div>
 
-					<button
-						type="button"
-						class="w-full border border-slate-300 py-2.5 rounded-full text-sm flex items-center justify-center gap-2 hover:bg-slate-50"
-					>
-						<span>🌐</span>
-						Google
-					</button>
+					<div class="flex flex-col items-center gap-2">
+						<div ref="googleButton" class="w-full flex justify-center"></div>
+						<p v-if="googleSubmitting" class="text-xs text-slate-500">
+							Signing up with Google...
+						</p>
+						<p v-if="googleError" class="text-xs text-red-600">
+							{{ googleError }}
+						</p>
+					</div>
 				</form>
 
 				<p class="text-center text-sm text-slate-600 mt-6">
@@ -122,21 +135,26 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
 
 const router = useRouter();
-const { requestSignupOtp } = useAuth();
+const { requestSignupOtp, signInWithGoogle, getPostSignInRoute } = useAuth();
 
 const submitting = ref(false);
 const errorMessage = ref('');
+const googleSubmitting = ref(false);
+const googleError = ref('');
+const googleButton = ref<HTMLDivElement | null>(null);
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
 const form = reactive({
 	firstName: '',
 	lastName: '',
 	email: '',
 	password: '',
+	confirmPassword: '',
 	agree: false,
 });
 
@@ -145,6 +163,11 @@ const onSubmit = async () => {
 
 	if (!form.agree) {
 		errorMessage.value = 'You must agree to the terms.';
+		return;
+	}
+
+	if (form.password !== form.confirmPassword) {
+		errorMessage.value = 'Passwords do not match.';
 		return;
 	}
 
@@ -166,4 +189,73 @@ const onSubmit = async () => {
 		submitting.value = false;
 	}
 };
+
+const handleGoogleCredential = async (credential?: string) => {
+	if (!credential) {
+		googleError.value = 'Google sign-up failed to return credentials.';
+		return;
+	}
+
+	googleSubmitting.value = true;
+	googleError.value = '';
+
+	try {
+		const result = await signInWithGoogle(credential);
+		await router.push(getPostSignInRoute(result.user.role));
+	} catch (error) {
+		googleError.value = error instanceof Error ? error.message : 'Unable to sign up with Google.';
+	} finally {
+		googleSubmitting.value = false;
+	}
+};
+
+const initializeGoogle = () => {
+	if (!googleButton.value) return false;
+	const google = (window as typeof window & { google?: any }).google;
+
+	if (!google?.accounts?.id) {
+		return false;
+	}
+
+	google.accounts.id.initialize({
+		client_id: googleClientId,
+		callback: (response: { credential?: string }) => handleGoogleCredential(response.credential),
+	});
+
+	googleButton.value.innerHTML = '';
+	google.accounts.id.renderButton(googleButton.value, {
+		theme: 'outline',
+		size: 'large',
+		shape: 'pill',
+		width: 320,
+		text: 'signup_with',
+	});
+
+	return true;
+};
+
+onMounted(() => {
+	if (!googleClientId) {
+		googleError.value = 'Google sign-up is not configured.';
+		return;
+	}
+
+	let attempts = 0;
+	const maxAttempts = 25;
+	const tryInit = () => {
+		attempts += 1;
+		if (initializeGoogle()) {
+			return;
+		}
+
+		if (attempts >= maxAttempts) {
+			googleError.value = 'Google sign-up failed to load.';
+			return;
+		}
+
+		setTimeout(tryInit, 200);
+	};
+
+	tryInit();
+});
 </script>

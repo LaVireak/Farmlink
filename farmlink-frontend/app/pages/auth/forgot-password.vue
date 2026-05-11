@@ -33,20 +33,21 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../../composables/useAuth';
 
 const email = ref('');
 const loading = ref(false);
 const error = ref('');
 const router = useRouter();
+const { requestPasswordResetOtp } = useAuth();
 
 const handleSubmit = async () => {
 	if (!email.value) return;
 	loading.value = true;
 	error.value = '';
 	try {
-		// TODO: replace with real forgot-password API call when backend is ready.
-		await new Promise((resolve) => setTimeout(resolve, 700));
-		await router.push(`/auth/verify-code?email=${encodeURIComponent(email.value)}`);
+		await requestPasswordResetOtp(email.value);
+		await router.push(`/auth/verify-code?email=${encodeURIComponent(email.value)}&mode=reset`);
 	} catch (err: unknown) {
 		error.value = err instanceof Error ? err.message : 'Something went wrong.';
 	} finally {

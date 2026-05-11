@@ -81,6 +81,43 @@ export const authService = {
         return normalizeResult(result);
     },
 
+    async googleSignIn(idToken: string): Promise<SignInResult> {
+        const result = await apiFetch<SignInResult>('/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ idToken }),
+        });
+
+        return normalizeResult(result);
+    },
+
+    async requestPasswordResetOtp(email: string): Promise<{ message: string }> {
+        return apiFetch('/auth/password/request-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    },
+
+    async resendPasswordResetOtp(email: string): Promise<{ message: string }> {
+        return apiFetch('/auth/password/resend-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    },
+
+    async verifyPasswordResetOtp(payload: VerifyOtpPayload): Promise<{ resetToken: string }> {
+        return apiFetch('/auth/password/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+    },
+
+    async resetPassword(token: string, password: string): Promise<{ message: string }> {
+        return apiFetch('/auth/password/reset', {
+            method: 'POST',
+            body: JSON.stringify({ token, password }),
+        });
+    },
+
     async submitFarmerOnboarding(payload: FarmerOnboardingPayload): Promise<{ message: string }> {
         return apiFetch('/farmers/onboarding', {
             method: 'POST',

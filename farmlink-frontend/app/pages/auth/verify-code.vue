@@ -61,7 +61,14 @@ import type { FarmerOnboardingPayload } from '../../types/auth.type';
 
 const route = useRoute();
 const router = useRouter();
-const { verifySignupOtp, resendSignupOtp, getPostSignInRoute, submitFarmerOnboarding } = useAuth();
+const {
+  verifySignupOtp,
+  resendSignupOtp,
+  verifyPasswordResetOtp,
+  resendPasswordResetOtp,
+  getPostSignInRoute,
+  submitFarmerOnboarding,
+} = useAuth();
 const FARMER_ONBOARDING_KEY = 'farmlink.farmer.onboarding';
 
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
@@ -78,6 +85,7 @@ const emailText = computed(() => {
 
 const countdownText = computed(() => countdown.value.toString().padStart(2, '0'));
 const isCodeComplete = computed(() => codeDigits.value.every((digit) => /^[0-9]$/.test(digit)));
+const isResetMode = computed(() => route.query.mode === 'reset');
 
 const setInputRef = (el: Element | { $el?: Element } | null, idx: number) => {
   if (!el) {
@@ -147,7 +155,11 @@ const resendCode = async () => {
   }
 
   try {
-    await resendSignupOtp(email);
+    if (isResetMode.value) {
+      await resendPasswordResetOtp(email);
+    } else {
+      await resendSignupOtp(email);
+    }
     startCountdown();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to resend code.';
@@ -171,18 +183,23 @@ const verifyCode = async () => {
 
   try {
     const code = codeDigits.value.join('');
-    const result = await verifySignupOtp(email, code);
+    if (isResetMode.value) {
+      const result = await verifyPasswordResetOtp(email, code);
+      await router.push(`/auth/reset-password?token=${encodeURIComponent(result.resetToken)}`);
+    } else {
+      const result = await verifySignupOtp(email, code);
 
-    if (result.user.role === 'farmer') {
-      const raw = sessionStorage.getItem(FARMER_ONBOARDING_KEY);
-      if (raw) {
-        const payload = JSON.parse(raw) as FarmerOnboardingPayload;
-        await submitFarmerOnboarding(payload);
-        sessionStorage.removeItem(FARMER_ONBOARDING_KEY);
+      if (result.user.role === 'farmer') {
+        const raw = sessionStorage.getItem(FARMER_ONBOARDING_KEY);
+        if (raw) {
+          const payload = JSON.parse(raw) as FarmerOnboardingPayload;
+          await submitFarmerOnboarding(payload);
+          sessionStorage.removeItem(FARMER_ONBOARDING_KEY);
+        }
       }
-    }
 
-    await router.push(getPostSignInRoute(result.user.role));
+      await router.push(getPostSignInRoute(result.user.role));
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Verification failed.';
   } finally {

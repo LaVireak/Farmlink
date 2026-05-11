@@ -8,6 +8,7 @@ import { RefreshToken } from './refresh-token.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GmailMailerService } from './gmail-mailer.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 const parseDurationToSeconds = (value: string): number => {
   const raw = value.trim();
@@ -57,6 +58,7 @@ const parseDurationToSeconds = (value: string): number => {
   providers: [
     AuthService, 
     GmailMailerService, 
+    JwtStrategy,
   ],
   exports: [AuthService],
 })

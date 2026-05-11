@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 
 
 export enum OtpPurpose {
     SIGNUP = 'signup',
+    RESET_PASSWORD = 'reset_password',
 }
 
 @Entity('email_otps')

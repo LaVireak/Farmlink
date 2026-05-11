@@ -102,10 +102,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useAuth } from '../../composables/useAuth';
 
 const router = useRouter();
+const route = useRoute();
+const { resetPassword } = useAuth();
 
 const newPassword = ref('');
 const confirmPassword = ref('');
@@ -120,6 +123,9 @@ const hasUpper = computed(() => /[A-Z]/.test(newPassword.value));
 const hasNumber = computed(() => /\d/.test(newPassword.value));
 const hasSpecial = computed(() => /[^A-Za-z0-9]/.test(newPassword.value));
 const isStrong = computed(() => hasMinLength.value && hasUpper.value && hasNumber.value && hasSpecial.value);
+const resetToken = computed(() => (typeof route.query.token === 'string' ? route.query.token : ''));
+const redirectDelayMs = 2400;
+let redirectTimer: ReturnType<typeof setTimeout> | null = null;
 
 const submitReset = async () => {
   errorMessage.value = '';
@@ -134,12 +140,19 @@ const submitReset = async () => {
     return;
   }
 
+  if (!resetToken.value) {
+    errorMessage.value = 'Reset token is missing or invalid.';
+    return;
+  }
+
   submitting.value = true;
 
   try {
-    // TODO: call backend reset endpoint with verification token/code.
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await resetPassword(resetToken.value, newPassword.value);
     showSuccess.value = true;
+    redirectTimer = setTimeout(() => {
+      router.push('/auth/signin');
+    }, redirectDelayMs);
   } catch {
     errorMessage.value = 'Unable to reset password right now. Please try again.';
   } finally {
@@ -154,6 +167,13 @@ const goBack = () => {
 const goToSignIn = () => {
   router.push('/auth/signin');
 };
+
+onBeforeUnmount(() => {
+  if (redirectTimer) {
+    clearTimeout(redirectTimer);
+    redirectTimer = null;
+  }
+});
 </script>
 
 <style scoped>
