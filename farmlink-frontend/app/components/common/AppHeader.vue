@@ -13,83 +13,44 @@
       </div>
 
       <nav class="hidden lg:flex items-center space-x-8">
-        <NuxtLink to="/" class="nav-link uppercase text-md">
+        <NuxtLink to="/" class="nav-link uppercase text-xs">
           Home
         </NuxtLink>
 
-        <div class="relative group" id="product-menu" @mouseenter="productOpen = true" @mouseleave="productOpen = false">
-          <div class="flex items-center space-x-1 cursor-pointer">
-            <span class="nav-link uppercase text-md">Product</span>
-            <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
+        <div class="relative" id="product-menu">
+          <div class="flex items-center space-x-1">
+            <NuxtLink to="/user/products/products" class="nav-link uppercase text-xs">Product</NuxtLink>
+            <button @click.stop="toggleProduct" class="flex items-center cursor-pointer group focus:outline-none">
+              <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
           </div>
 
-          <div v-show="productOpen" class="absolute -left-[35px] top-full pt-4 w-[950px] z-50">
-            <div class="bg-[#fcfcfa] shadow-2xl flex p-8 border border-gray-100 rounded-md">
-              <div class="flex-1 grid grid-cols-3 gap-4 p-6">
-              <div >
-                <h3 class="text-[15px] font-bold text-gray-900 uppercase tracking-widest mb-4">Vegetables</h3>
-                <ul class="space-y-4 text-[15px] text-gray-600">
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Leafy Greens</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Root Vegetables</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Salads</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Herbs</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Onions & Garlic</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Vegetable" class="hover:text-green-600 transition-colors">Peppers & Tomatoes</NuxtLink></li>
-                  <li class="pt-2"><NuxtLink to="/user/products?category=Vegetable" class="text-green-700 font-semibold hover:underline">All Vegetables</NuxtLink></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 class="text-[15px] font-bold text-gray-900 uppercase tracking-widest mb-4">Fruits</h3>
-                <ul class="space-y-4 text-[15px] text-gray-600">
-                  <li><NuxtLink to="/user/products?category=Fruit" class="hover:text-green-600 transition-colors">Citrus Fruits</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Fruit" class="hover:text-green-600 transition-colors">Berries</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Fruit" class="hover:text-green-600 transition-colors">Tropical</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Fruit" class="hover:text-green-600 transition-colors">Apples & Pears</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Fruit" class="hover:text-green-600 transition-colors">Melons</NuxtLink></li>
-                  <li class="pt-2"><NuxtLink to="/user/products?category=Fruit" class="text-green-700 font-semibold hover:underline">All Fruits</NuxtLink></li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 class="text-[15px] font-bold text-gray-900 uppercase tracking-widest mb-4">Seeds & Supplies</h3>
-                <ul class="space-y-4 text-[15px] text-gray-600">
-                  <li><NuxtLink to="/user/products?category=Organic" class="hover:text-green-600 transition-colors">Vegetable Seeds</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Organic" class="hover:text-green-600 transition-colors">Fruit Seeds</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=Organic" class="hover:text-green-600 transition-colors">Organic Soil & Fertilizer</NuxtLink></li>
-                  <li><NuxtLink to="/user/products" class="hover:text-green-600 transition-colors">Hand Tools</NuxtLink></li>
-                  <li><NuxtLink to="/user/products" class="hover:text-green-600 transition-colors">Gardening Kits</NuxtLink></li>
-                  <li class="pt-2"><NuxtLink to="/user/products" class="text-green-700 font-semibold hover:underline">All Supplies</NuxtLink></li>
-                </ul>
-              </div>
+          <div v-show="productOpen" class="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <div class="p-3 border-b">
+              <div class="text-xs font-bold text-gray-700">Categories:</div>
+              <ul class="mt-2">
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Vegetables</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Fruits</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Seeds & Seedlings</NuxtLink></li>
+                <li><NuxtLink to="/user/products" class="block px-2 py-1 hover:bg-gray-100">Tools & Equipment</NuxtLink></li>
+              </ul>
             </div>
-            
-            <div class="w-[320px] ml-8 relative bg-[#f9faf6] p-6 flex flex-col justify-between items-center text-center overflow-hidden border border-gray-100">
-              <div class="z-10 relative">
-                <h2 class="text-2xl font-serif text-gray-900 leading-tight mb-2">Perfect Produce for Spring</h2>
-                <p class="text-sm text-gray-700 font-medium">From $2.50 per item</p>
-              </div>
-              
-              <div class="absolute inset-0 z-0 mt-24">
-                <img src="/images/farm-banner.jpg" alt="Spring Produce" class="w-full h-full object-cover object-center" />
-                <div class="absolute inset-0 bg-gradient-to-b from-[#f9faf6] via-transparent to-transparent h-16"></div>
-              </div>
-              
-              <div class="z-10 relative w-full mt-40">
-                <NuxtLink to="/user/products" class="inline-block px-8 py-3 bg-[#4a9f3b] hover:bg-[#3d8331] text-white font-bold text-sm tracking-wide transition-colors shadow-lg">
-                  SHOP ALL
-                </NuxtLink>
-              </div>
-              </div>
+            <div class="p-3">
+              <div class="text-xs font-bold text-gray-700">Popular:</div>
+              <ul class="mt-2">
+                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Best Sellers</NuxtLink></li>
+                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">New Arrivals</NuxtLink></li>
+                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Discounted</NuxtLink></li>
+              </ul>
             </div>
           </div>
         </div>
 
         <div class="relative" id="farm-menu">
           <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none">
-            <span class="nav-link uppercase text-md">Farm</span>
+            <span class="nav-link uppercase text-xs">Farm</span>
             <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
@@ -115,8 +76,8 @@
           </div>
         </div>
 
-        <NuxtLink to="/about" class="nav-link uppercase text-md">About</NuxtLink>
-        <NuxtLink to="/contacts" class="nav-link uppercase text-md">Contacts</NuxtLink>
+        <NuxtLink to="/about" class="nav-link uppercase text-xs">About</NuxtLink>
+        <NuxtLink to="/contacts" class="nav-link uppercase text-xs">Contacts</NuxtLink>
       </nav>
 
       <div class="flex items-center space-x-6">
@@ -158,11 +119,14 @@
               <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
             </svg>
           </button>
-          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-25 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div class="p-2 border-b">
               <ul>
+                <li><NuxtLink to="/auth/signin" class="block px-2 py-1 hover:bg-gray-100">Sign In</NuxtLink></li>
+                <li class="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">Sign Up</li>
+                <li><NuxtLink to="/auth/signup" class="block px-2 py-1 hover:bg-gray-100">Customer</NuxtLink></li>
+                <li><NuxtLink to="/auth/farmer-signup" class="block px-2 py-1 hover:bg-gray-100">Farmer</NuxtLink></li>
                 <li><NuxtLink to="/user/settings/profile" class="block px-2 py-1 hover:bg-gray-100">Settings</NuxtLink></li>
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">SignIn</NuxtLink></li>
               </ul>
             </div>
           </div>
@@ -220,6 +184,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
 
 <style scoped>
+/* Scoped ensures these styles don't leak to other components */
 .bg-cream {
   background-color: #FFF7DA;
 }

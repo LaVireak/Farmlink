@@ -1,7 +1,7 @@
 import type { ShippingInfo } from './ShippingInfo.type';
 
 export interface PaymentInfo {
-  method: 'cod' | 'card' | 'mobile';
+  method: 'cod' | 'card' | 'mobile' | 'aba_payway_qr';
   billingAddressSameAsDelivery: boolean;
   // Add card details if method is 'card'
   cardholderName?: string;

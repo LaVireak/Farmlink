@@ -47,6 +47,15 @@ export class FarmerProfile {
   @Column({ name: 'cover_image_url', length: 500, nullable: true })
   coverImageUrl: string;
 
+  @Column({ name: 'id_document_url', length: 500, nullable: true })
+  idDocumentUrl: string;
+
+  @Column({ name: 'farm_deed_url', length: 500, nullable: true })
+  farmDeedUrl: string;
+
+  @Column({ name: 'product_tags', type: 'text', nullable: true })
+  productTags: string;
+
   @Column({ name: 'is_verified', default: false })
   isVerified: boolean;
 
