@@ -15,7 +15,7 @@
 
         <div class="form-wrap">
           <h1>Enter<br>Verification<br>Code</h1>
-          <p class="copy">We have sent a 6-digit code to your email</p>
+          <p class="copy">We have sent a 5-digit code to your email</p>
           <p class="email">{{ emailText }}</p>
 
           <div class="code-grid">
@@ -41,9 +41,9 @@
             {{ loading ? 'Verifying...' : 'Verify Code' }}
           </button>
 
-          <p class="resend-copy">Didn't receive the email?</p>
-          <button type="button" class="resend-btn" :disabled="countdown > 0 || loading" @click="resendCode">
-            {{ countdown > 0 ? `Resend code in 0:${countdownText}` : 'Resend code now' }}
+          <p class="resend-copy">Didn't receive code?</p>
+          <button type="button" class="resend-btn" :disabled="loading" @click="resendCode">
+            Resend code
           </button>
 
           <div class="status-pill">● SECURE RECOVERY ACTIVE</div>
@@ -54,7 +54,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
 import type { FarmerOnboardingPayload } from '../../types/auth.type';
@@ -73,17 +73,14 @@ const FARMER_ONBOARDING_KEY = 'farmlink.farmer.onboarding';
 
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
 const inputRefs = ref<Array<HTMLInputElement | null>>([]);
-const countdown = ref(59);
 const loading = ref(false);
 const errorMessage = ref('');
-let timer: ReturnType<typeof setInterval> | null = null;
 
 const emailText = computed(() => {
   const email = typeof route.query.email === 'string' ? route.query.email : '';
   return email || 'keat.farmer@example.com';
 });
 
-const countdownText = computed(() => countdown.value.toString().padStart(2, '0'));
 const isCodeComplete = computed(() => codeDigits.value.every((digit) => /^[0-9]$/.test(digit)));
 const isResetMode = computed(() => route.query.mode === 'reset');
 
@@ -127,25 +124,6 @@ const onBackspace = (idx: number, event: KeyboardEvent) => {
   }
 };
 
-const startCountdown = () => {
-  if (timer) {
-    clearInterval(timer);
-  }
-
-  countdown.value = 59;
-  timer = setInterval(() => {
-    if (countdown.value <= 0) {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-      return;
-    }
-
-    countdown.value -= 1;
-  }, 1000);
-};
-
 const resendCode = async () => {
   errorMessage.value = '';
   const email = typeof route.query.email === 'string' ? route.query.email : '';
@@ -160,7 +138,6 @@ const resendCode = async () => {
     } else {
       await resendSignupOtp(email);
     }
-    startCountdown();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to resend code.';
   }
@@ -213,14 +190,6 @@ const goBack = async () => {
 
 onMounted(() => {
   focusIndex(0);
-  startCountdown();
-});
-
-onBeforeUnmount(() => {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
 });
 </script>
 

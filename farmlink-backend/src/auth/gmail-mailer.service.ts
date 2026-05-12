@@ -39,7 +39,7 @@ export class GmailMailerService {
                     To complete your account registration and secure your access, please verify your email address using the One-Time Password (OTP) below:
                 </p>
                 <div style="text-align:center;background:#f1f5ef;border-radius:12px;padding:14px;margin:16px 0;font-size:28px;letter-spacing:6px;font-weight:700;color:#1b4332;">${code}</div>
-                <p style="margin:0 0 8px;font-size:14px;color:#4b5a4b;">This code will expire in <strong>10 minutes</strong> for security reasons.</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#4b5a4b;">This code will expire in <strong>5 minutes</strong> for security reasons.</p>
                 <p style="margin:0 0 16px;font-size:14px;color:#6b726b;">If you did not request this verification, please ignore this email.</p>
                 <p style="margin:0 0 16px;font-size:14px;color:#4b5a4b;">Thank you for choosing <strong>Farmlink</strong> - connecting modern agriculture with smarter solutions.</p>
                 <p style="margin:0;font-size:14px;color:#4b5a4b;">Best regards,<br><strong>The Farmlink Team</strong><br>Modern Agriculture Solutions</p>
@@ -50,7 +50,7 @@ export class GmailMailerService {
                 from: `"FarmLink" <${from}>`,
                 to: email,
                 subject: 'Farmlink email verification',
-                text: `Dear User,\n\nWelcome to Farmlink!\n\nTo complete your account registration and secure your access, please verify your email address using the One-Time Password (OTP) below:\n\nYour Verification Code: ${code}\n\nThis code will expire in 10 minutes for security reasons.\n\nIf you did not request this verification, please ignore this email.\n\nThank you for choosing Farmlink - connecting modern agriculture with smarter solutions.\n\nBest regards,\nThe Farmlink Team\nModern Agriculture Solutions`,
+                text: `Dear User,\n\nWelcome to Farmlink!\n\nTo complete your account registration and secure your access, please verify your email address using the One-Time Password (OTP) below:\n\nYour Verification Code: ${code}\n\nThis code will expire in 5 minutes for security reasons.\n\nIf you did not request this verification, please ignore this email.\n\nThank you for choosing Farmlink - connecting modern agriculture with smarter solutions.\n\nBest regards,\nThe Farmlink Team\nModern Agriculture Solutions`,
                 html,
             });
             this.logger.log(`Sent OTP email to ${email} via Gmail`);

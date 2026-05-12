@@ -122,6 +122,8 @@ export class AuthService {
             throw new BadRequestException('Account is already verified');
         }
 
+        await this.assertResendAllowed(email, OtpPurpose.SIGNUP);
+
         const code = await this.createOtp(email, OtpPurpose.SIGNUP);
         await this.mailer.sendOtpEmail(email, code);
 
@@ -198,6 +200,8 @@ export class AuthService {
         if (user.status !== UserStatus.ACTIVE) {
             throw new BadRequestException('Account not verified');
         }
+
+        await this.assertResendAllowed(email, OtpPurpose.RESET_PASSWORD);
 
         const code = await this.createOtp(email, OtpPurpose.RESET_PASSWORD);
         await this.mailer.sendOtpEmail(email, code);
@@ -405,7 +409,7 @@ export class AuthService {
     }
 
     private async createOtp(email: string, purpose: OtpPurpose): Promise<string> {
-        const ttlMinutes = Number(this.config.get('OTP_TTL_MINUTES', 10));
+        const ttlMinutes = Number(this.config.get('OTP_TTL_MINUTES', 5));
         const maxAttempts = Number(this.config.get('OTP_MAX_ATTEMPTS', 5));
         const code = randomInt(0, 10 ** OTP_CODE_LENGTH).toString().padStart(OTP_CODE_LENGTH, '0');
         const codeHash = await bcrypt.hash(code, 10);
@@ -425,6 +429,19 @@ export class AuthService {
 
         await this.otps.save(otp);
         return code;
+    }
+
+    private async assertResendAllowed(email: string, purpose: OtpPurpose) {
+        const activeOtp = await this.otps.findOne({
+            where: { email, purpose, consumedAt: IsNull() },
+            order: { createdAt: 'DESC' },
+        });
+
+        if (activeOtp && activeOtp.expiresAt > new Date()) {
+            throw new BadRequestException(
+                'Verification code still valid. Please wait before requesting a new code.',
+            );
+        }
     }
 
     private async issueTokens(user: User) {
