@@ -1,6 +1,6 @@
 <template>
     <div class="p-10 space-y-6 bg-[#f7fdf4]">
-        <AdminHeader title="Order Management" />
+        <AdminProfileDropdown title="Order Management" />
 
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <template v-if="loadingStats">
