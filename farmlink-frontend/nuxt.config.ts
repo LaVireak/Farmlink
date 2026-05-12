@@ -4,6 +4,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   pages: true,
   ssr: false, 
+  runtimeConfig: {
+    public: {
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001',
+    },
+  },
   css: ['@/assets/css/main.css'],
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
   tailwindcss: {
@@ -11,6 +16,13 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      script: [
+        {
+          src: 'https://accounts.google.com/gsi/client',
+          async: true,
+          defer: true,
+        },
+      ],
       link: [
         {
           rel: 'stylesheet',
