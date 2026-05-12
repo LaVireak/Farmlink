@@ -1,348 +1,304 @@
-import {
-	BadRequestException,
-	Injectable,
-	InternalServerErrorException,
-	Logger,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHmac } from 'crypto';
-import { Repository } from 'typeorm';
-import { PaymentMethod, PaymentStatus } from '../common/enums/payment.enum';
+import { Repository, Between } from 'typeorm';
 import { Order } from './order.entity';
-
-type CreateDynamicQrInput = {
-	amount: number;
-	currency?: 'USD' | 'KHR';
-	orderId?: string;
-	lifetimeMinutes?: number;
-	firstName?: string;
-	lastName?: string;
-	email?: string;
-	phone?: string;
-};
-
-type PayWayStatusData = {
-	payment_status_code?: number;
-	payment_status?: string;
-	payment_amount?: number;
-	payment_currency?: string;
-	transaction_date?: string;
-};
+import { OrderItem } from './order-item.entity';
+import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
+import { Product } from '../products/product.entity';
 
 @Injectable()
 export class OrdersService {
-	private readonly logger = new Logger(OrdersService.name);
+  constructor(
+    @InjectRepository(Order)
+    private ordersRepository: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private orderItemsRepository: Repository<OrderItem>,
+    @InjectRepository(Product)
+    private productsRepository: Repository<Product>,
+  ) {}
 
-	constructor(
-		private readonly configService: ConfigService,
-		@InjectRepository(Order)
-		private readonly ordersRepository: Repository<Order>,
-	) {}
+  /**
+   * Get all orders with pagination and filtering
+   */
+  async getAllOrders(
+    page: number = 1,
+    limit: number = 10,
+    filters?: OrderFilterDto,
+  ): Promise<OrderPaginationDto> {
+    const skip = (page - 1) * limit;
 
-	async createDemoDynamicQr(input: CreateDynamicQrInput) {
-		// Demo endpoint: creates a temporary test order and generates QR
-		try {
-			// Create a demo order (without a real user)
-			const demoOrder = this.ordersRepository.create({
-				consumerId: 'demo-test-user-' + Date.now(),
-				orderNumber: 'DEMO-' + Date.now().toString().slice(-8),
-				status: 'pending' as any,
-				paymentMethod: 'aba_payway' as any,
-				paymentStatus: 'unpaid' as any,
-				subtotal: input.amount || 0.1,
-				deliveryFee: 0,
-				totalAmount: input.amount || 0.1,
-			});
-			const savedOrder = await this.ordersRepository.save(demoOrder);
-			
-			// Generate QR with the demo order ID
-			const qrInput = { ...input, orderId: savedOrder.id };
-			return this.createDynamicQr(qrInput);
-		} catch (error) {
-			this.logger.warn('Demo order creation failed, generating QR without order tracking');
-			return this.createDynamicQr(input);
-		}
-	}
+    const query = this.ordersRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.consumer', 'consumer')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('items.farmer', 'farmer');
 
-	async createDynamicQr(input: CreateDynamicQrInput) {
-		if (!input?.amount || Number(input.amount) <= 0) {
-			throw new BadRequestException('amount must be greater than 0');
-		}
+    if (filters?.status) {
+      query.andWhere('order.status = :status', { status: filters.status });
+    }
 
-		const config = this.getPayWayConfig();
-		const amount = Number(input.amount);
-		const currency = input.currency ?? 'USD';
-		const reqTime = this.getReqTime();
-		const tranId = this.generateTranId(input.orderId);
+    if (filters?.paymentStatus) {
+      query.andWhere('order.payment_status = :paymentStatus', { paymentStatus: filters.paymentStatus });
+    }
 
-		const firstName = input.firstName ?? '';
-		const lastName = input.lastName ?? '';
-		const email = input.email ?? '';
-		const phone = input.phone ?? '';
-		const purchaseType = 'purchase';
-		const paymentOption = 'abapay_khqr';
-		const items = '';
-		const callbackUrl = config.callbackUrl
-			? Buffer.from(config.callbackUrl).toString('base64')
-			: '';
-		const returnDeeplink = '';
-		const customFields = input.orderId
-			? Buffer.from(JSON.stringify({ orderId: input.orderId })).toString('base64')
-			: '';
-		const returnParams = '';
-		const payout = '';
-		const lifetime = this.normalizeLifetime(input.lifetimeMinutes);
-		const qrImageTemplate = config.qrImageTemplate;
+    if (filters?.consumerId) {
+      query.andWhere('order.consumer_id = :consumerId', { consumerId: filters.consumerId });
+    }
 
-		const hashInput =
-			reqTime +
-			config.merchantId +
-			tranId +
-			amount +
-			items +
-			firstName +
-			lastName +
-			email +
-			phone +
-			purchaseType +
-			paymentOption +
-			callbackUrl +
-			returnDeeplink +
-			currency +
-			customFields +
-			returnParams +
-			payout +
-			lifetime +
-			qrImageTemplate;
+    if (filters?.startDate && filters?.endDate) {
+      query.andWhere('order.created_at BETWEEN :startDate AND :endDate', {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
+    }
 
-		const hash = this.sign(hashInput, config.publicKey);
+    query.orderBy('order.created_at', 'DESC');
+    query.take(limit);
+    query.skip(skip);
 
-		const payload: Record<string, unknown> = {
-			req_time: reqTime,
-			merchant_id: config.merchantId,
-			tran_id: tranId,
-			amount,
-			currency,
-			payment_option: paymentOption,
-			purchase_type: purchaseType,
-			lifetime,
-			qr_image_template: qrImageTemplate,
-			hash,
-		};
+    const [orders, total] = await query.getManyAndCount();
 
-		if (firstName) payload.first_name = firstName;
-		if (lastName) payload.last_name = lastName;
-		if (email) payload.email = email;
-		if (phone) payload.phone = phone;
-		if (callbackUrl) payload.callback_url = callbackUrl;
-		if (customFields) payload.custom_fields = customFields;
+    return {
+      data: orders.map((order) => this.mapToDto(order)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
-		const response = await fetch(config.qrApiUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(payload),
-		});
+  /**
+   * Get orders by consumer ID
+   */
+  async getOrdersByConsumerId(
+    consumerId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<OrderPaginationDto> {
+    if (!consumerId) {
+      throw new BadRequestException('Consumer ID is required');
+    }
 
-		const data = (await response.json()) as Record<string, any>;
-		const statusCode = data?.status?.code;
+    const filters: OrderFilterDto = { consumerId };
+    return this.getAllOrders(page, limit, filters);
+  }
 
-		if (!response.ok || statusCode !== '0') {
-			this.logger.error(`PayWay QR create failed: ${JSON.stringify(data)}`);
-			throw new InternalServerErrorException(
-				data?.status?.message || 'Unable to create PayWay dynamic QR',
-			);
-		}
+  /**
+   * Get a single order by ID
+   */
+  async getOrderById(id: string): Promise<OrderResponseDto> {
+    const order = await this.ordersRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.consumer', 'consumer')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('items.farmer', 'farmer')
+      .where('order.id = :id', { id })
+      .getOne();
 
-		await this.upsertOrderPaymentReference(input.orderId, tranId);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
 
-		return {
-			tranId,
-			qrString: data.qrString,
-			qrImage: data.qrImage,
-			abapayDeeplink: data.abapay_deeplink,
-			amount: data.amount,
-			currency: data.currency,
-			expiresAt: new Date(Date.now() + lifetime * 60 * 1000).toISOString(),
-		};
-	}
+    return this.mapToDto(order);
+  }
 
-	async checkPaymentStatus(tranId: string) {
-		if (!tranId) {
-			throw new BadRequestException('tranId is required');
-		}
+  /**
+   * Create a new order
+   */
+  async createOrder(createOrderDto: CreateOrderDto): Promise<OrderResponseDto> {
+    if (!createOrderDto.items || createOrderDto.items.length === 0) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
 
-		const config = this.getPayWayConfig();
-		const reqTime = this.getReqTime();
-		const hashInput = reqTime + config.merchantId + tranId;
-		const hash = this.sign(hashInput, config.publicKey);
+    // Calculate totals
+    let subtotal = 0;
+    for (const item of createOrderDto.items) {
+      subtotal += item.unitPrice * item.quantity;
+    }
 
-		const response = await fetch(config.checkTransactionUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				req_time: reqTime,
-				merchant_id: config.merchantId,
-				tran_id: tranId,
-				hash,
-			}),
-		});
+    const deliveryFee = createOrderDto.deliveryLat && createOrderDto.deliveryLng ? 5.0 : 0;
+    const totalAmount = subtotal + deliveryFee;
 
-		const data = (await response.json()) as {
-			data?: PayWayStatusData;
-			status?: { code?: string; message?: string };
-		};
+    // Generate order number
+    const orderNumber = this.generateOrderNumber();
 
-		const providerStatusCode = Number(data?.data?.payment_status_code ?? -1);
-		const mappedStatus = this.mapPayWayStatus(providerStatusCode, data?.data?.payment_status);
+    // Create order
+    const order = this.ordersRepository.create({
+      consumerId: createOrderDto.consumerId,
+      orderNumber,
+      paymentMethod: createOrderDto.paymentMethod,
+      deliveryAddress: createOrderDto.deliveryAddress,
+      deliveryLat: createOrderDto.deliveryLat,
+      deliveryLng: createOrderDto.deliveryLng,
+      note: createOrderDto.note,
+      subtotal,
+      deliveryFee,
+      totalAmount,
+    });
 
-		if (mappedStatus === PaymentStatus.PAID) {
-			await this.markOrderPaidByReference(tranId);
-		}
+    const savedOrder = await this.ordersRepository.save(order);
 
-		return {
-			tranId,
-			paymentStatus: mappedStatus,
-			providerStatusCode,
-			providerStatus: data?.data?.payment_status ?? data?.status?.message ?? 'UNKNOWN',
-			paymentAmount: data?.data?.payment_amount,
-			paymentCurrency: data?.data?.payment_currency,
-			transactionDate: data?.data?.transaction_date,
-			raw: data,
-		};
-	}
+    // Create order items
+    const items = createOrderDto.items.map((item) =>
+      this.orderItemsRepository.create({
+        orderId: savedOrder.id,
+        productId: item.productId,
+        farmerId: item.farmerId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.unitPrice * item.quantity,
+      }),
+    );
 
-	async handlePayWayWebhook(payload: Record<string, unknown>) {
-		const transactionId =
-			this.toString(payload.transaction_id) || this.toString(payload.merchant_ref);
+    await this.orderItemsRepository.save(items);
 
-		const paymentStatusCode = Number(payload.payment_status_code ?? -1);
-		const paymentStatus = this.toString(payload.payment_status);
+    // Fetch and return complete order
+    return this.getOrderById(savedOrder.id);
+  }
 
-		const mappedStatus = this.mapPayWayStatus(paymentStatusCode, paymentStatus);
+  /**
+   * Update order status
+   */
+  async updateOrderStatus(orderId: string, status: string): Promise<OrderResponseDto> {
+    const order = await this.ordersRepository.findOne({ where: { id: orderId } });
 
-		if (transactionId && mappedStatus === PaymentStatus.PAID) {
-			await this.markOrderPaidByReference(transactionId);
-		}
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
 
-		return {
-			accepted: true,
-			transactionId,
-			paymentStatus: mappedStatus,
-		};
-	}
+    order.status = status as any;
 
-	private getPayWayConfig() {
-		const merchantId = this.configService.get<string>('PAYWAY_MERCHANT_ID');
-		const publicKey = this.configService.get<string>('PAYWAY_PUBLIC_KEY');
+    if (status === 'CONFIRMED') {
+      order.confirmedAt = new Date();
+    } else if (status === 'DELIVERED') {
+      order.deliveredAt = new Date();
+    } else if (status === 'CANCELLED') {
+      order.cancelledAt = new Date();
+    }
 
-		if (!merchantId || !publicKey) {
-			throw new InternalServerErrorException(
-				'Missing PAYWAY_MERCHANT_ID or PAYWAY_PUBLIC_KEY configuration',
-			);
-		}
+    await this.ordersRepository.save(order);
+    return this.getOrderById(orderId);
+  }
 
-		return {
-			merchantId,
-			publicKey,
-			qrApiUrl:
-				this.configService.get<string>('PAYWAY_QR_API_URL') ||
-				'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/generate-qr',
-			checkTransactionUrl:
-				this.configService.get<string>('PAYWAY_CHECK_TRANSACTION_URL') ||
-				'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2',
-			callbackUrl: this.configService.get<string>('PAYWAY_CALLBACK_URL') || '',
-			qrImageTemplate:
-				this.configService.get<string>('PAYWAY_QR_IMAGE_TEMPLATE') || 'template3_color',
-		};
-	}
+  /**
+   * Cancel order
+   */
+  async cancelOrder(orderId: string, reason?: string): Promise<OrderResponseDto> {
+    const order = await this.ordersRepository.findOne({ where: { id: orderId } });
 
-	private getReqTime() {
-		const d = new Date();
-		const year = d.getUTCFullYear();
-		const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-		const day = String(d.getUTCDate()).padStart(2, '0');
-		const hour = String(d.getUTCHours()).padStart(2, '0');
-		const minute = String(d.getUTCMinutes()).padStart(2, '0');
-		const second = String(d.getUTCSeconds()).padStart(2, '0');
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
 
-		return `${year}${month}${day}${hour}${minute}${second}`;
-	}
+    if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
+      throw new BadRequestException(`Cannot cancel order with status ${order.status}`);
+    }
 
-	private normalizeLifetime(value?: number) {
-		const defaultMinutes = 15;
-		const min = 3;
-		const max = 172800;
+    order.status = 'CANCELLED' as any;
+    order.cancelledAt = new Date();
+    order.disputeReason = reason;
 
-		if (!value) return defaultMinutes;
-		if (value < min) return min;
-		if (value > max) return max;
+    await this.ordersRepository.save(order);
+    return this.getOrderById(orderId);
+  }
 
-		return Math.floor(value);
-	}
+  /**
+   * Get order statistics
+   */
+  async getOrderStats(): Promise<OrderStatsDto> {
+    const totalOrders = await this.ordersRepository.count();
+    const totalRevenue = await this.ordersRepository
+      .createQueryBuilder('order')
+      .select('SUM(order.total_amount)', 'sum')
+      .where('order.payment_status = :status', { status: 'PAID' })
+      .getRawOne();
 
-	private generateTranId(orderId?: string) {
-		const timestamp = Date.now().toString().slice(-10);
-		const orderPart = (orderId || '').replace(/-/g, '').slice(0, 8);
-		const seed = `${orderPart}${timestamp}`;
-		return (seed || timestamp).slice(0, 20);
-	}
+    const pendingOrders = await this.ordersRepository.count({
+      where: { status: 'PENDING' as any },
+    });
 
-	private sign(input: string, key: string) {
-		return createHmac('sha512', key).update(input).digest('base64');
-	}
+    const completedOrders = await this.ordersRepository.count({
+      where: { status: 'DELIVERED' as any },
+    });
 
-	private mapPayWayStatus(code: number, status?: string) {
-		const upperStatus = (status || '').toUpperCase();
+    const cancelledOrders = await this.ordersRepository.count({
+      where: { status: 'CANCELLED' as any },
+    });
 
-		if (code === 0 || upperStatus === 'APPROVED' || upperStatus === 'PRE-AUTH') {
-			return PaymentStatus.PAID;
-		}
+    const avgOrderValue = totalOrders > 0 ? (parseFloat(totalRevenue?.sum || 0) / totalOrders) : 0;
 
-		if (code === 4 || upperStatus === 'REFUNDED') {
-			return PaymentStatus.REFUNDED;
-		}
+    return {
+      totalOrders,
+      totalRevenue: parseFloat(totalRevenue?.sum || 0),
+      pendingOrders,
+      completedOrders,
+      cancelledOrders,
+      averageOrderValue: avgOrderValue,
+    };
+  }
 
-		if (code === 2 || upperStatus === 'PENDING') {
-			return PaymentStatus.UNPAID;
-		}
+  /**
+   * Map Order entity to DTO
+   */
+  private mapToDto(order: Order): OrderResponseDto {
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      paymentRef: order.paymentRef,
+      subtotal: parseFloat(order.subtotal.toString()),
+      deliveryFee: parseFloat(order.deliveryFee.toString()),
+      totalAmount: parseFloat(order.totalAmount.toString()),
+      deliveryAddress: order.deliveryAddress,
+      deliveryLat: order.deliveryLat ? parseFloat(order.deliveryLat.toString()) : null,
+      deliveryLng: order.deliveryLng ? parseFloat(order.deliveryLng.toString()) : null,
+      note: order.note,
+      disputeReason: order.disputeReason,
+      confirmedAt: order.confirmedAt,
+      deliveredAt: order.deliveredAt,
+      cancelledAt: order.cancelledAt,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      consumerId: order.consumerId,
+      consumer: order.consumer ? {
+        id: order.consumer.id,
+        email: order.consumer.email,
+        firstName: (order.consumer as any).firstName,
+        lastName: (order.consumer as any).lastName,
+      } : null,
+      items: order.items?.map((item) => ({
+        id: item.id,
+        productId: item.productId,
+        farmerId: item.farmerId,
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.unitPrice.toString()),
+        subtotal: parseFloat(item.subtotal.toString()),
+        farmerStatus: item.farmerStatus,
+        product: item.product ? {
+          id: item.product.id,
+          nameEn: item.product.nameEn,
+          unit: item.product.unit,
+          thumbnailUrl: item.product.thumbnailUrl,
+        } : null,
+        farmer: item.farmer ? {
+          id: item.farmer.id,
+          farmName: item.farmer.farmName,
+        } : null,
+      })),
+    };
+  }
 
-		if (code === 3 || code === 7 || upperStatus === 'DECLINED' || upperStatus === 'CANCELLED') {
-			return PaymentStatus.FAILED;
-		}
-
-		return PaymentStatus.UNPAID;
-	}
-
-	private async upsertOrderPaymentReference(orderId: string | undefined, tranId: string) {
-		if (!orderId) return;
-
-		const order = await this.ordersRepository.findOne({ where: { id: orderId } });
-		if (!order) return;
-
-		order.paymentMethod = PaymentMethod.ABA_PAYWAY;
-		order.paymentRef = tranId;
-		order.paymentStatus = PaymentStatus.UNPAID;
-		await this.ordersRepository.save(order);
-	}
-
-	private async markOrderPaidByReference(paymentRef: string) {
-		const order = await this.ordersRepository.findOne({ where: { paymentRef } });
-		if (!order) return;
-
-		if (order.paymentStatus !== PaymentStatus.PAID) {
-			order.paymentStatus = PaymentStatus.PAID;
-			await this.ordersRepository.save(order);
-		}
-	}
-
-	private toString(value: unknown) {
-		if (typeof value === 'string') return value;
-		if (typeof value === 'number') return String(value);
-		return '';
-	}
+  /**
+   * Generate unique order number
+   */
+  private generateOrderNumber(): string {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    return `ORD-${timestamp}-${random}`;
+  }
 }
+
