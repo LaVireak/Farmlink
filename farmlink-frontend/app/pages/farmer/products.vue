@@ -3,40 +3,14 @@
     <FarmerSideBar />
 
     <!-- Main content area -->
-    <div class="main-wrapper">
-
-      <!-- Top bar -->
-      <header class="bg-white border-b border-gray-100 px-8 py-3 flex items-center gap-4 sticky top-0 z-10">
-      <div class="flex-1 relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-        </svg>
-        <input
-          type="text"
-          placeholder="Search inventory..."
-          class="w-80 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition"
-        />
-      </div>
-      <button class="relative p-2 text-gray-500 hover:text-gray-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-        </svg>
-      </button>
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-green-700">Sokha Farmer</span>
-        <div class="w-8 h-8 rounded-full bg-amber-200 overflow-hidden">
-          <img src="https://i.pravatar.cc/32?img=12" alt="Avatar" class="w-full h-full object-cover" />
-        </div>
-      </div>
-    </header>
 
     <!-- Page Body -->
     <main class="px-8 py-8">
+      <FarmerHeader title="Product Management" />
       <!-- Page Header -->
       <div class="flex items-start justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Farmer Dashboard - Phum Garden</h1>
-          <p class="text-gray-500 text-sm mt-1.5 max-w-lg">
+          <p class="text-gray-700 text-lg font-semibold mt-1.5 max-w-[600px] italic">
             Manage your fresh Cambodian harvest, track stock levels, and monitor listing status for your local produce.
           </p>
         </div>
@@ -292,7 +266,6 @@
       </div>
     </main>
     </div>
-  </div>
 </template>
 
 <script setup>
