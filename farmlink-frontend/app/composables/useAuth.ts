@@ -1,6 +1,7 @@
 import { computed } from 'vue';
-import type { SignInPayload, SignUpPayload } from '../types/auth.type';
+import type { FarmerOnboardingPayload, SignInPayload, SignUpPayload } from '../types/auth.type';
 import { useAuthStore } from '../stores/auth.store';
+import { authService } from '../services/auth.service';
 
 export const useAuth = () => {
   const auth = useAuthStore();
@@ -8,7 +9,15 @@ export const useAuth = () => {
   const ensureHydrated = () => auth.hydrate();
 
   const signIn = (payload: SignInPayload) => auth.signIn(payload);
-  const signUp = (payload: SignUpPayload) => auth.signUp(payload);
+  const signInWithGoogle = (idToken: string) => auth.signInWithGoogle(idToken);
+  const requestSignupOtp = (payload: SignUpPayload) => auth.requestSignupOtp(payload);
+  const verifySignupOtp = (email: string, code: string) => auth.verifySignupOtp(email, code);
+  const resendSignupOtp = (email: string) => auth.resendSignupOtp(email);
+  const requestPasswordResetOtp = (email: string) => authService.requestPasswordResetOtp(email);
+  const resendPasswordResetOtp = (email: string) => authService.resendPasswordResetOtp(email);
+  const verifyPasswordResetOtp = (email: string, code: string) => authService.verifyPasswordResetOtp({ email, code });
+  const resetPassword = (token: string, password: string) => authService.resetPassword(token, password);
+  const submitFarmerOnboarding = (payload: FarmerOnboardingPayload) => authService.submitFarmerOnboarding(payload);
 
   const signOut = async () => {
     auth.signOut();
@@ -19,7 +28,15 @@ export const useAuth = () => {
     isAuthenticated: computed(() => auth.isAuthenticated),
     ensureHydrated,
     signIn,
-    signUp,
+    signInWithGoogle,
+    requestSignupOtp,
+    verifySignupOtp,
+    resendSignupOtp,
+    requestPasswordResetOtp,
+    resendPasswordResetOtp,
+    verifyPasswordResetOtp,
+    resetPassword,
+    submitFarmerOnboarding,
     signOut,
     getPostSignInRoute: auth.getPostSignInRoute,
   };

@@ -16,6 +16,13 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      script: [
+        {
+          src: 'https://accounts.google.com/gsi/client',
+          async: true,
+          defer: true,
+        },
+      ],
       link: [
         {
           rel: 'stylesheet',
