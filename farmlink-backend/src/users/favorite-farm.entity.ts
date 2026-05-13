@@ -1,18 +1,19 @@
 import {
   Entity,
+  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../users/user.entity';
 import { FarmerProfile } from '../farmers/farmer.entity';
 
 @Entity('favorite_farms')
 @Unique(['consumerId', 'farmerId'])
 export class FavoriteFarm {
-  @ManyToOne(() => User, (user) => user.favoriteFarms, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'consumer_id' })
   consumer: User;
 

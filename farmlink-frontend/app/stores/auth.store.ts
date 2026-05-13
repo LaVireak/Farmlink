@@ -6,6 +6,7 @@ import { authService } from '../services/auth.service';
 const SESSION_KEY = 'farmlink.auth.session';
 export const useAuthStore = defineStore('auth', () => {
     const accessToken = ref<string | null>(null);
+    const refreshToken = ref<string | null>(null);
     const user = ref<AuthUser | null>(null);
     const hydrated = ref(false);
 
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const applySession = (result: SignInResult) => {
         accessToken.value = result.accessToken;
+        refreshToken.value = result.refreshToken;
         user.value = result.user;
         persist();
     };
@@ -26,13 +28,14 @@ export const useAuthStore = defineStore('auth', () => {
     const persist = () => {
         if ( typeof window === 'undefined') return;
 
-        if (!accessToken.value || !user.value) {
+        if (!accessToken.value || !refreshToken.value || !user.value) {
             localStorage.removeItem(SESSION_KEY);
             return;
         } 
 
         localStorage.setItem(SESSION_KEY, JSON.stringify({
             accessToken: accessToken.value,
+            refreshToken: refreshToken.value,
             user: user.value,
         }),
      );
@@ -49,8 +52,9 @@ export const useAuthStore = defineStore('auth', () => {
 
         try {
             const parsed = JSON.parse(raw!);
-            if (parsed.accessToken && parsed?.user?.id && parsed?.user?.email && parsed?.user?.role) {
+            if (parsed.accessToken && parsed.refreshToken && parsed?.user?.id && parsed?.user?.email && parsed?.user?.role) {
                 accessToken.value = parsed.accessToken;
+                refreshToken.value = parsed.refreshToken;
                 user.value = parsed.user;
             } 
         } catch {
@@ -62,38 +66,52 @@ export const useAuthStore = defineStore('auth', () => {
 
     const signIn = async (payload : SignInPayload) => {
         const result = await authService.signin(payload);
-
-        if(payload.expectedRole && result.user.role !== payload.expectedRole) {
-            throw new Error(`This account is not a ${payload.expectedRole}.`);
-        }
-        
         applySession(result);
 
         return result;
     };
 
-    const signUp = async (payload: SignUpPayload) => {
-        const result = await authService.signup(payload);
+    const signInWithGoogle = async (idToken: string) => {
+        const result = await authService.googleSignIn(idToken);
         applySession(result);
-
         return result;
+    };
+
+    const requestSignupOtp = async (payload: SignUpPayload) => {
+        await authService.requestSignupOtp(payload);
+        return { email: payload.email };
+    };
+
+    const verifySignupOtp = async (email: string, code: string) => {
+        const result = await authService.verifySignupOtp({ email, code });
+        applySession(result);
+        return result;
+    };
+
+    const resendSignupOtp = async (email: string) => {
+        return authService.resendSignupOtp(email);
     };
 
     const signOut = () => {
         accessToken.value = null;
+        refreshToken.value = null;
         user.value = null;
         persist();
     };
 
     return {
         accessToken,
+        refreshToken,
         user,
         isAuthenticated,
         getPostSignInRoute,
         hydrate,
         hydrated,
         signIn,
-        signUp,
+        signInWithGoogle,
+        requestSignupOtp,
+        verifySignupOtp,
+        resendSignupOtp,
         signOut,
     };
 });

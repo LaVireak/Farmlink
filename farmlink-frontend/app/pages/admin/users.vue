@@ -1,6 +1,6 @@
 <template>
     <div class="p-10 space-y-6 bg-[#f7fdf4]">
-        <AdminHeader title="User Management" />
+        <AdminProfileDropdown title="User Management" />
 
         <div class="flex items-center justify-end">
             <div class="flex items-center gap-2">

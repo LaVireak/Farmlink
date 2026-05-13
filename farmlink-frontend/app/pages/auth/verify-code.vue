@@ -15,7 +15,7 @@
 
         <div class="form-wrap">
           <h1>Enter<br>Verification<br>Code</h1>
-          <p class="copy">We have sent a 6-digit code to your email</p>
+          <p class="copy">We have sent a 5-digit code to your email</p>
           <p class="email">{{ emailText }}</p>
 
           <div class="code-grid">
@@ -33,13 +33,17 @@
             >
           </div>
 
-          <button type="button" class="verify-btn" :disabled="!isCodeComplete" @click="verifyCode">
-            Verify Code
+          <p v-if="errorMessage" class="error-text">
+            {{ errorMessage }}
+          </p>
+
+          <button type="button" class="verify-btn" :disabled="!isCodeComplete || loading" @click="verifyCode">
+            {{ loading ? 'Verifying...' : 'Verify Code' }}
           </button>
 
-          <p class="resend-copy">Didn't receive the email?</p>
-          <button type="button" class="resend-btn" :disabled="countdown > 0" @click="resendCode">
-            {{ countdown > 0 ? `Resend code in 0:${countdownText}` : 'Resend code now' }}
+          <p class="resend-copy">Didn't receive code?</p>
+          <button type="button" class="resend-btn" :disabled="loading" @click="resendCode">
+            Resend code
           </button>
 
           <div class="status-pill">● SECURE RECOVERY ACTIVE</div>
@@ -50,24 +54,35 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuth } from '../../composables/useAuth';
+import type { FarmerOnboardingPayload } from '../../types/auth.type';
 
 const route = useRoute();
 const router = useRouter();
+const {
+  verifySignupOtp,
+  resendSignupOtp,
+  verifyPasswordResetOtp,
+  resendPasswordResetOtp,
+  getPostSignInRoute,
+  submitFarmerOnboarding,
+} = useAuth();
+const FARMER_ONBOARDING_KEY = 'farmlink.farmer.onboarding';
 
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
 const inputRefs = ref<Array<HTMLInputElement | null>>([]);
-const countdown = ref(59);
-let timer: ReturnType<typeof setInterval> | null = null;
+const loading = ref(false);
+const errorMessage = ref('');
 
 const emailText = computed(() => {
   const email = typeof route.query.email === 'string' ? route.query.email : '';
   return email || 'keat.farmer@example.com';
 });
 
-const countdownText = computed(() => countdown.value.toString().padStart(2, '0'));
 const isCodeComplete = computed(() => codeDigits.value.every((digit) => /^[0-9]$/.test(digit)));
+const isResetMode = computed(() => route.query.mode === 'reset');
 
 const setInputRef = (el: Element | { $el?: Element } | null, idx: number) => {
   if (!el) {
@@ -109,32 +124,64 @@ const onBackspace = (idx: number, event: KeyboardEvent) => {
   }
 };
 
-const startCountdown = () => {
-  if (timer) {
-    clearInterval(timer);
+const resendCode = async () => {
+  errorMessage.value = '';
+  const email = typeof route.query.email === 'string' ? route.query.email : '';
+  if (!email) {
+    errorMessage.value = 'Missing email address.';
+    return;
   }
 
-  countdown.value = 59;
-  timer = setInterval(() => {
-    if (countdown.value <= 0) {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-      return;
+  try {
+    if (isResetMode.value) {
+      await resendPasswordResetOtp(email);
+    } else {
+      await resendSignupOtp(email);
     }
-
-    countdown.value -= 1;
-  }, 1000);
-};
-
-const resendCode = () => {
-  startCountdown();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Unable to resend code.';
+  }
 };
 
 const verifyCode = async () => {
-  // TODO: call backend endpoint to validate code, then route with secure reset token.
-  await router.push('/auth/reset-password');
+  errorMessage.value = '';
+  const email = typeof route.query.email === 'string' ? route.query.email : '';
+  if (!email) {
+    errorMessage.value = 'Missing email address.';
+    return;
+  }
+
+  if (!isCodeComplete.value) {
+    errorMessage.value = 'Please enter the full code.';
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    const code = codeDigits.value.join('');
+    if (isResetMode.value) {
+      const result = await verifyPasswordResetOtp(email, code);
+      await router.push(`/auth/reset-password?token=${encodeURIComponent(result.resetToken)}`);
+    } else {
+      const result = await verifySignupOtp(email, code);
+
+      if (result.user.role === 'farmer') {
+        const raw = sessionStorage.getItem(FARMER_ONBOARDING_KEY);
+        if (raw) {
+          const payload = JSON.parse(raw) as FarmerOnboardingPayload;
+          await submitFarmerOnboarding(payload);
+          sessionStorage.removeItem(FARMER_ONBOARDING_KEY);
+        }
+      }
+
+      await router.push(getPostSignInRoute(result.user.role));
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Verification failed.';
+  } finally {
+    loading.value = false;
+  }
 };
 
 const goBack = async () => {
@@ -143,14 +190,6 @@ const goBack = async () => {
 
 onMounted(() => {
   focusIndex(0);
-  startCountdown();
-});
-
-onBeforeUnmount(() => {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
 });
 </script>
 
@@ -203,7 +242,7 @@ onBeforeUnmount(() => {
 
 .lock-badge {
   position: absolute;
-  right: -16px;
+  right: -16px; 
   bottom: -12px;
   width: 84px;
   height: 84px;
@@ -273,6 +312,12 @@ onBeforeUnmount(() => {
 .verify-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.error-text {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 14px;
 }
 
 .resend-copy {

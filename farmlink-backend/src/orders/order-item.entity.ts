@@ -7,14 +7,14 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 @Entity('order_items')
 export class OrderItem {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id?: string;
 
   @ManyToOne(() => Order, order => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order?: Order;
 
   @Column({ name: 'order_id' })
-  orderId: string;
+  orderId?: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })

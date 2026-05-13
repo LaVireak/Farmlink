@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-[#f7fdf4] flex font-sans text-slate-900">
     <main class="flex-1 p-10">
-      <AdminHeader/>
+      <AdminProfileDropdown/>
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-9 bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-50">
           <h2 class="text-2xl font-black text-[#15803d] mb-10">Appearance</h2>

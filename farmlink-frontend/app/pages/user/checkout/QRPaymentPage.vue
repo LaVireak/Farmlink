@@ -32,18 +32,39 @@
           </p>
 
           <div class="flex flex-col items-center justify-center mb-12">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-6">
+            <div class="bg-gradient-to-br from-white to-[#f0f7e9] p-10 rounded-[2.5rem] shadow-lg border-2 border-[#0a4d1e]/10 mb-6 flex items-center justify-center">
+              <div v-if="isLoading" class="w-[380px] h-[380px] flex items-center justify-center text-sm text-gray-400 font-semibold">
+                Generating QR...
+              </div>
+              <img
+                v-else-if="qrImageSrc"
+                :src="qrImageSrc"
+                alt="Dynamic payment QR"
+                class="w-[380px] h-[380px] object-contain"
+              />
               <qrcode-vue 
+                v-else-if="qrValue"
                 :value="qrValue" 
-                :size="220" 
+                :size="380" 
                 level="H" 
                 render-as="svg"
                 foreground="#0a4d1e"
               />
+              <div v-else class="w-[380px] h-[380px] flex items-center justify-center text-sm text-red-500 font-semibold text-center px-4">
+                No QR data received yet.
+              </div>
             </div>
             <div class="text-center">
-              <p class="text-[#0a4d1e] font-bold text-lg mb-1">Farm Link Merchant ID: FL-2024-X9</p>
-              <p class="text-gray-400 text-sm font-medium">Expires in {{ formattedTime }}</p>
+              <p class="text-[#0a4d1e] font-bold text-lg mb-1">Dynamic Bakong QR</p>
+              <p class="text-gray-400 text-sm font-medium">
+                <span v-if="isLoading">Generating QR...</span>
+                <span v-else-if="error" class="text-red-600 font-semibold">{{ error }}</span>
+                <span v-else-if="paymentStatus === 'paid'" class="text-green-700 font-bold">Payment confirmed</span>
+                <span v-else-if="isExpired" class="text-red-600 font-semibold">QR expired. Please regenerate.</span>
+                <span v-else>Expires in {{ formattedTime }}</span>
+              </p>
+              <p v-if="tranId" class="text-xs text-gray-400 mt-2">Tran ID: {{ tranId }}</p>
+              <p v-if="error" class="text-sm text-red-600 mt-2">{{ error }}</p>
             </div>
           </div>
 
@@ -61,14 +82,28 @@
           </div>
 
           <div class="space-y-4 max-w-md">
-            <button class="w-full bg-[#0a4d1e] text-white py-4 rounded-2xl font-bold hover:bg-[#083d18] transition-all shadow-md active:scale-[0.98]">
-              I Have Paid
+            <button
+              class="w-full bg-[#0a4d1e] text-white py-4 rounded-2xl font-bold hover:bg-[#083d18] transition-all shadow-md active:scale-[0.98]"
+              @click="checkStatus"
+              :disabled="isLoading || !tranId"
+            >
+              Check Payment Status
             </button>
-            <button class="w-full bg-white border-2 border-[#0a4d1e] text-[#0a4d1e] py-4 rounded-2xl font-bold hover:bg-[#f7fdf4] transition-all flex items-center justify-center gap-2">
+            <button
+              class="w-full bg-white border-2 border-[#0a4d1e] text-[#0a4d1e] py-4 rounded-2xl font-bold hover:bg-[#f7fdf4] transition-all flex items-center justify-center gap-2"
+              @click="openAbaApp"
+              :disabled="isLoading"
+            >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              Upload payment screenshot
+              Open ABA App
+            </button>
+            <button
+              class="w-full text-[#0a4d1e] font-bold text-sm pt-2"
+              @click="createDynamicQr"
+            >
+              Regenerate Dynamic QR
             </button>
             <button class="w-full text-gray-500 font-bold text-sm pt-2">
               ← Back to Payment Method
@@ -102,15 +137,15 @@
             <div class="space-y-3 pt-6 border-t border-gray-100">
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Subtotal</span>
-                <span>$17.00</span>
+                <span>Test payment</span>
               </div>
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Delivery Fee</span>
-                <span>$4.00</span>
+                <span>$0.00</span>
               </div>
               <div class="flex justify-between items-end pt-4">
                 <span class="text-lg font-bold text-[#0a4d1e]">Total Price</span>
-                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">$21.00</span>
+                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">${{ testAmount.toFixed(2) }}</span>
               </div>
             </div>
 
@@ -129,10 +164,34 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { onMounted } from 'vue'
 import { useQR } from '@/composables/useQR'
 import QrcodeVue from 'qrcode.vue'
-const { qrValue, formattedTime, steps, orderItems } = useQR();
+
+const {
+  testAmount,
+  qrValue,
+  qrImage,
+  qrImageSrc,
+  tranId,
+  formattedTime,
+  steps,
+  orderItems,
+  isLoading,
+  error,
+  paymentStatus,
+  isExpired,
+  createDynamicQr,
+  checkStatus,
+  openAbaApp,
+} = useQR();
+
+onMounted(() => {
+  if (!tranId.value && !isLoading.value) {
+    createDynamicQr();
+  }
+})
 </script>
 
 <style scoped>
