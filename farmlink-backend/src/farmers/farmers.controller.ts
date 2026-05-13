@@ -4,10 +4,10 @@ import { FarmersService } from './farmers.service';
 
 @Controller('farmers')
 export class FarmersController {
-	constructor(private readonly farmersService: FarmersService) {}
+  constructor(private readonly farmersService: FarmersService) {}
 
-	@Post('onboarding')
-	submitOnboarding(@Body() dto: CreateFarmerOnboardingDto) {
-		return this.farmersService.submitOnboarding(dto);
-	}
+  @Post('onboarding')
+  submitOnboarding(@Body() dto: CreateFarmerOnboardingDto) {
+    return this.farmersService.submitOnboarding(dto);
+  }
 }

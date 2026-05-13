@@ -16,7 +16,7 @@ import { ProductImage } from './product-image.entity';
 @Entity('products')
 export class Product {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => FarmerProfile, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'farmer_id' })
@@ -65,7 +65,11 @@ export class Product {
   @Column({ name: 'is_organic', default: false })
   isOrganic: boolean;
 
-  @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.PENDING_REVIEW })
+  @Column({
+    type: 'enum',
+    enum: ProductStatus,
+    default: ProductStatus.PENDING_REVIEW,
+  })
   status: ProductStatus;
 
   @Column({ name: 'thumbnail_url', length: 500, nullable: true })
@@ -74,7 +78,13 @@ export class Product {
   @Column({ name: 'total_sold', default: 0 })
   totalSold: number;
 
-  @Column({ name: 'avg_rating', type: 'decimal', precision: 3, scale: 2, nullable: true })
+  @Column({
+    name: 'avg_rating',
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+    nullable: true,
+  })
   avgRating: number;
 
   @OneToMany(() => ProductImage, (image) => image.product)
