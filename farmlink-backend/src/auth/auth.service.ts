@@ -16,7 +16,7 @@ import { UserStatus } from '../common/enums/user-status.enum';
 import { User } from '../users/user.entity';
 import { EmailOtp, OtpPurpose } from './email-otp.entity';
 import { RefreshToken } from './refresh-token.entity';
-import { RequestSignupOtpDto } from './dto/request-signup-otp.dto';
+import { SignupDto } from './dto/signup.dto';
 import { ResendSignupOtpDto } from './dto/resend-signup-otp.dto';
 import { SignInDto } from './dto/signin.dto';
 import { VerifySignupOtpDto } from './dto/verify-signup-otp.dto';
@@ -76,7 +76,7 @@ export class AuthService {
         private readonly config: ConfigService
     ) {}
 
-    async requestSignupOtp(dto: RequestSignupOtpDto) {
+    async requestSignupOtp(dto: SignupDto) {
         const email = normalizeEmail(dto.email);
         const existing = await this.users.findOne({ where: { email } });
 
