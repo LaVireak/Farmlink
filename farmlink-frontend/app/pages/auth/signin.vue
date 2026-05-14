@@ -17,35 +17,11 @@
              <!-- RIGHT FORM -->
             <div class="p-8 md:p-10 flex flex-col justify-center">
                 <span class="bg-emerald-700 text-white text-xs px-3 py-1 rounded-full w-fit mb-4">
-                    MEMBER PORTAL
+                    Login to Your Account
                 </span>
 
                 <h1 class="text-3xl font-serif text-slate-900">Welcome Back</h1>
                 <p class="text-sm text-slate-600 mb-6">Looking for some fresh vegetable</p>
-                <!-- ROLE SWITCH -->
-                 <div class="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
-                    <button
-                    type="button"
-                    class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                    :class="selectedRole === 'customer'
-                    ? 'bg-white text-emerald-700 shadow-sm'
-                    : 'text-slate-600'"
-                    @click="selectedRole = 'customer'"
-                >
-                    User
-                </button>
-
-                <button
-                    type="button"
-                    class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                    :class="selectedRole === 'farmer'
-                    ? 'bg-white text-emerald-700 shadow-sm'
-                    : 'text-slate-600'"
-                    @click="selectedRole = 'farmer'"
-                >
-                    Farmer
-                </button>
-                </div>
                 <!-- FORM -->
                 <form class="space-y-4" @submit.prevent="onSubmit">
                 <div>
@@ -62,11 +38,6 @@
                 <div>
                     <div class="flex justify-between text-xs text-slate-500">
                     <label>PASSWORD</label>
-
-					<NuxtLink to="/auth/forgot-password" class="text-emerald-700 font-semibold">
-					Forgot Password?
-					</NuxtLink>
-				    
                     </div>
                     <input
                     v-model="form.password"
@@ -77,10 +48,15 @@
                     />
                 </div>
 
-                <label class="flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" class="accent-emerald-700" />
-                    Remember Me
-                </label>
+                <div class="flex items-center justify-between text-sm text-slate-700">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="accent-emerald-700" />
+                        Remember Me
+                    </label>
+                    <NuxtLink to="/auth/forgot-password" class="text-emerald-700 font-semibold">
+                        Forgot Password?
+                    </NuxtLink>
+                </div>
 
                 <p v-if="errorMessage" class="text-sm text-red-600">
                     {{ errorMessage }}
@@ -91,13 +67,29 @@
                     :disabled="submitting"
                     class="w-full bg-green-800 text-white py-3 rounded-full tracking-widest text-sm hover:bg-green-900 transition"
                 >
-                    {{ submitting ? 'Signing in...' : 'ENTER GREENHOUSE →' }}
+                    {{ submitting ? 'Signing in...' : 'ENTER TO YOUR ACCOUNT →' }}
                 </button>
+
+                <div class="flex items-center gap-3">
+                    <span class="h-px flex-1 bg-slate-200"></span>
+                    <span class="text-xs text-slate-400">OR</span>
+                    <span class="h-px flex-1 bg-slate-200"></span>
+                </div>
+
+                <div class="flex flex-col items-center gap-2">
+                    <div ref="googleButton" class="w-full flex justify-center"></div>
+                    <p v-if="googleSubmitting" class="text-xs text-slate-500">
+                        Signing in with Google...
+                    </p>
+                    <p v-if="googleError" class="text-xs text-red-600">
+                        {{ googleError }}
+                    </p>
+                </div>
                 </form>
 
                 <p class="mt-6 text-center text-sm text-slate-600">
                     New in Here?
-                    <NuxtLink :to="selectedRole === 'farmer' ? '/auth/farmer-signup' : '/auth/signup'" class="text-emerald-700 font-semibold">
+                    <NuxtLink to="/auth/signup" class="text-emerald-700 font-semibold">
                         Apply for an Account
                     </NuxtLink>
                 </p>
@@ -107,27 +99,24 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
-import type { SignInPayload } from '../../types/auth.type';
 
-const route = useRoute();
 const router = useRouter();
-const { signIn, getPostSignInRoute } = useAuth();
+const { signIn, signInWithGoogle, getPostSignInRoute } = useAuth();
 
-const selectedRole = ref<SignInPayload['expectedRole']>('customer');
 const submitting = ref(false);
 const errorMessage = ref('');
+const googleSubmitting = ref(false);
+const googleError = ref('');
+const googleButton = ref<HTMLDivElement | null>(null);
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
 const form = reactive({
   email: '',
   password: '',
 });
-
-if (route.query.role === 'farmer') {
-    selectedRole.value = 'farmer';
-}
 
 const onSubmit = async () => {
   errorMessage.value = '';
@@ -140,11 +129,10 @@ const onSubmit = async () => {
   submitting.value = true;
 
   try {
-    const result = await signIn({
-      email: form.email,
-      password: form.password,
-      expectedRole: selectedRole.value,
-    });
+        const result = await signIn({
+            email: form.email,
+            password: form.password,
+        });
 
     await router.push(getPostSignInRoute(result.user.role));
   } catch (error) {
@@ -154,4 +142,73 @@ const onSubmit = async () => {
     submitting.value = false;
   }
 };
+
+const handleGoogleCredential = async (credential?: string) => {
+    if (!credential) {
+        googleError.value = 'Google sign-in failed to return credentials.';
+        return;
+    }
+
+    googleSubmitting.value = true;
+    googleError.value = '';
+
+    try {
+        const result = await signInWithGoogle(credential);
+        await router.push(getPostSignInRoute(result.user.role));
+    } catch (error) {
+        googleError.value = error instanceof Error ? error.message : 'Unable to sign in with Google.';
+    } finally {
+        googleSubmitting.value = false;
+    }
+};
+
+const initializeGoogle = () => {
+    if (!googleButton.value) return;
+    const google = (window as typeof window & { google?: any }).google;
+
+    if (!google?.accounts?.id) {
+        return false;
+    }
+
+    google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response: { credential?: string }) => handleGoogleCredential(response.credential),
+    });
+
+    googleButton.value.innerHTML = '';
+    google.accounts.id.renderButton(googleButton.value, {
+        theme: 'outline',
+        size: 'large',
+        shape: 'pill',
+        width: 320,
+        text: 'signin_with',
+    });
+
+    return true;
+};
+
+onMounted(() => {
+    if (!googleClientId) {
+        googleError.value = 'Google sign-in is not configured.';
+        return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 25;
+    const tryInit = () => {
+        attempts += 1;
+        if (initializeGoogle()) {
+            return;
+        }
+
+        if (attempts >= maxAttempts) {
+            googleError.value = 'Google sign-in failed to load.';
+            return;
+        }
+
+        setTimeout(tryInit, 200);
+    };
+
+    tryInit();
+});
 </script>

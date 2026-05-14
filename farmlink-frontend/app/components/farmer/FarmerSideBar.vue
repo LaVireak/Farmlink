@@ -40,18 +40,20 @@ import {
   Tractor,
   Settings,
   Menu,
+  Book,
+  MessageSquare,
   X
 } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 
 const navItems = [
-  { label: 'Account', to: '/farmer/account', icon: LayoutGrid },
+  { label: 'Settings', to: '/farmer/profile', icon: Settings },
   { label: 'Dashboard', to: '/farmer/dashboard', icon: LayoutGrid },
   { label: 'Orders', to: '/farmer/orders', icon: ShoppingCart },
   { label: 'Products', to: '/farmer/products', icon: Box },
-  { label: 'Analytics', to: '/farmer/users', icon: Users },
-  { label: 'Farmer', to: '/farmer/farmer', icon: Tractor },
+  { label: 'Guild Book', to: '/farmer/guildbook', icon: Book },
+  { label: 'Chat', to: '/farmer/farmer', icon: MessageSquare },
   //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
 ]
 </script>

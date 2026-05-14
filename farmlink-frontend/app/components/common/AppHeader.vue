@@ -119,11 +119,14 @@
               <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
             </svg>
           </button>
-          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-25 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div class="p-2 border-b">
               <ul>
+                <li><NuxtLink to="/auth/signin" class="block px-2 py-1 hover:bg-gray-100">Sign In</NuxtLink></li>
+                <li class="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">Sign Up</li>
+                <li><NuxtLink to="/auth/signup" class="block px-2 py-1 hover:bg-gray-100">Customer</NuxtLink></li>
+                <li><NuxtLink to="/auth/farmer-signup" class="block px-2 py-1 hover:bg-gray-100">Farmer</NuxtLink></li>
                 <li><NuxtLink to="/user/settings/profile" class="block px-2 py-1 hover:bg-gray-100">Settings</NuxtLink></li>
-                <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">SignIn</NuxtLink></li>
               </ul>
             </div>
           </div>
