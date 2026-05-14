@@ -91,5 +91,32 @@ export class OrdersController {
   ): Promise<OrderResponseDto> {
     return this.ordersService.cancelOrder(id, body?.reason);
   }
+
+  /**
+   * Create a demo dynamic PayWay QR
+   * POST /api/orders/payments/payway/qr/demo
+   */
+  @Post('payments/payway/qr/demo')
+  async createDemoPayWayQr(@Body() body: Record<string, any>) {
+    return this.ordersService.createDemoDynamicQr(body as any);
+  }
+
+  /**
+   * Check PayWay transaction status by tranId
+   * GET /api/orders/payments/payway/:tranId/status
+   */
+  @Get('payments/payway/:tranId/status')
+  async checkPayWayStatus(@Param('tranId') tranId: string) {
+    return this.ordersService.checkPaymentStatus(tranId);
+  }
+
+  /**
+   * PayWay webhook receiver
+   * POST /api/orders/payments/payway/webhook
+   */
+  @Post('payments/payway/webhook')
+  async payWayWebhook(@Body() payload: Record<string, unknown>) {
+    return this.ordersService.handlePayWayWebhook(payload);
+  }
 }
 
