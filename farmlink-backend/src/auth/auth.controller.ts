@@ -1,6 +1,6 @@
 import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RequestSignupOtpDto } from './dto/request-signup-otp.dto';
+import { SignupDto } from './dto/signup.dto';
 import { ResendSignupOtpDto } from './dto/resend-signup-otp.dto';
 import { SignInDto } from './dto/signin.dto';
 import { VerifySignupOtpDto } from './dto/verify-signup-otp.dto';
@@ -18,7 +18,7 @@ export class AuthController {
 	constructor(private readonly auth: AuthService) {}
 
 	@Post('signup/request-otp')
-	requestSignupOtp(@Body() dto: RequestSignupOtpDto) {
+	requestSignupOtp(@Body() dto: SignupDto) {
 		return this.auth.requestSignupOtp(dto);
 	}
 
