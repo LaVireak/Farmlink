@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
 import { Product } from '../products/product.entity';
+import { PaymentMethod, PaymentStatus } from '../common/enums/payment.enum';
+import { OrderStatus } from '../common/enums/order-status.enum';
 
 @Injectable()
 export class OrdersService {
@@ -128,7 +130,7 @@ export class OrdersService {
     const order = this.ordersRepository.create({
       consumerId: createOrderDto.consumerId,
       orderNumber,
-      paymentMethod: createOrderDto.paymentMethod,
+      paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
       deliveryAddress: createOrderDto.deliveryAddress,
       deliveryLat: createOrderDto.deliveryLat,
       deliveryLng: createOrderDto.deliveryLng,
@@ -138,7 +140,7 @@ export class OrdersService {
       totalAmount,
     });
 
-    const savedOrder = await this.ordersRepository.save(order);
+    const savedOrder = await this.ordersRepository.save(order) as Order;
 
     // Create order items
     const items = createOrderDto.items.map((item) =>
@@ -192,13 +194,13 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
-    if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
+    if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
       throw new BadRequestException(`Cannot cancel order with status ${order.status}`);
     }
 
-    order.status = 'CANCELLED' as any;
+    order.status = OrderStatus.CANCELLED;
     order.cancelledAt = new Date();
-    order.disputeReason = reason;
+    order.disputeReason = reason ?? null!;
 
     await this.ordersRepository.save(order);
     return this.getOrderById(orderId);
@@ -254,8 +256,8 @@ export class OrdersService {
       deliveryFee: parseFloat(order.deliveryFee.toString()),
       totalAmount: parseFloat(order.totalAmount.toString()),
       deliveryAddress: order.deliveryAddress,
-      deliveryLat: order.deliveryLat ? parseFloat(order.deliveryLat.toString()) : null,
-      deliveryLng: order.deliveryLng ? parseFloat(order.deliveryLng.toString()) : null,
+      deliveryLat: order.deliveryLat ? parseFloat(order.deliveryLat.toString()) : undefined,
+      deliveryLng: order.deliveryLng ? parseFloat(order.deliveryLng.toString()) : undefined,
       note: order.note,
       disputeReason: order.disputeReason,
       confirmedAt: order.confirmedAt,
@@ -269,9 +271,9 @@ export class OrdersService {
         email: order.consumer.email,
         firstName: (order.consumer as any).firstName,
         lastName: (order.consumer as any).lastName,
-      } : null,
+      } : undefined,
       items: order.items?.map((item) => ({
-        id: item.id,
+        id: item.id ?? '',
         productId: item.productId,
         farmerId: item.farmerId,
         quantity: item.quantity,
@@ -282,12 +284,12 @@ export class OrdersService {
           id: item.product.id,
           nameEn: item.product.nameEn,
           unit: item.product.unit,
-          thumbnailUrl: item.product.thumbnailUrl,
-        } : null,
+          thumbnailUrl: item.product.thumbnailUrl ?? undefined,
+        } : undefined,
         farmer: item.farmer ? {
           id: item.farmer.id,
           farmName: item.farmer.farmName,
-        } : null,
+        } : undefined,
       })),
     };
   }
@@ -300,5 +302,60 @@ export class OrdersService {
     const random = Math.floor(Math.random() * 10000);
     return `ORD-${timestamp}-${random}`;
   }
-}
 
+  /**
+   * Assign ABA PayWay payment reference to an order (before payment)
+   */
+  private async assignPayWayReference(orderId: string | undefined, tranId: string) {
+    if (!orderId) return;
+    const order = await this.ordersRepository.findOne({ where: { id: orderId } });
+    if (!order) return;
+    order.paymentMethod = PaymentMethod.ABA_PAYWAY;
+    order.paymentRef = tranId;
+    order.paymentStatus = PaymentStatus.UNPAID;
+    await this.ordersRepository.save(order);
+  }
+
+  private async markOrderPaidByReference(paymentRef: string) {
+    const order = await this.ordersRepository.findOne({ where: { paymentRef } });
+    if (!order) return;
+    if (order.paymentStatus !== PaymentStatus.PAID) {
+      order.paymentStatus = PaymentStatus.PAID;
+      await this.ordersRepository.save(order);
+    }
+  }
+
+  private valueToString(value: unknown): string {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    return '';
+  }
+
+  /**
+   * Create a demo dynamic PayWay QR (stub — replace with real ABA PayWay SDK call)
+   */
+  async createDemoDynamicQr(body: Record<string, any>): Promise<any> {
+    // TODO: integrate real ABA PayWay SDK
+    return { status: 'demo', body };
+  }
+
+  /**
+   * Check payment status by transaction ID
+   */
+  async checkPaymentStatus(tranId: string): Promise<any> {
+    const order = await this.ordersRepository.findOne({ where: { paymentRef: tranId } });
+    if (!order) throw new NotFoundException(`No order found for transaction ${tranId}`);
+    return { orderId: order.id, paymentStatus: order.paymentStatus, paymentRef: order.paymentRef };
+  }
+
+  /**
+   * Handle PayWay webhook callback
+   */
+  async handlePayWayWebhook(payload: Record<string, unknown>): Promise<any> {
+    const tranId = this.valueToString(payload['tran_id']);
+    if (tranId) {
+      await this.markOrderPaidByReference(tranId);
+    }
+    return { received: true };
+  }
+}
