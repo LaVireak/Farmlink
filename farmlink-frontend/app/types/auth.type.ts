@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'farmer' | 'admin';
+export type UserRole = 'consumer' | 'farmer' | 'admin';
 
 export interface AuthUser {
     id: string;
@@ -17,15 +17,38 @@ export interface SignUpPayload {
     lastName: string;
     email: string;
     password: string;
+    role?: 'customer' | 'farmer';
+}
+
+export interface VerifyOtpPayload {
+    email: string;
+    code: string;
 }
 
 export interface SignInPayload {
     email: string;
     password: string;
-    expectedRole?: 'farmer' | 'customer';
 }
 
-export interface SignInResult {
+export interface AuthResponse {
     user: AuthUser;
     accessToken: string;
+    refreshToken: string;
+}
+
+export interface UploadedImagePayload {
+    name: string;
+    type: string;
+    dataUrl: string;
+}
+
+export interface FarmerOnboardingPayload {
+    email: string;
+    phone?: string;
+    address?: string;
+    farmName?: string;
+    tags?: string[];
+    idPhoto?: UploadedImagePayload | null;
+    farmDeed?: UploadedImagePayload | null;
+    profilePhoto?: UploadedImagePayload | null;
 }

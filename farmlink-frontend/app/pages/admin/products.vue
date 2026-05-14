@@ -1,6 +1,6 @@
 <template>
     <div class="p-10 space-y-6 bg-[#f7fdf4]">
-        <AdminHeader title="Product Management" />
+        <AdminProfileDropdown title="Product Management" />
 
         <div class="flex items-end justify-end">
             <div class="flex items-center gap-2">

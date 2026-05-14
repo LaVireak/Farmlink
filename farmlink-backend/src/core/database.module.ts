@@ -24,6 +24,7 @@ import { MarketPrice } from '../support/market-price.entity';
 import { CropHealthTip } from '../support/crop-health-tip.entity';
 import { KnowledgeArticle } from '../support/knowledge-article.entity';
 import { RefreshToken } from '../auth/refresh-token.entity';
+import { EmailOtp } from '../auth/email-otp.entity';
 
 export const ALL_ENTITIES = [
   User,
@@ -47,6 +48,7 @@ export const ALL_ENTITIES = [
   CropHealthTip,
   KnowledgeArticle,
   RefreshToken,
+  EmailOtp,
 ];
 
 @Module({
@@ -54,16 +56,17 @@ export const ALL_ENTITIES = [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
+      
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.get<string>('DB_HOST', 'localhost'),
         port: config.get<number>('DB_PORT', 5432),
-        username: config.get<string>('DB_USER'),
-        password: config.get<string>('DB_PASS'),
+        username: config.get<string>('DB_USERNAME') || config.get<string>('DB_USER'),
+        password: String(config.get('DB_PASSWORD') || config.get('DB_PASS') || ''),
         database: config.get<string>('DB_NAME'),
         entities: ALL_ENTITIES,
         synchronize: config.get<string>('NODE_ENV') !== 'production',
-        logging: config.get<string>('NODE_ENV') === 'development',
+        logging: false,
       }),
     }),
   ],
