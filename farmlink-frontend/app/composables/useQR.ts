@@ -54,6 +54,7 @@ export const useQR = () => {
   const isLoading = ref(false);
   const error = ref('');
   const expiresAt = ref<Date | null>(null);
+  const hasGenerated = ref(false);
 
   const timeLeft = ref(0);
   let countdownTimer: ReturnType<typeof setInterval> | null = null;
@@ -73,7 +74,7 @@ export const useQR = () => {
       : `data:image/png;base64,${qrImage.value}`;
   });
 
-  const isExpired = computed(() => Number.isFinite(timeLeft.value) && timeLeft.value <= 0 && !isLoading.value);
+  const isExpired = computed(() => hasGenerated.value && Number.isFinite(timeLeft.value) && timeLeft.value <= 0 && !isLoading.value);
 
   const clearTimers = () => {
     if (countdownTimer) {
@@ -168,6 +169,7 @@ export const useQR = () => {
       deeplink.value = data.abapayDeeplink || '';
       const parsedExpiresAt = new Date(data.expiresAt);
       expiresAt.value = Number.isNaN(parsedExpiresAt.getTime()) ? null : parsedExpiresAt;
+      hasGenerated.value = true;
 
       startCountdown();
       // start polling after we have a tranId
