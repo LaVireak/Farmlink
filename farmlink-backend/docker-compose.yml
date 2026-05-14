@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - '3000:3000'
+      - '3001:3000'
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
@@ -38,6 +38,12 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GMAIL_USER: ${GMAIL_USER}
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+      PAYWAY_MERCHANT_ID: ${PAYWAY_MERCHANT_ID}
+      PAYWAY_PUBLIC_KEY: ${PAYWAY_PUBLIC_KEY}
+      PAYWAY_QR_API_URL: ${PAYWAY_QR_API_URL}
+      PAYWAY_CHECK_TRANSACTION_URL: ${PAYWAY_CHECK_TRANSACTION_URL}
+      PAYWAY_CALLBACK_URL: ${PAYWAY_CALLBACK_URL}
+      PAYWAY_QR_IMAGE_TEMPLATE: ${PAYWAY_QR_IMAGE_TEMPLATE}
     depends_on:
       postgres:
         condition: service_healthy
