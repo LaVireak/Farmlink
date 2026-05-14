@@ -14,10 +14,10 @@ export class Category {
   nameEn!: string;
 
   @Column({ name: 'name_km', length: 100, nullable: true })
-  nameKm!: string;
+  nameKm?: string;
 
   @Column({ name: 'icon_url', length: 500, nullable: true })
-  iconUrl!: string;
+  iconUrl?: string;
 
   @Column({ name: 'is_active', default: true })
   isActive!: boolean;
