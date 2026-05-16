@@ -53,7 +53,7 @@ const navItems = [
   { label: 'Orders', to: '/farmer/orders', icon: ShoppingCart },
   { label: 'Products', to: '/farmer/products', icon: Box },
   { label: 'Guild Book', to: '/farmer/guildbook', icon: Book },
-  { label: 'Chat', to: '/farmer/farmer', icon: MessageSquare },
+  { label: 'Chat', to: '/farmer/chat', icon: MessageSquare },
   //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
 ]
 </script>
