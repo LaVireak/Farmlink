@@ -12,7 +12,7 @@
 
       <div class="flex items-center gap-2 text-gray-400">
         <span class="w-6 h-6 flex items-center justify-center rounded-full border">2</span>
-        Shipping
+        Address
       </div>
       <div class="flex-1 h-px bg-gray-300"></div>
 
@@ -28,7 +28,7 @@
         <!-- Card Info -->
         <div class="bg-white p-6 rounded-xl shadow-sm">
           <button class="mb-6 bg-green-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/shipping" class="text-white no-underline">
+            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
               Back
             </NuxtLink>
           </button>
