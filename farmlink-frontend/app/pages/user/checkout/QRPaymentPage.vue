@@ -32,7 +32,37 @@
         <div class="lg:col-span-7 space-y-8">
           
           <!-- Payment Card -->
-          <div class="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(6,78,59,0.08)] border border-green-50 overflow-hidden transition-all hover:shadow-[0_30px_60px_rgba(6,78,59,0.12)]">
+          <div class="relative bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(6,78,59,0.08)] border border-green-50 overflow-hidden transition-all hover:shadow-[0_30px_60px_rgba(6,78,59,0.12)]">
+                       <!-- Simplified Immersive Success Overlay -->
+            <div v-if="paymentStatus === 'paid'" class="absolute inset-0 bg-white flex flex-col items-center justify-center p-8 z-50 animate-in fade-in duration-500">
+              <!-- Decorative background glow -->
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-green-50/50 to-emerald-50/50 -z-10"></div>
+
+              <div class="flex flex-col items-center text-center">
+                <!-- Checkmark (Centered and resized to avoid clipping) -->
+                <div class="w-24 h-24 bg-green-500 text-white rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(34,197,94,0.3)] mb-8 animate-in zoom-in duration-700">
+                  <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                
+                <h2 class="text-4xl font-black text-[#064e3b] mb-3 tracking-tight">Payment Success!</h2>
+                <p class="text-slate-400 font-bold uppercase text-[11px] tracking-[0.25em]">Your harvest is secured</p>
+                
+                <div class="mt-12 flex flex-col items-center gap-3">
+                  <div class="flex gap-2">
+                    <div class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div>
+                    <div class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse [animation-delay:200ms]"></div>
+                    <div class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse [animation-delay:400ms]"></div>
+                  </div>
+                  <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+                    Redirecting to Summary...
+                  </p>
+                </div>
+              </div>
+            </div>
+>
+
             <div class="p-10 flex flex-col items-center">
               
               <!-- QR Section -->
@@ -71,20 +101,11 @@
                       <button @click="createDynamicQr" class="mt-2 text-green-700 font-black text-xs hover:underline uppercase tracking-widest">Retry Connection</button>
                     </div>
                   </template>
-
-                  <!-- Success Overlay -->
-                  <div v-if="paymentStatus === 'paid'" class="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in duration-500">
-                    <div class="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-green-200 mb-6 scale-110">
-                      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <h2 class="text-2xl font-black text-[#064e3b]">Harvest Paid!</h2>
-                    <p class="text-slate-500 text-center mt-2 text-sm font-medium">Your order is now being prepared by our farmers. We'll notify you soon.</p>
-                  </div>
                 </div>
               </div>
 
               <!-- Status Footer -->
-              <div class="mt-10 w-full max-w-[320px] flex flex-col items-center">
+              <div v-if="paymentStatus !== 'paid'" class="mt-10 w-full max-w-[320px] flex flex-col items-center">
                 <div class="flex items-center gap-2 mb-2">
                   <div :class="['w-2 h-2 rounded-full', isExpired ? 'bg-red-500' : 'bg-green-500 animate-pulse']"></div>
                   <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -104,27 +125,16 @@
           </div>
 
           <!-- Quick Actions -->
-          <div class="grid grid-cols-2 gap-4">
+          <div v-if="paymentStatus !== 'paid'" class="w-full">
             <button 
               @click="checkStatus"
-              :disabled="isLoading || !tranId || paymentStatus === 'paid'"
-              class="group relative overflow-hidden bg-[#064e3b] text-white p-5 rounded-3xl font-bold transition-all shadow-xl shadow-green-100 hover:shadow-2xl hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+              :disabled="isLoading || !tranId"
+              class="w-full group relative overflow-hidden bg-[#064e3b] text-white p-6 rounded-[2rem] font-bold transition-all shadow-xl shadow-green-100 hover:shadow-2xl hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
             >
               <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               <div class="relative flex flex-col items-center">
                 <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span class="text-xs uppercase tracking-widest">Refresh Status</span>
-              </div>
-            </button>
-
-            <button 
-              @click="openAbaApp"
-              :disabled="isLoading || paymentStatus === 'paid'"
-              class="group bg-white text-[#064e3b] border-2 border-green-100 p-5 rounded-3xl font-bold transition-all hover:border-green-600 hover:-translate-y-1 active:scale-[0.98]"
-            >
-              <div class="flex flex-col items-center">
-                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                <span class="text-xs uppercase tracking-widest">Open ABA Mobile</span>
+                <span class="text-xs uppercase tracking-[0.2em] font-black">Refresh Payment Status</span>
               </div>
             </button>
           </div>
@@ -219,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useQR } from '@/composables/useQR'
 import QrcodeVue from 'qrcode.vue'
 
@@ -239,6 +249,15 @@ const {
   checkStatus,
   openAbaApp,
 } = useQR();
+
+// Watch for payment success and navigate to Success page
+watch(paymentStatus, (newStatus) => {
+  if (newStatus === 'paid') {
+    setTimeout(() => {
+      navigateTo('/user/checkout/Success')
+    }, 2500) // 2.5s delay to let the user see the success state
+  }
+})
 
 onMounted(() => {
   if (!tranId.value && !isLoading.value) {

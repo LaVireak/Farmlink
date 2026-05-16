@@ -108,9 +108,9 @@
         </div>
 
         <div class="flex items-center space-x-5 text-black gap-3">
-          <button aria-label="Favorites" class="flex items-center">
+          <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center">
             <Heart class="w-6 h-6 text-black" />
-          </button>
+          </NuxtLink>
           <button aria-label="Shopping Cart" class="flex items-center">
             <NuxtLink to="/user/checkout/cart" class="flex items-center">
               <ShoppingCart class="w-6 h-6 text-black" />
