@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 definePageMeta({
   layout: 'user',
@@ -15,17 +15,103 @@ const cardNumber = ref('');
 const expiryDate = ref('');
 const cvv = ref('');
 
+import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement, type StripeError, type PaymentMethod } from '@stripe/stripe-js';
+
+const config = useRuntimeConfig();
+
+const stripe = ref<Stripe | null>(null);
+const elements = ref<StripeElements | null>(null);
+const cardNumberElement = ref<StripeCardNumberElement | null>(null);
+const cardNumberMount = ref<HTMLDivElement | null>(null);
+const cardExpiryMount = ref<HTMLDivElement | null>(null);
+const cardCvcMount = ref<HTMLDivElement | null>(null);
+const cardError = ref('');
+const isProcessing = ref(false);
+
 const previewName = computed(() => (cardholderName.value.trim() ? cardholderName.value.toUpperCase() : 'YOUR NAME HERE'));
-const previewExpiry = computed(() => (expiryDate.value.trim() ? expiryDate.value.toUpperCase() : 'MM/YY'));
-const previewCardNumber = computed(() => {
-  const digits = cardNumber.value.replace(/\D/g, '').slice(0, 16);
-  if (!digits) {
-    return '•••• •••• •••• ••••';
+
+onMounted(async () => {
+  const publishableKey = config.public.stripePublishableKey;
+
+  if (!publishableKey) {
+    cardError.value = 'Stripe publishable key is missing. Set NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in farmlink-frontend/.env.';
+    return;
   }
 
-  const padded = digits.padEnd(16, '•');
-  return padded.match(/.{1,4}/g)?.join(' ') ?? '•••• •••• •••• ••••';
+  stripe.value = await loadStripe(publishableKey);
+  if (!stripe.value) {
+    cardError.value = 'Stripe failed to initialize. Check the publishable key in your frontend environment.';
+    return;
+  }
+
+  elements.value = stripe.value.elements();
+  await nextTick();
+  
+  const style = {
+    base: {
+      fontSize: '16px',
+      color: '#1d1d1f',
+      fontFamily: 'Manrope, system-ui, sans-serif',
+      '::placeholder': {
+        color: '#86868b',
+      },
+    },
+    invalid: {
+      color: '#ef4444',
+      iconColor: '#ef4444',
+    },
+  };
+
+  // Create and mount the individual elements
+  if (elements.value && cardNumberMount.value && cardExpiryMount.value && cardCvcMount.value) {
+    cardNumberElement.value = elements.value.create('cardNumber', { style, showIcon: true });
+    cardNumberElement.value.mount(cardNumberMount.value);
+
+    const cardExpiryElement = elements.value.create('cardExpiry', { style });
+    cardExpiryElement.mount(cardExpiryMount.value);
+
+    const cardCvcElement = elements.value.create('cardCvc', { style });
+    cardCvcElement.mount(cardCvcMount.value);
+  }
+
+  // Listen for errors on the card number field
+  cardNumberElement.value?.on('change', (event: any) => {
+    if (event.error) {
+      cardError.value = event.error.message;
+    } else {
+      cardError.value = '';
+    }
+  });
 });
+
+async function savePaymentMethod() {
+  if (!stripe.value || !elements.value) return;
+
+  isProcessing.value = true;
+  cardError.value = '';
+
+  // In a real app, you would create a SetupIntent on the backend and get the client_secret.
+  // Here, we simulate creating a payment method directly to test the card on the frontend!
+  const { error, paymentMethod } = await stripe.value.createPaymentMethod({
+    type: 'card',
+    card: cardNumberElement.value!,
+    billing_details: {
+      name: cardholderName.value || 'John Doe',
+    },
+  });
+
+  if (error) {
+    cardError.value = error.message || 'An error occurred while processing the card.';
+    isProcessing.value = false;
+  } else {
+    // Success! We generated a secure token for the mock card!
+    console.log('Success! Payment Method ID:', paymentMethod.id);
+    alert(`Success! Card saved securely with Stripe.\nPayment Method ID: ${paymentMethod.id}`);
+    
+    // Redirect back to payment methods
+    navigateTo('/user/settings/payment');
+  }
+}
 </script>
 
 <template>
@@ -60,26 +146,25 @@ const previewCardNumber = computed(() => {
 
                   <div>
                     <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">Card Number</label>
-                    <div class="relative">
-                      <input v-model="cardNumber" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus:ring-2 focus:ring-[#154212] transition-all font-body text-on-surface pr-12" maxlength="19" placeholder="0000 0000 0000 0000" type="text" />
-                      <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline">credit_card</span>
-                    </div>
+                    <div ref="cardNumberMount" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
                   </div>
 
                   <div class="grid grid-cols-2 gap-6">
                     <div>
                       <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">Expiry Date</label>
-                      <input v-model="expiryDate" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus:ring-2 focus:ring-[#154212] transition-all font-body text-on-surface" maxlength="5" placeholder="MM/YY" type="text" />
+                      <div ref="cardExpiryMount" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
                     </div>
 
                     <div>
                       <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">CVV / CVC</label>
-                      <div class="relative">
-                        <input v-model="cvv" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus:ring-2 focus:ring-[#154212] transition-all font-body text-on-surface pr-12" maxlength="4" placeholder="***" type="password" />
-                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline text-lg" title="3-4 digits on the back of your card">info</span>
-                      </div>
+                      <div ref="cardCvcMount" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
                     </div>
                   </div>
+                  
+                  <p v-if="cardError" class="text-error text-sm font-bold mt-2 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">error</span>
+                    {{ cardError }}
+                  </p>
                 </div>
 
                 <div class="flex items-center gap-3 py-4 bg-secondary-container/20 px-6 rounded-xl border border-secondary-container/30">
@@ -88,9 +173,10 @@ const previewCardNumber = computed(() => {
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button class="flex-1 bg-[#154212] text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-[#1f5a1a] transition-all flex items-center justify-center gap-2 active:scale-95 duration-150 shadow-[0_10px_24px_-8px_rgba(21,66,18,0.6)]" type="submit">
-                    <span>Save Payment Method</span>
-                    <span class="material-symbols-outlined transition-transform">arrow_forward</span>
+                  <button @click="savePaymentMethod" :disabled="isProcessing" class="flex-1 bg-[#154212] text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-[#1f5a1a] transition-all flex items-center justify-center gap-2 active:scale-95 duration-150 shadow-[0_10px_24px_-8px_rgba(21,66,18,0.6)] disabled:opacity-70 disabled:active:scale-100" type="button">
+                    <span>{{ isProcessing ? 'Processing...' : 'Save Payment Method' }}</span>
+                    <span v-if="!isProcessing" class="material-symbols-outlined transition-transform">arrow_forward</span>
+                    <span v-else class="material-symbols-outlined animate-spin">progress_activity</span>
                   </button>
                   <NuxtLink class="px-8 py-4 border-2 border-primary/20 text-primary font-bold rounded-lg hover:bg-surface-container-high transition-colors active:scale-95 duration-150 flex items-center justify-center" to="/user/settings/payment">
                     Cancel
@@ -110,7 +196,7 @@ const previewCardNumber = computed(() => {
                     <span class="material-symbols-outlined text-2xl lg:text-3xl opacity-50">contactless</span>
                   </div>
                   <div class="space-y-4">
-                    <div class="text-[15px] lg:text-lg font-mono tracking-[0.16em] drop-shadow-md">{{ previewCardNumber }}</div>
+                    <div class="text-[15px] lg:text-lg font-mono tracking-[0.16em] drop-shadow-md">•••• •••• •••• ••••</div>
                     <div class="flex justify-between items-end">
                       <div>
                         <div class="text-[9px] uppercase tracking-widest opacity-60 mb-1">Card Holder</div>
@@ -118,7 +204,7 @@ const previewCardNumber = computed(() => {
                       </div>
                       <div class="text-right">
                         <div class="text-[9px] uppercase tracking-widest opacity-60 mb-1">Expires</div>
-                        <div class="text-xs lg:text-sm font-[Manrope,sans-serif] font-bold">{{ previewExpiry }}</div>
+                        <div class="text-xs lg:text-sm font-[Manrope,sans-serif] font-bold">MM/YY</div>
                       </div>
                     </div>
                   </div>

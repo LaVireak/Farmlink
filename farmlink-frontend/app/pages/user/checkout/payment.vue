@@ -25,57 +25,51 @@
     <div class="grid lg:grid-cols-3 gap-8">
       <!-- LEFT -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- Card Info -->
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-          <button class="mb-6 bg-green-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
-              Back
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+          <div class="flex items-center gap-4 mb-8">
+            <NuxtLink to="/user/checkout/address" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
+              <span class="material-symbols-outlined text-xl">arrow_back</span>
             </NuxtLink>
-          </button>
-          <h2 class="text-xl font-semibold text-green-800 mb-6">
-            Card Information
-          </h2>
+            <h2 class="text-2xl font-black text-primary font-[Manrope,sans-serif] tracking-tight">
+              Payment Details
+            </h2>
+          </div>
 
-          <div class="space-y-4">
+          <div class="space-y-6">
             <!-- Name -->
-            <Input label="Cardholder Name" v-model="form.name" />
+            <div>
+              <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">Cardholder Name</label>
+              <input v-model="form.name" class="w-full bg-[#fbf9f6] border-none rounded-xl p-4 focus:ring-2 focus:ring-[#154212] transition-all font-body text-on-surface" placeholder="John Doe" type="text" />
+            </div>
 
             <!-- Card Number -->
             <div>
-              <label class="text-xs text-gray-500">Card Number</label>
-              <input
-                v-model="form.card"
-                @input="formatCard"
-                maxlength="19"
-                placeholder="0000 0000 0000 0000"
-                class="w-full mt-1 p-2 rounded-lg border focus:ring-2 focus:ring-green-600 outline-none"
-              />
+              <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">Card Number</label>
+              <div ref="cardNumberMount" class="w-full bg-[#fbf9f6] border-none rounded-xl p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
             </div>
 
             <!-- Expiry + CVV -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-6">
               <div>
-                <label class="text-xs text-gray-500">Expiry Date</label>
-                <input
-                  v-model="form.expiry"
-                  @input="formatExpiry"
-                  maxlength="5"
-                  placeholder="MM/YY"
-                  class="w-full mt-1 p-2 rounded-lg border focus:ring-2 focus:ring-green-600 outline-none"
-                />
+                <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">Expiry Date</label>
+                <div ref="cardExpiryMount" class="w-full bg-[#fbf9f6] border-none rounded-xl p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
               </div>
 
               <div>
-                <label class="text-xs text-gray-500">CVV</label>
-                <input
-                  v-model="form.cvv"
-                  type="password"
-                  maxlength="4"
-                  placeholder="***"
-                  class="w-full mt-1 p-2 rounded-lg border focus:ring-2 focus:ring-green-600 outline-none"
-                />
+                <label class="block text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">CVV / CVC</label>
+                <div ref="cardCvcMount" class="w-full bg-[#fbf9f6] border-none rounded-xl p-4 focus-within:ring-2 focus-within:ring-[#154212] transition-all min-h-[56px]"></div>
               </div>
             </div>
+            
+            <p v-if="cardError" class="text-red-500 text-sm font-bold mt-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">error</span>
+              {{ cardError }}
+            </p>
+          </div>
+          
+          <div class="mt-8 flex items-center gap-3 py-3 px-4 bg-green-50 rounded-lg border border-green-100">
+            <span class="material-symbols-outlined text-green-700">lock</span>
+            <p class="text-sm text-green-800">256-bit encrypted and PCI compliant. Your card is securely processed by Stripe.</p>
           </div>
         </div>
 
@@ -152,9 +146,13 @@
           </div>
 
           <button
-            class="w-full mt-6 bg-yellow-400 text-green-900 py-3 rounded-xl font-semibold hover:bg-yellow-300 transition"
+            @click="processPayment"
+            :disabled="isProcessing"
+            class="w-full mt-6 bg-[#facc15] text-[#154212] py-4 rounded-xl font-bold text-lg hover:bg-[#fde047] transition-all flex justify-center items-center gap-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
           >
-            Confirm Payment →
+            <span>{{ isProcessing ? 'Processing Securely...' : 'Confirm Payment' }}</span>
+            <span v-if="!isProcessing" class="material-symbols-outlined">arrow_forward</span>
+            <span v-else class="material-symbols-outlined animate-spin">progress_activity</span>
           </button>
 
         </div>
@@ -165,54 +163,124 @@
   <CommonAppFooter />
   
 </template>
-
 <script setup lang="ts">
+import { nextTick, onMounted, reactive, ref } from 'vue'
+import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
+
+const config = useRuntimeConfig();
+
 const form = reactive({
   name: 'Johnathan Appieseed',
-  card: '',
-  expiry: '',
-  cvv: ''
 })
 
 const billingSame = ref(true)
 
-// Format card number (#### #### #### ####)
-function formatCard(e: Event) {
-  let value = (e.target as HTMLInputElement).value.replace(/\D/g, '')
-  value = value.substring(0, 16)
-  form.card = value.replace(/(.{4})/g, '$1 ').trim()
-}
+const stripe = ref<Stripe | null>(null);
+const elements = ref<StripeElements | null>(null);
+const cardNumberElement = ref<StripeCardNumberElement | null>(null);
+const cardNumberMount = ref<HTMLDivElement | null>(null);
+const cardExpiryMount = ref<HTMLDivElement | null>(null);
+const cardCvcMount = ref<HTMLDivElement | null>(null);
+const cardError = ref('');
+const isProcessing = ref(false);
 
-// Format expiry MM/YY
-function formatExpiry(e: Event) {
-  let value = (e.target as HTMLInputElement).value.replace(/\D/g, '')
-  value = value.substring(0, 4)
+onMounted(async () => {
+  const publishableKey = config.public.stripePublishableKey;
 
-  if (value.length >= 3) {
-    form.expiry = value.slice(0, 2) + '/' + value.slice(2)
-  } else {
-    form.expiry = value
+  if (!publishableKey) {
+    cardError.value = 'Stripe publishable key is missing. Set NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in farmlink-frontend/.env.';
+    return;
   }
-}
-</script>
 
-<!-- Reusable Input -->
-<script lang="ts">
-export default {
-  components: {
-    Input: {
-      props: ['modelValue', 'label'],
-      emits: ['update:modelValue'],
-      template: `
-        <div>
-          <label class="text-xs text-gray-500">{{ label }}</label>
-          <input
-            :value="modelValue"
-            @input="$emit('update:modelValue', $event.target.value)"
-            class="w-full mt-1 p-2 rounded-lg border focus:ring-2 focus:ring-green-600 outline-none"
-          />
-        </div>
-      `
+  stripe.value = await loadStripe(publishableKey);
+  if (!stripe.value) {
+    cardError.value = 'Stripe failed to initialize. Check the publishable key in your frontend environment.';
+    return;
+  }
+
+  elements.value = stripe.value.elements();
+  await nextTick();
+  
+  const style = {
+    base: {
+      fontSize: '16px',
+      color: '#1d1d1f',
+      fontFamily: 'Manrope, system-ui, sans-serif',
+      '::placeholder': {
+        color: '#86868b',
+      },
+    },
+    invalid: {
+      color: '#ef4444',
+      iconColor: '#ef4444',
+    },
+  };
+
+  // Create and mount the individual elements
+  if (elements.value && cardNumberMount.value && cardExpiryMount.value && cardCvcMount.value) {
+    cardNumberElement.value = elements.value.create('cardNumber', { style, showIcon: true });
+    cardNumberElement.value.mount(cardNumberMount.value);
+
+    const cardExpiryElement = elements.value.create('cardExpiry', { style });
+    cardExpiryElement.mount(cardExpiryMount.value);
+
+    const cardCvcElement = elements.value.create('cardCvc', { style });
+    cardCvcElement.mount(cardCvcMount.value);
+  }
+
+  // Listen for errors on the card number field
+  cardNumberElement.value?.on('change', (event: any) => {
+    if (event.error) {
+      cardError.value = event.error.message;
+    } else {
+      cardError.value = '';
+    }
+  });
+});
+
+async function processPayment() {
+  if (!stripe.value || !elements.value || !cardNumberElement.value) return;
+
+  isProcessing.value = true;
+  cardError.value = '';
+
+  const { error, paymentMethod } = await stripe.value.createPaymentMethod({
+    type: 'card',
+    card: cardNumberElement.value,
+    billing_details: {
+      name: form.name || 'John Doe',
+    },
+  });
+
+  if (error) {
+    cardError.value = error.message || 'Payment failed. Please check your details.';
+    isProcessing.value = false;
+  } else {
+    // Send the paymentMethod.id to our NestJS backend to actually charge the card!
+    try {
+      const response = await fetch('http://localhost:3001/stripe/charge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 57.50, // Hardcoded for this demo, usually comes from cart state
+          paymentMethodId: paymentMethod.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'succeeded') {
+        // Success! Navigate to the success page!
+        console.log('Payment Succeeded! ID:', data.id);
+        navigateTo('/user/checkout/Success');
+      } else {
+        throw new Error(data.message || 'Payment failed on server');
+      }
+    } catch (err: any) {
+      cardError.value = err.message || 'Failed to communicate with server.';
+      isProcessing.value = false;
     }
   }
 }
