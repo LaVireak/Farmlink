@@ -14,7 +14,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StripeModule } from './stripe/stripe.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './auth/guards/api-key.guard';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { SupabaseAuthGuard } from './auth/guards/supabase-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
@@ -35,7 +35,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: ApiKeyGuard },
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: SupabaseAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })

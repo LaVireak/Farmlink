@@ -1,156 +1,467 @@
 <template>
-	<div class="recover-container">
-		<div class="card">
-			<div class="icon">i</div>
+	<div class="recover-page">
+		<!-- background blobs -->
+		<div class="bg-blob blob-1"></div>
+		<div class="bg-blob blob-2"></div>
 
-			<h2>Recover your account</h2>
-			<p class="subtitle">
-				Enter your email address and we’ll send you a link to reset your password.
-			</p>
-
-			<form @submit.prevent="handleSubmit">
-				<label for="email">EMAIL ADDRESS</label>
-				<input
-					id="email"
-					type="email"
-					v-model="email"
-					placeholder="hello@garden.com"
-					required
+		<div class="recover-card">
+			<!-- left side -->
+			<div class="hero-side">
+				<img
+					src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=1200&q=80"
+					alt="Farm fresh"
+					class="hero-image"
 				>
 
-				<button type="submit" :disabled="loading">
-					<span v-if="loading">Sending...</span>
-					<span v-else>Send Reset Link →</span>
-				</button>
-			</form>
+				<div class="hero-overlay">
+					<span class="hero-badge">
+						FarmLink Security
+					</span>
 
-			<p v-if="error" class="error-message">{{ error }}</p>
-			<p class="back" @click="goBack">← Back to Sign In</p>
+					<h2>
+						Recover your
+						account securely.
+					</h2>
+
+					<p>
+						We’ll send a secure verification code
+						to your email to reset your password.
+					</p>
+				</div>
+			</div>
+
+			<!-- form side -->
+			<div class="form-side">
+				<div class="form-badge">
+					Password Recovery
+				</div>
+
+				<h1>Forgot Password?</h1>
+
+				<p class="form-intro">
+					Enter your email address and
+					we’ll send you a verification code.
+				</p>
+
+				<form
+					class="recover-form"
+					@submit.prevent="handleSubmit"
+				>
+					<div class="field">
+						<label for="email">
+							Email Address
+						</label>
+
+						<input
+							id="email"
+							type="email"
+							v-model="email"
+							placeholder="hello@garden.com"
+							required
+						>
+					</div>
+
+					<p
+						v-if="error"
+						class="error-message"
+					>
+						{{ error }}
+					</p>
+
+					<button
+						type="submit"
+						:disabled="loading"
+						class="submit-btn"
+					>
+						<span v-if="loading">
+							Sending...
+						</span>
+
+						<span v-else>
+							Send Verification Code →
+						</span>
+					</button>
+				</form>
+
+				<button
+					class="back-btn"
+					@click="goBack"
+				>
+					← Back to Sign In
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuth } from '../../composables/useAuth';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../../composables/useAuth'
 
-const email = ref('');
-const loading = ref(false);
-const error = ref('');
-const router = useRouter();
-const { requestPasswordResetOtp } = useAuth();
+const email = ref('')
+const loading = ref(false)
+const error = ref('')
+
+const router = useRouter()
+
+const { requestPasswordResetOtp } = useAuth()
 
 const handleSubmit = async () => {
-	if (!email.value) return;
-	loading.value = true;
-	error.value = '';
+	if (!email.value) return
+
+	loading.value = true
+	error.value = ''
+
 	try {
-		await requestPasswordResetOtp(email.value);
-		await router.push(`/auth/verify-code?email=${encodeURIComponent(email.value)}&mode=reset`);
+		await requestPasswordResetOtp(email.value)
+
+		await router.push(
+			`/auth/verify-code?email=${encodeURIComponent(email.value)}&mode=reset`
+		)
 	} catch (err: unknown) {
-		error.value = err instanceof Error ? err.message : 'Something went wrong.';
+		error.value =
+			err instanceof Error
+				? err.message
+				: 'Something went wrong.'
 	} finally {
-		loading.value = false;
+		loading.value = false
 	}
-};
+}
 
 const goBack = () => {
-	router.push('/auth/signin');
-};
+	router.push('/auth/signin')
+}
 </script>
 
 <style scoped>
-.recover-container {
-	height: 100vh;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	background: #f5f5f5;
-}
+.recover-page {
+	position: fixed;
+	inset: 0;
 
-.card {
-	width: 360px;
-	padding: 30px;
-	background: #ffffff;
-	border-radius: 16px;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-	text-align: center;
-}
-
-.icon {
-	width: 36px;
-	height: 36px;
-	margin: 0 auto 10px;
-	border-radius: 50%;
-	background: #d8e8c8;
-	color: #2f5d2f;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-weight: bold;
+
+	padding: 20px;
+	overflow: hidden;
+
+	background:
+		linear-gradient(
+			135deg,
+			#f4f7f2,
+			#edf3ea
+		);
 }
 
-h2 {
-	margin: 10px 0;
-	font-size: 22px;
+/* background blobs */
+.bg-blob {
+	position: absolute;
+	border-radius: 999px;
+	filter: blur(90px);
+	z-index: 0;
 }
 
-.subtitle {
-	font-size: 14px;
-	color: #666;
-	margin-bottom: 20px;
+.blob-1 {
+	width: 260px;
+	height: 260px;
+	top: -80px;
+	left: -80px;
+	background: rgba(34, 197, 94, 0.18);
 }
 
-form {
+.blob-2 {
+	width: 260px;
+	height: 260px;
+	bottom: -80px;
+	right: -80px;
+	background: rgba(16, 185, 129, 0.14);
+}
+
+.recover-card {
+	position: relative;
+	z-index: 2;
+
+	width: 100%;
+	max-width: 880px;
+
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+
+	background: rgba(255,255,255,0.78);
+
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+
+	border: 1px solid rgba(255,255,255,0.4);
+
+	border-radius: 26px;
+
+	overflow: hidden;
+
+	box-shadow:
+		0 12px 40px rgba(15,23,42,0.06);
+}
+
+/* LEFT SIDE */
+.hero-side {
+	position: relative;
+	min-height: 500px;
+}
+
+.hero-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.hero-overlay {
+	position: absolute;
+	inset: 0;
+
+	padding: 34px;
+
 	display: flex;
 	flex-direction: column;
-	text-align: left;
-}
+	justify-content: flex-end;
 
-label {
-	font-size: 12px;
-	margin-bottom: 5px;
-	color: #555;
-}
+	background:
+		linear-gradient(
+			180deg,
+			rgba(0,0,0,0.08),
+			rgba(0,0,0,0.72)
+		);
 
-input {
-	padding: 10px;
-	border-radius: 6px;
-	border: none;
-	background: #f3ecd9;
-	margin-bottom: 15px;
-}
-
-button {
-	background: #1f4d1f;
 	color: white;
-	padding: 12px;
-	border: none;
-	border-radius: 25px;
-	cursor: pointer;
-	font-weight: 500;
 }
 
-button:disabled {
+.hero-badge {
+	display: inline-flex;
+	width: fit-content;
+
+	padding: 8px 14px;
+
+	border-radius: 999px;
+
+	background: rgba(255,255,255,0.12);
+
+	border: 1px solid rgba(255,255,255,0.16);
+
+	font-size: 11px;
+	font-weight: 700;
+
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.hero-overlay h2 {
+	margin: 18px 0 12px;
+
+	font-size: 40px;
+	line-height: 0.96;
+	letter-spacing: -0.04em;
+
+	max-width: 9ch;
+}
+
+.hero-overlay p {
+	max-width: 32ch;
+
+	font-size: 14px;
+	line-height: 1.7;
+
+	color: rgba(255,255,255,0.82);
+}
+
+/* FORM SIDE */
+.form-side {
+	padding: 34px;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.form-badge {
+	display: inline-flex;
+	width: fit-content;
+
+	padding: 8px 14px;
+
+	border-radius: 999px;
+
+	background: rgba(22,101,52,0.1);
+
+	color: #166534;
+
+	font-size: 11px;
+	font-weight: 700;
+
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.form-side h1 {
+	margin: 18px 0 10px;
+
+	font-size: 42px;
+	line-height: 0.96;
+	letter-spacing: -0.04em;
+
+	color: #0f172a;
+}
+
+.form-intro {
+	margin-bottom: 28px;
+
+	font-size: 14px;
+	line-height: 1.7;
+
+	color: #64748b;
+}
+
+.recover-form {
+	display: grid;
+	gap: 18px;
+}
+
+.field {
+	display: grid;
+	gap: 8px;
+}
+
+.field label {
+	font-size: 11px;
+	font-weight: 700;
+
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+
+	color: #475569;
+}
+
+.field input {
+	width: 100%;
+	height: 48px;
+
+	padding: 0 16px;
+
+	border-radius: 14px;
+
+	border: 1px solid rgba(15,23,42,0.08);
+
+	background: rgba(255,255,255,0.82);
+
+	outline: none;
+
+	transition: all 0.2s ease;
+}
+
+.field input:focus {
+	border-color: rgba(22,101,52,0.35);
+
+	box-shadow:
+		0 0 0 4px rgba(22,101,52,0.08);
+}
+
+.submit-btn {
+	height: 48px;
+
+	border: none;
+	border-radius: 14px;
+
+	background:
+		linear-gradient(
+			135deg,
+			#22c55e,
+			#166534
+		);
+
+	color: white;
+
+	font-size: 14px;
+	font-weight: 700;
+
+	letter-spacing: 0.04em;
+
+	cursor: pointer;
+
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+
+	box-shadow:
+		0 10px 24px rgba(22,101,52,0.18);
+}
+
+.submit-btn:hover:not(:disabled) {
+	transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
 	opacity: 0.7;
 	cursor: not-allowed;
 }
 
-button:hover:not(:disabled) {
-	background: #163a16;
+.error-message {
+	padding: 12px 14px;
+
+	border-radius: 14px;
+
+	background: rgba(254,242,242,0.92);
+
+	border: 1px solid rgba(180,35,24,0.1);
+
+	color: #b42318;
+
+	font-size: 14px;
 }
 
-.back {
-	margin-top: 15px;
-	font-size: 13px;
-	color: #2f5d2f;
+.back-btn {
+	margin-top: 18px;
+
+	background: transparent;
+	border: none;
+
+	width: fit-content;
+
+	padding: 0;
+
+	font-size: 14px;
+	font-weight: 600;
+
+	color: #166534;
+
 	cursor: pointer;
 }
 
-.error-message {
-	color: #c0392b;
-	margin-top: 10px;
-	font-size: 14px;
+.back-btn:hover {
+	text-decoration: underline;
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+	.recover-page {
+		position: relative;
+		min-height: 100vh;
+		padding: 14px;
+	}
+
+	.recover-card {
+		grid-template-columns: 1fr;
+		max-width: 460px;
+	}
+
+	.hero-side {
+		display: none;
+	}
+
+	.form-side {
+		padding: 24px;
+	}
+
+	.form-side h1 {
+		font-size: 34px;
+	}
 }
 </style>
