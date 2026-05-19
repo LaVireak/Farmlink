@@ -20,14 +20,14 @@
         <div class="relative" id="product-menu">
           <div class="flex items-center space-x-1">
             <button @click.stop="toggleProduct" class="flex items-center gap-1 cursor-pointer group focus:outline-none">
-              <div class="nav-link uppercase text-xs">Product</div>
-              <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="nav-link uppercase text-xs"><NuxtLink to="/user/products">Product</NuxtLink></div>
+              <!-- <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-              </svg>
+              </svg> -->
             </button>
           </div>
 
-          <div v-show="productOpen" class="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+          <!-- <div v-show="productOpen" class="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <div class="p-3 border-b">
               <div class="text-xs font-bold text-gray-700">Categories:</div>
               <ul class="mt-2">
@@ -45,12 +45,12 @@
                 <li><NuxtLink to="#" class="block px-2 py-1 hover:bg-gray-100">Discounted</NuxtLink></li>
               </ul>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <div class="relative" id="farm-menu">
           <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none">
-            <span class="nav-link uppercase text-xs">Farm</span>
+            <span class="nav-link uppercase text-xs"><NuxtLink to="/user/farm">Farm</NuxtLink></span>
             <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
