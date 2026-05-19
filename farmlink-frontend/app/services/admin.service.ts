@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { getAccessToken } from './auth.service'
 
 // Base API URL - adjust based on your environment
 const API_BASE = '/api'
@@ -8,7 +9,7 @@ async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  const token = await getAccessToken()
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

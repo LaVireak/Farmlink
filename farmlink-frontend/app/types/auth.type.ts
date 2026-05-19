@@ -18,6 +18,9 @@ export interface SignUpPayload {
     email: string;
     password: string;
     role?: 'customer' | 'farmer';
+    phone?: string;
+    farmName?: string;
+    address?: string;
 }
 
 export interface VerifyOtpPayload {
@@ -30,11 +33,13 @@ export interface SignInPayload {
     password: string;
 }
 
-export interface AuthResponse {
+export interface SignInResult {
     user: AuthUser;
     accessToken: string;
     refreshToken: string;
 }
+
+export type AuthResponse = SignInResult;
 
 export interface UploadedImagePayload {
     name: string;

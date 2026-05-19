@@ -9,15 +9,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/enums/role.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
-import { UpdateAdminDto, SuspendUserDto, UpdateUserRoleDto, UpdateOrderStatusDto, RejectProductDto, MatchFarmerDto } from './dto/update-admin.dto';
+import { SuspendUserDto, UpdateUserRoleDto, UpdateOrderStatusDto, RejectProductDto, MatchFarmerDto } from './dto/update-admin.dto';
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(SupabaseAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
