@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import type { AuthUser, SignInPayload, SignInResult, SignUpPayload } from '../types/auth.type';
-import { authService } from '../services/auth.service';
+import type { Session } from '@supabase/supabase-js';
+import { authService, mapSupabaseUser, supabase } from '../services/auth.service';
 
 const SESSION_KEY = 'farmlink.auth.session';
 export const useAuthStore = defineStore('auth', () => {
@@ -16,6 +17,20 @@ export const useAuthStore = defineStore('auth', () => {
         accessToken.value = result.accessToken;
         refreshToken.value = result.refreshToken;
         user.value = result.user;
+        persist();
+    };
+
+    const applySupabaseSession = (session: Session) => {
+        accessToken.value = session.access_token;
+        refreshToken.value = session.refresh_token;
+        user.value = mapSupabaseUser(session.user);
+        persist();
+    };
+
+    const clearSession = () => {
+        accessToken.value = null;
+        refreshToken.value = null;
+        user.value = null;
         persist();
     };
 
@@ -41,8 +56,15 @@ export const useAuthStore = defineStore('auth', () => {
      );
     };
 
-    const hydrate = () => {
-        if ( typeof window === 'undefined' || hydrated.value) return;
+    const hydrate = async () => {
+        if (typeof window === 'undefined' || hydrated.value) return;
+
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+            applySupabaseSession(data.session);
+            hydrated.value = true;
+            return;
+        }
 
         const raw = localStorage.getItem(SESSION_KEY);
         if (!raw) {
@@ -51,12 +73,12 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         try {
-            const parsed = JSON.parse(raw!);
+            const parsed = JSON.parse(raw);
             if (parsed.accessToken && parsed.refreshToken && parsed?.user?.id && parsed?.user?.email && parsed?.user?.role) {
                 accessToken.value = parsed.accessToken;
                 refreshToken.value = parsed.refreshToken;
                 user.value = parsed.user;
-            } 
+            }
         } catch {
             localStorage.removeItem(SESSION_KEY);
         } finally {
@@ -92,11 +114,9 @@ export const useAuthStore = defineStore('auth', () => {
         return authService.resendSignupOtp(email);
     };
 
-    const signOut = () => {
-        accessToken.value = null;
-        refreshToken.value = null;
-        user.value = null;
-        persist();
+    const signOut = async () => {
+        await authService.signOut();
+        clearSession();
     };
 
     return {

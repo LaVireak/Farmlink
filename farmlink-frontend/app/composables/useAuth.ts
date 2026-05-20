@@ -16,11 +16,11 @@ export const useAuth = () => {
   const requestPasswordResetOtp = (email: string) => authService.requestPasswordResetOtp(email);
   const resendPasswordResetOtp = (email: string) => authService.resendPasswordResetOtp(email);
   const verifyPasswordResetOtp = (email: string, code: string) => authService.verifyPasswordResetOtp({ email, code });
-  const resetPassword = (token: string, password: string) => authService.resetPassword(token, password);
+  const resetPassword = (password: string) => authService.resetPassword(password);
   const submitFarmerOnboarding = (payload: FarmerOnboardingPayload) => authService.submitFarmerOnboarding(payload);
 
   const signOut = async () => {
-    auth.signOut();
+    await auth.signOut();
   };
 
   return {

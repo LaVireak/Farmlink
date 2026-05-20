@@ -268,6 +268,9 @@ const onSubmit = async () => {
     email: form.email,
     password: form.password,
     role: 'farmer',
+    phone: form.phone,
+    farmName: form.name,
+    address: form.address,
   });
 
   await router.push(`/auth/verify-code?email=${encodeURIComponent(form.email)}`);
