@@ -1,41 +1,54 @@
 import { Injectable } from '@nestjs/common'
 import { InjectDataSource } from '@nestjs/typeorm'
 import { DataSource } from 'typeorm'
+import { ProductsService } from '../products/products.service'
 
 @Injectable()
 export class SearchService {
-    constructor(@InjectDataSource() private db: DataSource) { }
+    constructor(
+        @InjectDataSource() private db: DataSource,
+        private readonly productsService: ProductsService,
+    ) { }
 
     async search(q: string) {
-        const results = await this.db.query(`
-      SELECT 
-        fp.id,
-        fp.farm_name AS name,
-        fp.description,
-        fp.province AS category,
-        fp.cover_image_url AS image,
-        'farm' AS type
-      FROM farmer_profiles fp
-      WHERE fp.farm_name ILIKE $1 OR fp.description ILIKE $1
+        // Ensure q is defined and not empty
+        if (!q || q.trim().length === 0) {
+            return []
+        }
 
-      UNION ALL
+        const query = q.trim().toLowerCase()
+        const searchPattern = `%${q.trim()}%`
 
-      SELECT 
-        p.id,
-        p.name_en AS name,
-        p.description,
-        c.name_en AS category,
-        p.thumbnail_url AS image,
-        'product' AS type
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.name_en ILIKE $1 OR c.name_en ILIKE $1
-      AND p.status = 'active'
+        // Search farms from the real Supabase DB
+        let farms: any[] = []
+        try {
+            farms = await this.db.query(`
+              SELECT 
+                fp.id,
+                fp.farm_name AS name,
+                fp.description,
+                fp.province AS category,
+                fp.cover_image_url AS image,
+                'farm' AS type
+              FROM farmer_profiles fp
+              WHERE fp.farm_name ILIKE $1 OR fp.description ILIKE $1
+              LIMIT 5
+            `, [searchPattern])
+        } catch (_) {
+            farms = []
+        }
 
-      ORDER BY type, name
-      LIMIT 10
-    `, [`%${q}%`])
+        // Search products from the in-memory mock list (same data the catalog page uses)
+        const allProducts = await this.productsService.findAll()
+        const products = allProducts
+            .filter(p =>
+                p.name?.toLowerCase().includes(query) ||
+                p.category?.toLowerCase().includes(query)
+            )
+            .slice(0, 5)
+            .map(p => ({ ...p, type: 'product' }))
 
-        return results
+        // Return farms first, then products (max 10 total)
+        return [...farms, ...products].slice(0, 10)
     }
 }

@@ -26,7 +26,6 @@
           @mouseenter="handleProductHover(true)"
           @mouseleave="handleProductHover(false)"
         >
-          <!-- Trigger Area with Padding Bridge -->
           <div class="flex items-center space-x-1 py-6 cursor-pointer">
             <NuxtLink to="/user/products" class="nav-link uppercase text-xs">Product</NuxtLink>
             <button class="flex items-center focus:outline-none" aria-label="Toggle Products">
@@ -56,7 +55,6 @@
               </div>
             </div>
 
-            <!-- Column 2: Fruits -->
             <div class="flex flex-col justify-between h-full">
               <div>
                 <div class="text-xs font-bold text-gray-800 uppercase tracking-wider pb-1 mb-3">Fruits</div>
@@ -73,7 +71,6 @@
               </div>
             </div>
 
-            <!-- Column 3: Farm Essentials -->
             <div class="flex flex-col justify-between h-full">
               <div>
                 <div class="text-xs font-bold text-gray-800 uppercase tracking-wider pb-1 mb-3">Supplies & Tools</div>
@@ -90,7 +87,6 @@
               </div>
             </div>
 
-            <!-- Column 4 (Right Side Image Banner Link) -->
             <NuxtLink to="/user/products" class="relative block w-full h-[250px] rounded overflow-hidden border border-gray-100 shadow-sm group/banner">
               <img 
                 src="/assets/images/farm1.png" 
@@ -163,27 +159,26 @@
             type="text"
             v-model="searchQuery"
             @input="handleSearch"
-            @focus="showDropdown = true"
+            @focus="handleFocus"
+            @keydown.enter="triggerSearch"
             class="w-full bg-transparent border-[1px] border-black rounded-full py-1 px-4 focus:outline-none focus:ring-0 search-input" 
             placeholder="Search..." 
           />
-          <button class="absolute right-4 top-1/2 -translate-y-1/2" aria-label="Search Submit">
+          <button @click="triggerSearch" class="absolute right-4 top-1/2 -translate-y-1/2" aria-label="Search Submit">
             <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
           </button>
 
-          <!-- Search Dropdown -->
+          <!-- Search Dropdown — only shows when 2+ chars typed -->
           <div 
-            v-if="showDropdown && searchQuery.trim().length > 0"
+            v-if="showDropdown && searchQuery.trim().length >= 2"
             class="absolute top-full mt-2 w-full bg-[#FFF7DA] border border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 overflow-hidden"
           >
-            <!-- Loading -->
             <div v-if="searchLoading" class="px-4 py-3 text-sm text-gray-500 text-center">
               Searching...
             </div>
 
-            <!-- Results -->
             <template v-else>
               <div
                 v-for="item in searchResults"
@@ -191,21 +186,18 @@
                 @mousedown.prevent="goToResult(item)"
                 class="flex items-center gap-3 px-4 py-3 hover:bg-[#f0e8c8] cursor-pointer border-b border-gray-200 last:border-b-0 transition-colors group"
               >
-                <!-- Left: Info -->
                 <div class="flex-1 min-w-0">
                   <div class="font-bold text-sm text-gray-800 truncate">{{ item.name }}</div>
                   <div class="text-xs text-gray-500 truncate mt-0.5">{{ item.description }}</div>
                   <div class="text-xs text-gray-400 truncate mt-0.5" v-if="item.category">{{ item.category }}</div>
                 </div>
 
-                <!-- Right: Image + Badge -->
                 <div class="flex-shrink-0 relative">
                   <img 
                     :src="item.image || '/assets/images/placeholder.png'" 
                     :alt="item.name"
                     class="w-14 h-14 object-cover rounded-lg border border-gray-300"
                   />
-                  <!-- Type Badge -->
                   <span 
                     class="absolute -top-2 -right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-black whitespace-nowrap"
                     :class="item.type === 'farm' ? 'bg-[#1f7a2e] text-white' : 'bg-yellow-400 text-black'"
@@ -215,7 +207,6 @@
                 </div>
               </div>
 
-              <!-- No results -->
               <div v-if="searchResults.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">
                 No results found for "{{ searchQuery }}"
               </div>
@@ -337,57 +328,29 @@ const showDropdown = ref(false)
 const searchLoading = ref(false)
 const searchContainer = ref(null)
 
-// ── STATIC TEST DATA (remove later and replace with API) ──
-const staticFarms = [
-  { id: 1, name: 'Green Valley Farm', description: 'Organic vegetables & seasonal produce', category: 'Organic', image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=100&h=100&fit=crop' },
-  { id: 2, name: "Tom's Orchard Farm", description: 'Family-run orchard and beekeeping', category: 'Orchard', image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=100&h=100&fit=crop' },
-  { id: 3, name: 'Hydroponics Hub', description: 'Greenhouse-grown greens year round', category: 'Hydroponics', image: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=100&h=100&fit=crop' },
-  { id: 4, name: 'Sunrise Rice Farm', description: 'Traditional rice farming in the highlands', category: 'Rice', image: 'https://images.unsplash.com/photo-1536054985104-7f7d2af54c30?w=100&h=100&fit=crop' },
-]
-
-const staticProducts = [
-  { id: 1, name: 'Fresh Tomato', description: 'Locally grown red tomatoes', category: 'Vegetables', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop' },
-  { id: 2, name: 'Cherry Tomato', description: 'Sweet bite-sized cherry tomatoes', category: 'Vegetables', image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=100&h=100&fit=crop' },
-  { id: 3, name: 'Heirloom Seeds Pack', description: 'Mixed vegetable seed collection', category: 'Seeds', image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=100&h=100&fit=crop' },
-  { id: 4, name: 'Organic Fertilizer', description: 'Natural compost-based fertilizer', category: 'Supplies', image: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=100&h=100&fit=crop' },
-  { id: 5, name: 'Mango', description: 'Sweet tropical mangoes from local farms', category: 'Fruits', image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=100&h=100&fit=crop' },
-  { id: 6, name: 'Baby Spinach', description: 'Fresh tender spinach leaves', category: 'Leafy Greens', image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=100&h=100&fit=crop' },
-]
-// ──────────────────────────────────────────────────────────
+// Only show dropdown if already has 2+ chars when focused
+const handleFocus = () => {
+  if (searchQuery.value.trim().length >= 2) {
+    showDropdown.value = true
+  }
+}
 
 const handleSearch = async () => {
-  if (!searchQuery.value.trim()) {
+  const q = searchQuery.value.trim()
+
+  // Hide dropdown and clear results if less than 2 chars
+  if (q.length < 2) {
     searchResults.value = []
+    showDropdown.value = false
     return
   }
 
   searchLoading.value = true
+  showDropdown.value = true
 
   try {
-    // TODO: replace with real API calls later
-    // const [farms, products] = await Promise.all([
-    //   $fetch(`/api/farms?q=${searchQuery.value}`),
-    //   $fetch(`/api/products?q=${searchQuery.value}`)
-    // ])
-
-    const q = searchQuery.value.toLowerCase()
-
-    const farms = staticFarms.filter(f =>
-      f.name.toLowerCase().includes(q) ||
-      f.description.toLowerCase().includes(q) ||
-      f.category.toLowerCase().includes(q)
-    )
-
-    const products = staticProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-    )
-
-    searchResults.value = [
-      ...farms.map(f => ({ ...f, type: 'farm' })),
-      ...products.map(p => ({ ...p, type: 'product' }))
-    ]
+    const data = await $fetch(`http://localhost:3001/api/search?q=${encodeURIComponent(q)}`)
+    searchResults.value = data
   } catch (e) {
     searchResults.value = []
   } finally {
@@ -402,9 +365,20 @@ const goToResult = (item) => {
   if (item.type === 'farm') navigateTo(`/user/farmer/${item.id}`)
   else navigateTo(`/user/products/${item.id}`)
 }
+
+const triggerSearch = () => {
+  showDropdown.value = false
+  searchResults.value = []
+  const q = searchQuery.value.trim()
+  searchQuery.value = ''
+  if (q) {
+    navigateTo(`/user/products?search=${encodeURIComponent(q)}`)
+  } else {
+    navigateTo('/user/products')
+  }
+}
 // ────────────────────────────────────────────────────────
 
-// Smooth Hover handler for mega menu
 const handleProductHover = (status) => {
   productOpen.value = status
   if (status) {
@@ -432,7 +406,6 @@ const toggleUserMenu = () => {
   }
 }
 
-// Notifications State
 const notifications = ref([
   { id: 1, title: 'New order received', body: 'Order #123 has been placed.', time: '2h ago', read: false },
   { id: 2, title: 'Message from Farmer John', body: 'Can you deliver extra potatoes?', time: '1d ago', read: false }
@@ -471,7 +444,6 @@ const onClickOutside = (e) => {
   if (userMenuEl && !userMenuEl.contains(e.target)) userMenuOpen.value = false
   if (notificationsEl && !notificationsEl.contains(e.target)) notificationsOpen.value = false
 
-  // Close search dropdown when clicking outside
   if (searchContainer.value && !searchContainer.value.contains(e.target)) {
     showDropdown.value = false
   }

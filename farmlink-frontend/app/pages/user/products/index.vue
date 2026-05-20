@@ -22,6 +22,26 @@
       <aside class="filter-sidebar">
 
         <div class="filter-section">
+          <h3 class="filter-title">Search</h3>
+          <div class="relative">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Search products..."
+              class="filter-input"
+            />
+            <button 
+              v-if="searchQuery" 
+              @click="searchQuery = ''" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-section">
           <h3 class="filter-title">Category</h3>
           <select v-model="selectedCategory" class="filter-select">
             <option value="All">All Categories</option>
@@ -109,7 +129,8 @@
             <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
             <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
           </svg>
-          <p>No products match your found</p>
+          <p class="text-lg font-semibold text-gray-700 mt-2">No products found matching your search</p>
+          <p class="text-sm text-gray-500">Try adjusting your filters or search keywords.</p>
         </div>
       </main>
 
@@ -120,13 +141,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted, watch } from "vue"
+import { useRoute } from "vue-router"
+
+const route = useRoute()
+const config = useRuntimeConfig()
 
 const selectedCategory = ref('All')
 const price = ref(300)
 const minRating = ref(0)
 const sortBy = ref('default')
 const loading = ref(false)
+const searchQuery = ref(route.query.search || '')
 
 const products = ref([])
 const allCategories = ref([])
@@ -139,9 +165,8 @@ onMounted(async () => {
 const fetchProducts = async () => {
   loading.value = true
   try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch('/api/products')
-    // products.value = await res.json()
+    const res = await $fetch(`${config.public.apiUrl}/products`)
+    products.value = res || []
   } catch (err) {
     console.error('Failed to fetch products:', err)
   } finally {
@@ -151,22 +176,37 @@ const fetchProducts = async () => {
 
 const fetchCategories = async () => {
   try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch('/api/categories')
-    // allCategories.value = await res.json()
-
-    // Or derive from products if your API doesn't have a separate endpoint:
-    // allCategories.value = [...new Set(products.value.map(p => p.category))]
+    if (products.value.length > 0) {
+      allCategories.value = [...new Set(products.value.map(p => p.category).filter(Boolean))]
+    }
   } catch (err) {
     console.error('Failed to fetch categories:', err)
   }
 }
+
+// Watch for route search param changes (e.g. from header search)
+watch(() => route.query.search, (newVal) => {
+  searchQuery.value = newVal || ''
+})
+
+// Sync search query changes to URL route
+watch(searchQuery, (newVal) => {
+  const query = { ...route.query }
+  if (newVal) {
+    query.search = newVal
+  } else {
+    delete query.search
+  }
+  navigateTo({ path: route.path, query })
+})
 
 const clearFilters = () => {
   selectedCategory.value = 'All'
   price.value = 300
   minRating.value = 0
   sortBy.value = 'default'
+  searchQuery.value = ''
+  navigateTo('/user/products')
 }
 
 const filteredProducts = computed(() => {
@@ -181,8 +221,14 @@ const filteredProducts = computed(() => {
 
     const matchPrice = effectivePrice <= price.value
     const matchRating = (p.rating || 0) >= minRating.value
+    
+    const query = searchQuery.value.trim().toLowerCase()
+    const matchSearch = !query || 
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.description && p.description.toLowerCase().includes(query))
 
-    return matchCategory && matchPrice && matchRating
+    return matchCategory && matchPrice && matchRating && matchSearch
   })
 })
 
@@ -330,6 +376,23 @@ const handleAddToCart = (product) => {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1b1c1a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+  border-color: #2e7e3f;
 }
 
 .filter-select:focus {
