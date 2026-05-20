@@ -33,12 +33,10 @@ export class ProductsController {
     return this.productService.findOne(id);
   }
 
-
   @Post()
   create(@Body() body: any) {
     return this.productService.create(body);
   }
-
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {

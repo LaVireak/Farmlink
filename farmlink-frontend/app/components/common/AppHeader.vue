@@ -349,7 +349,7 @@ const handleSearch = async () => {
   showDropdown.value = true
 
   try {
-    const data = await $fetch(`http://localhost:3001/api/search?q=${encodeURIComponent(q)}`)
+    const data = await $fetch(`${config.public.apiUrl}/products`)
     searchResults.value = data
   } catch (e) {
     searchResults.value = []
