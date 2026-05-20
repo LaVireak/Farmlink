@@ -38,19 +38,19 @@ export class User {
   })
   status: UserStatus;
 
-  @Column({ name: 'first_name', length: 100, nullable: true })
-  firstName: string;
+  @Column('varchar', { name: 'first_name', length: 100, nullable: true })
+  firstName: string | null;
 
-  @Column({ name: 'last_name', length: 100, nullable: true })
-  lastName: string;
+  @Column('varchar', { name: 'last_name', length: 100, nullable: true })
+  lastName: string | null;
 
-  @Column({ name: 'phone_number', length: 30, nullable: true })
-  phoneNumber: string;
+  @Column('varchar', { name: 'phone_number', length: 30, nullable: true })
+  phoneNumber: string | null;
 
-  @Column({ name: 'avatar_url', length: 500, nullable: true })
-  avatarUrl: string;
+  @Column('varchar', { name: 'avatar_url', length: 500, nullable: true })
+  avatarUrl: string | null;
 
-  @Column({ name: 'language_pref', length: 5, default: 'kh' })
+  @Column('varchar', { name: 'language_pref', length: 5, default: 'kh' })
   languagePref: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

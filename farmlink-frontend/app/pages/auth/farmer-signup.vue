@@ -1,187 +1,242 @@
 <template>
-  <div class="min-h-screen bg-[#eef3ea] px-4 py-10 flex justify-center">
-    <div class="w-full max-w-6xl grid md:grid-cols-2 gap-10">
-      <div class="bg-white rounded-3xl shadow-md overflow-hidden border border-emerald-100">
-        <div class="relative h-[420px]">
+  <div class="auth-page">
+    <div class="auth-shell">
+      
+      <!-- LEFT HERO -->
+      <div class="hero-panel">
+        <div class="hero-image-wrap">
           <img
-            src="https://images.unsplash.com/photo-1500382017468-9049fed747ef"
-            class="absolute inset-0 h-full w-full object-cover"
+            src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80"
+            alt="Modern farming"
+            class="hero-image"
           >
-          <div class="absolute inset-0 overlay-card">
-            <span class="pill">Live Metrics</span>
-            <div>
-              <div class="text-sm font-semibold tracking-wide">Precision Farming</div>
-              <h2 class="text-2xl font-semibold mt-2">
-                Precision Ecology for
-                the modern farmer
-              </h2>
-              <p class="text-xs opacity-90 mt-3">
-                Join the most advanced digital network connecting sustainable harvests
-                to the global marketplace.
-              </p>
-            </div>
+
+          <div class="hero-overlay">
+            <span class="eyebrow">Farmer Network</span>
+
+            <h2>
+              Grow your farm with
+              the future of
+              digital agriculture
+            </h2>
+
+            <p>
+              Join FarmLink to manage harvests, connect with buyers,
+              and unlock modern tools built for sustainable farming.
+            </p>
           </div>
         </div>
 
-        <div class="p-6">
-          <div class="flex gap-4">
-            <div class="stat-card">
-              <strong>4.2k</strong><br>Active Farms
-            </div>
-            <div class="stat-card">
-              <strong>128TB</strong><br>Harvest Data
-            </div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <span class="feature-label">Smart Operations</span>
+
+            <strong>Track every harvest</strong>
+
+            <p>
+              Monitor crops, inventory, and farm performance
+              in one secure platform.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-label">Marketplace Access</span>
+
+            <strong>Reach more buyers</strong>
+
+            <p>
+              Expand your agricultural business with direct
+              access to trusted markets.
+            </p>
           </div>
         </div>
       </div>
 
-      <div>
-        <span class="text-xs text-emerald-700 font-semibold">PARTNER ONBOARDING</span>
-        <h1 class="text-3xl font-semibold mt-2 text-slate-900">
-          Create Farmer Account
-        </h1>
-        <p class="text-sm text-slate-500 mb-6">
-          Digitize your operations and access professional-grade tools.
+      <!-- RIGHT FORM -->
+      <div class="form-panel">
+        <div class="form-badge">Partner onboarding</div>
+
+        <h1>Create Farmer Account</h1>
+
+        <p class="form-intro">
+          Digitize your operations and access professional-grade agricultural tools.
         </p>
 
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <label class="field-label">Full Name</label>
-            <input v-model="form.name" placeholder="Samuel Green" class="input">
+        <!-- NAME -->
+        <div class="name-grid">
+          <div class="field">
+            <label>First name</label>
+            <input v-model="form.firstName" placeholder="Samuel">
           </div>
-          <div>
-            <label class="field-label">Phone Number</label>
-            <input v-model="form.phone" placeholder="(+855) 000-000-000" class="input">
+
+          <div class="field">
+            <label>Last name</label>
+            <input v-model="form.lastName" placeholder="Green">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="col-span-2">
-            <label class="field-label">Email Address</label>
-            <input v-model="form.email" type="email" placeholder="farmer@example.com" class="input">
+        <div class="name-grid" style="margin-top:12px">
+          <div class="field">
+            <label>Phone Number</label>
+            <input v-model="form.phone" placeholder="(+855) 000-000-000">
           </div>
-          <div>
-            <label class="field-label">Password</label>
-            <input v-model="form.password" type="password" placeholder="Enter password" class="input">
-          </div>
-          <div>
-            <label class="field-label">Confirm Password</label>
-            <input v-model="form.confirmPassword" type="password" placeholder="Confirm password" class="input">
+
+          <div class="field">
+            <label>Farm Name</label>
+            <input v-model="form.farmName" placeholder="Green Valley Farm">
           </div>
         </div>
 
-        <div class="card">
-          <h3 class="section-title">Verification Hub</h3>
-
-          <div class="grid grid-cols-2 gap-4 mt-4">
-            <div>
-              <label class="field-label">Farmer ID</label>
-              <label class="upload-box cursor-pointer">
-                <input
-                  class="hidden"
-                  type="file"
-                  accept="image/*"
-                  @change="(event) => onFileChange(event, 'idPhoto')"
-                >
-                <img
-                  v-if="previews.idPhoto"
-                  :src="previews.idPhoto"
-                  alt="ID preview"
-                  class="preview-image"
-                >
-                <div v-else class="upload-inner">
-                  <div class="upload-title">ID Photo</div>
-                  <div class="upload-hint">JPG, PNG 10MB</div>
-                </div>
-              </label>
-            </div>
-            <div>
-              <label class="field-label">Ownership Deed</label>
-              <label class="upload-box cursor-pointer">
-                <input
-                  class="hidden"
-                  type="file"
-                  accept="image/*"
-                  @change="(event) => onFileChange(event, 'farmDeed')"
-                >
-                <img
-                  v-if="previews.farmDeed"
-                  :src="previews.farmDeed"
-                  alt="Farm deed preview"
-                  class="preview-image"
-                >
-                <div v-else class="upload-inner">
-                  <div class="upload-title">Farm Deed</div>
-                  <div class="upload-hint">JPG, PNG 10MB</div>
-                </div>
-              </label>
-            </div>
-          </div>
+        <!-- EMAIL -->
+        <div class="field">
+          <label>Email Address</label>
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="farmer@example.com"
+          >
         </div>
 
-        <div class="card">
-          <h3 class="section-title">Farm Logistics</h3>
-          <label class="field-label mt-3">Physical Address</label>
-          <input v-model="form.address" placeholder="Operation HQ, GPS Coordinates or Street Address" class="input">
-        </div>
-
-        <div class="card flex items-center justify-between">
-          <div>
-            <p class="font-medium text-sm">Profile Visual</p>
-            <p class="text-xs text-slate-500">Upload aerial or field photo for verification</p>
-          </div>
-          <label class="profile-upload cursor-pointer">
+        <!-- PASSWORD -->
+        <div class="name-grid">
+          <div class="field">
+            <label>Password</label>
             <input
-              class="hidden"
-              type="file"
-              accept="image/*"
-              @change="(event) => onFileChange(event, 'profilePhoto')"
+              v-model="form.password"
+              type="password"
+              placeholder="Enter password"
             >
-            <img
-              v-if="previews.profilePhoto"
-              :src="previews.profilePhoto"
-              alt="Profile preview"
-              class="profile-preview"
-            >
-            <span v-else>Select</span>
-          </label>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Product Catalog</h3>
-          <div class="field-label mt-3">Inventory Tags</div>
-
-          <div class="flex flex-wrap gap-2 mt-3">
-            <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
           </div>
 
-          <div class="flex gap-2 mt-3">
-            <input v-model="newTag" placeholder="Add product (e.g. Organic Carrots)" class="input flex-1">
-            <button @click="addTag" class="btn-secondary" type="button">Deploy Tag</button>
+          <div class="field">
+            <label>Confirm Password</label>
+            <input
+              v-model="form.confirmPassword"
+              type="password"
+              placeholder="Confirm password"
+            >
           </div>
         </div>
 
-        <label class="flex gap-2 text-xs mt-4 text-slate-600">
+        <!-- ADDRESS -->
+        <div class="field">
+          <label>Farm Address</label>
+          <input
+            v-model="form.address"
+            placeholder="Operation HQ or farm location"
+          >
+        </div>
+
+        <!-- FILES -->
+        <div class="upload-grid">
+          <div>
+            <label class="field-label">Farmer ID</label>
+
+            <label class="upload-box">
+              <input
+                class="hidden"
+                type="file"
+                accept="image/*"
+                @change="(event) => onFileChange(event, 'idPhoto')"
+              >
+
+              <img
+                v-if="previews.idPhoto"
+                :src="previews.idPhoto"
+                class="preview-image"
+              >
+
+              <div v-else class="upload-inner">
+                <div class="upload-title">Upload ID</div>
+                <div class="upload-hint">PNG / JPG</div>
+              </div>
+            </label>
+          </div>
+
+          <div>
+            <label class="field-label">Farm Deed</label>
+
+            <label class="upload-box">
+              <input
+                class="hidden"
+                type="file"
+                accept="image/*"
+                @change="(event) => onFileChange(event, 'farmDeed')"
+              >
+
+              <img
+                v-if="previews.farmDeed"
+                :src="previews.farmDeed"
+                class="preview-image"
+              >
+
+              <div v-else class="upload-inner">
+                <div class="upload-title">Upload Deed</div>
+                <div class="upload-hint">PNG / JPG</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- TAGS -->
+        <div class="field">
+          <label>Product Catalog</label>
+
+          <div class="tag-list">
+            <span
+              v-for="tag in tags"
+              :key="tag"
+              class="tag"
+            >
+              {{ tag }}
+            </span>
+          </div>
+
+          <div class="tag-input">
+            <input
+              v-model="newTag"
+              placeholder="Add product"
+            >
+
+            <button
+              type="button"
+              class="tag-btn"
+              @click="addTag"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- CHECKBOX -->
+        <label class="policy-check">
           <input type="checkbox" v-model="form.agree">
-          I confirm the accuracy of all submitted agricultural data and agree to the
-          <span class="link-inline">Operational Protocols</span> and
-          <span class="link-inline">Privacy Framework</span>.
+
+          <span>
+            I confirm the accuracy of submitted agricultural data and
+            agree to the operational protocols and privacy policy.
+          </span>
         </label>
 
-        <p v-if="errorMessage" class="text-red-600 text-sm mt-2">
+        <!-- ERROR -->
+        <p
+          v-if="errorMessage"
+          class="feedback feedback-error"
+        >
           {{ errorMessage }}
         </p>
 
+        <!-- BUTTON -->
         <button
           @click="onSubmit"
-          class="btn-primary mt-4"
+          class="primary-btn"
         >
-          Initialize Partner Account
+          Create Farmer Account
         </button>
 
-        <p class="text-center text-sm text-slate-600 mt-6">
-          Existing Partner?
-          <NuxtLink to="/auth/signin" class="text-emerald-700 font-semibold">
+        <p class="footer-copy">
+          Already have an account?
+          <NuxtLink to="/auth/signin">
             Sign in
           </NuxtLink>
         </p>
@@ -189,11 +244,11 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
+import { isValidEmail } from '../../utils/validation';
 
 const router = useRouter();
 const { requestSignupOtp } = useAuth();
@@ -201,7 +256,9 @@ const PROFILE_STORAGE_KEY = 'farmlink.farmer.profilePreview';
 const ONBOARDING_STORAGE_KEY = 'farmlink.farmer.onboarding';
 
 const form = reactive({
-  name: '',
+  firstName: '',
+  lastName: '',
+  farmName: '',
   phone: '',
   address: '',
   email: '',
@@ -241,8 +298,13 @@ const addTag = () => {
 const onSubmit = async () => {
   errorMessage.value = '';
 
-  if (!form.name || !form.phone || !form.email || !form.password || !form.confirmPassword) {
+  if (!form.firstName || !form.lastName || !form.phone || !form.email || !form.password || !form.confirmPassword) {
     errorMessage.value = 'Please complete all required fields.';
+    return;
+  }
+
+  if (!isValidEmail(form.email)) {
+    errorMessage.value = 'Please enter a valid email address.';
     return;
   }
 
@@ -256,9 +318,9 @@ const onSubmit = async () => {
     return;
   }
 
-  const nameParts = form.name.trim().split(/\s+/);
-  const firstName = nameParts.shift() || form.name.trim();
-  const lastName = nameParts.join(' ') || 'Farmer';
+  const firstName = form.firstName.trim();
+  const lastName = form.lastName.trim() || 'Farmer';
+  const farmName = form.farmName.trim() || `${firstName} ${lastName}`;
 
   await persistOnboarding();
 
@@ -268,6 +330,9 @@ const onSubmit = async () => {
     email: form.email,
     password: form.password,
     role: 'farmer',
+    phone: form.phone,
+    farmName,
+    address: form.address,
   });
 
   await router.push(`/auth/verify-code?email=${encodeURIComponent(form.email)}`);
@@ -284,7 +349,7 @@ const onFileChange = async (event: Event, key: 'idPhoto' | 'farmDeed' | 'profile
 
   if (!file.type.startsWith('image/')) {
     errorMessage.value = 'Only image files are allowed in Verification Hub.';
-    input.value = '';
+    if (input) input.value = '';
     files[key] = null;
     revokePreview(key);
     return;
@@ -323,7 +388,7 @@ const persistOnboarding = async () => {
     email: form.email,
     phone: form.phone,
     address: form.address,
-    farmName: form.name,
+    farmName: form.farmName,
     tags: tags.value,
     idPhoto: await serializeFile(files.idPhoto),
     farmDeed: await serializeFile(files.farmDeed),
@@ -370,197 +435,476 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.65rem;
-  border: 1px solid #d5dfd3;
-  font-size: 0.875rem;
-  outline: none;
-  background: #f7f9f4;
+:root {
+	--bg: #f4f7f2;
+	--card: rgba(255, 255, 255, 0.72);
+	--border: rgba(255, 255, 255, 0.3);
+	--text: #0f172a;
+	--muted: #64748b;
+	--green: #166534;
+	--green-dark: #0f4f29;
 }
 
-.card {
-  background: #ffffff;
-  padding: 1rem 1.2rem;
-  border-radius: 1rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  margin-top: 1rem;
+* {
+	box-sizing: border-box;
 }
 
-.section-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #334155;
+.auth-page {
+	position: relative;
+	min-height: 100vh;
+	padding: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background:
+		radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 30%),
+		radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.12), transparent 30%),
+		linear-gradient(135deg, #f4f7f2, #eef3ea);
 }
 
+/* blur background */
+.auth-page::before,
+.auth-page::after {
+	content: '';
+	position: absolute;
+	width: 420px;
+	height: 420px;
+	border-radius: 50%;
+	filter: blur(90px);
+	opacity: 0.4;
+	z-index: 0;
+}
+
+.auth-page::before {
+	top: -120px;
+	left: -120px;
+	background: #4ade80;
+}
+
+.auth-page::after {
+	right: -120px;
+	bottom: -120px;
+	background: #86efac;
+}
+
+/* MAIN LAYOUT */
+.auth-shell {
+	position: relative;
+	z-index: 2;
+	width: min(1240px, 100%);
+	display: grid;
+	grid-template-columns: 1.08fr 0.92fr;
+	gap: 28px;
+	align-items: stretch;
+}
+
+/* GLASS */
+.hero-panel,
+.form-panel {
+	position: relative;
+	background: var(--card);
+	backdrop-filter: blur(22px);
+	-webkit-backdrop-filter: blur(22px);
+	border: 1px solid var(--border);
+	border-radius: 34px;
+	box-shadow:
+		0 10px 40px rgba(15, 23, 42, 0.06),
+		0 2px 10px rgba(15, 23, 42, 0.04);
+	overflow: hidden;
+}
+
+/* HERO */
+.hero-panel {
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.hero-image-wrap {
+	position: relative;
+	min-height: 500px;
+	border-radius: 28px;
+	overflow: hidden;
+}
+
+.hero-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transform: scale(1.02);
+	transition: transform 0.8s ease;
+}
+
+.hero-panel:hover .hero-image {
+	transform: scale(1.06);
+}
+
+/* OVERLAY */
+.hero-overlay {
+	position: absolute;
+	inset: 0;
+	padding: 36px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	background:
+		linear-gradient(
+			180deg,
+			rgba(15, 23, 42, 0.02),
+			rgba(15, 23, 42, 0.78)
+		);
+	color: white;
+}
+
+.eyebrow,
+.form-badge {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	padding: 8px 14px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+}
+
+.eyebrow {
+	background: rgba(255,255,255,0.14);
+	border: 1px solid rgba(255,255,255,0.2);
+	backdrop-filter: blur(10px);
+}
+
+.hero-overlay h2 {
+	margin: 18px 0 12px;
+	font-size: clamp(38px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 0.95;
+	max-width: 10ch;
+	letter-spacing: -0.04em;
+}
+
+.hero-overlay p {
+	max-width: 42ch;
+	font-size: 15px;
+	line-height: 1.7;
+	color: rgba(255,255,255,0.84);
+}
+
+/* FEATURES */
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
+}
+
+.feature-card {
+	padding: 22px;
+	border-radius: 24px;
+	background: rgba(255,255,255,0.7);
+	border: 1px solid rgba(255,255,255,0.45);
+	backdrop-filter: blur(14px);
+	transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+}
+
+.feature-label {
+	display: inline-block;
+	margin-bottom: 10px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #64748b;
+}
+
+.feature-card strong {
+	display: block;
+	font-size: 20px;
+	color: #0f172a;
+	margin-bottom: 8px;
+}
+
+.feature-card p {
+	color: #64748b;
+	line-height: 1.6;
+	font-size: 14px;
+}
+
+/* FORM */
+.form-panel {
+	padding: 44px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	justify-content: center;
+}
+
+.form-badge {
+	background: rgba(22,101,52,0.08);
+	color: var(--green);
+	border: 1px solid rgba(22,101,52,0.12);
+}
+
+.form-panel h1 {
+	margin: 10px 0;
+	font-size: clamp(40px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.05em;
+	color: var(--text);
+}
+
+.form-intro {
+	font-size: 15px;
+	line-height: 1.7;
+	color: var(--muted);
+	margin-bottom: 8px;
+	max-width: 46ch;
+}
+
+/* INPUTS */
+.name-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 14px;
+}
+
+.field {
+	display: grid;
+	gap: 8px;
+}
+
+.field label,
 .field-label {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #7b8a76;
-  margin-bottom: 0.35rem;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #475569;
+}
+
+.field input,
+.tag-input input {
+	width: 100%;
+	height: 56px;
+	padding: 0 18px;
+	border-radius: 18px;
+	border: 1px solid rgba(15,23,42,0.08);
+	background: rgba(255,255,255,0.7);
+	font-size: 15px;
+	color: #0f172a;
+	outline: none;
+	transition: all 0.25s ease;
+	backdrop-filter: blur(10px);
+}
+
+.field input::placeholder,
+.tag-input input::placeholder {
+	color: #94a3b8;
+}
+
+.field input:focus,
+.tag-input input:focus {
+	background: white;
+	border-color: rgba(22,101,52,0.5);
+	box-shadow:
+		0 0 0 4px rgba(22,101,52,0.08),
+		0 8px 20px rgba(22,101,52,0.08);
+}
+
+/* UPLOAD */
+.upload-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
 }
 
 .upload-box {
-  border: 2px dashed #cbd5e1;
-  border-radius: 0.75rem;
-  height: 6.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  color: #94a3b8;
-  overflow: hidden;
-  position: relative;
-  background: #f8faf7;
+	height: 140px;
+	border-radius: 24px;
+	border: 2px dashed rgba(15,23,42,0.08);
+	background: rgba(255,255,255,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	cursor: pointer;
+	transition: 0.25s ease;
+}
+
+.upload-box:hover {
+	border-color: rgba(22,101,52,0.4);
+	background: rgba(255,255,255,0.8);
 }
 
 .preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .upload-inner {
-  text-align: center;
-  font-size: 0.75rem;
-  color: #8a9b86;
-  line-height: 1.2;
+	text-align: center;
 }
 
 .upload-title {
-  font-weight: 700;
-  color: #3d5340;
-  margin-bottom: 0.2rem;
+	font-size: 14px;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 4px;
 }
 
 .upload-hint {
-  font-size: 0.68rem;
-  color: #94a3b8;
+	font-size: 12px;
+	color: #64748b;
 }
 
-.btn-secondary {
-  background: #e6efe0;
-  padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  transition: background-color 0.2s ease;
-  border: 1px solid #cfe0c7;
-  color: #2f4f2f;
-}
-
-.btn-secondary:hover {
-  background: #d7e7cf;
+/* TAGS */
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 12px;
 }
 
 .tag {
-  background: #dff4e5;
-  color: #1b6b3c;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+	padding: 8px 14px;
+	border-radius: 999px;
+	background: rgba(22,101,52,0.08);
+	color: #166534;
+	font-size: 13px;
+	font-weight: 700;
 }
 
-.input:focus {
-  box-shadow: 0 0 0 2px #9fc8a2;
+.tag-input {
+	display: flex;
+	gap: 10px;
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
+.tag-btn {
+	height: 56px;
+	padding: 0 20px;
+	border: none;
+	border-radius: 18px;
+	background: rgba(22,101,52,0.08);
+	color: #166534;
+	font-weight: 700;
+	cursor: pointer;
 }
 
-.overlay-card {
-  padding: 1.5rem;
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: linear-gradient(140deg, rgba(8, 68, 34, 0.8), rgba(13, 92, 46, 0.45));
+/* CHECK */
+.policy-check {
+	display: flex;
+	gap: 12px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: #475569;
 }
 
-.stat-card {
-  background: #f1f6ef;
-  border-radius: 0.85rem;
-  padding: 0.8rem 1rem;
-  font-size: 0.75rem;
-  color: #3c4f3b;
-  min-width: 120px;
+.policy-check input {
+	accent-color: var(--green);
+	margin-top: 4px;
 }
 
-.btn-primary {
-  width: 100%;
-  background: #0f6b2f;
-  color: #ffffff;
-  padding: 0.8rem 1rem;
-  border-radius: 0.9rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
+/* ERROR */
+.feedback {
+	padding: 14px;
+	border-radius: 16px;
+	background: rgba(255,255,255,0.75);
+	border: 1px solid rgba(15,23,42,0.06);
+	font-size: 14px;
 }
 
-.btn-primary:hover {
-  background: #0c5a28;
+.feedback-error {
+	color: #b42318;
+	background: rgba(254,242,242,0.9);
+	border-color: rgba(180,35,24,0.12);
 }
 
-.link-inline {
-  color: #0f6b2f;
-  font-weight: 600;
+/* BUTTON */
+.primary-btn {
+	height: 58px;
+	border: none;
+	border-radius: 18px;
+	background:
+		linear-gradient(
+			135deg,
+			#22c55e,
+			#166534
+		);
+	color: white;
+	font-size: 15px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: 0.25s ease;
+	box-shadow:
+		0 10px 25px rgba(22,101,52,0.22),
+		0 2px 10px rgba(22,101,52,0.12);
 }
 
-.enterprise-block {
-  margin-top: 1.5rem;
-  text-align: center;
+.primary-btn:hover {
+	transform: translateY(-2px);
+	box-shadow:
+		0 16px 34px rgba(22,101,52,0.3),
+		0 6px 18px rgba(22,101,52,0.16);
 }
 
-.enterprise-title {
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: #9aa89a;
-  margin-bottom: 0.6rem;
+/* FOOTER */
+.footer-copy {
+	text-align: center;
+	font-size: 14px;
+	color: var(--muted);
+	margin-top: 8px;
 }
 
-.enterprise-btn {
-  width: 100%;
-  border: 1px solid #dfe6da;
-  border-radius: 0.75rem;
-  padding: 0.6rem 1rem;
-  font-size: 0.85rem;
-  background: #ffffff;
-  color: #2f3f2f;
+.footer-copy a {
+	color: var(--green);
+	font-weight: 700;
+	text-decoration: none;
 }
 
-.profile-upload {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 9999px;
-  border: 1px solid #cfe0c7;
-  background: #e6efe0;
-  color: #2f4f2f;
-  font-size: 0.8rem;
-  font-weight: 600;
-  overflow: hidden;
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+	.auth-shell {
+		grid-template-columns: 1fr;
+	}
+
+	.hero-image-wrap {
+		min-height: 360px;
+	}
 }
 
-.profile-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 9999px;
+@media (max-width: 720px) {
+	.auth-page {
+		padding: 16px;
+	}
+
+	.hero-panel,
+	.form-panel {
+		padding: 20px;
+		border-radius: 26px;
+	}
+
+	.name-grid,
+	.feature-grid,
+	.upload-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.hero-overlay {
+		padding: 24px;
+	}
+
+	.hero-overlay h2,
+	.form-panel h1 {
+		font-size: 38px;
+	}
 }
 </style>
