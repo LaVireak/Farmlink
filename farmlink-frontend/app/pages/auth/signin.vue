@@ -187,6 +187,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
+import { isValidEmail } from '../../utils/validation'
 
 const router = useRouter()
 
@@ -218,6 +219,11 @@ const onSubmit = async () => {
   if (!form.email || !form.password) {
     errorMessage.value =
       'Email and password are required.'
+    return
+  }
+
+  if (!isValidEmail(form.email)) {
+    errorMessage.value = 'Please enter a valid email address.'
     return
   }
 

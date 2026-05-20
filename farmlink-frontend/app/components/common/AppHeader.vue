@@ -178,13 +178,13 @@
 
                 <li>
                   <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100">
-                    <Moon class="w-4 h-4 text-gray-600" />
+                    <Moon class="w-4 h-4 text-gray- 600" />
                     <span>Dark Mode</span>
                   </button>
                 </li>
 
                 <li>
-                  <NuxtLink to="#" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100">
+                  <NuxtLink to="/auth/signin" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100">
                     <Users class="w-4 h-4 text-gray-600" />
                     <span>Sign In</span>
                   </NuxtLink>
@@ -218,6 +218,8 @@ import {
 
 
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useAuthStore } from '../../stores/auth.store'
+import { useRouter } from 'vue-router'
 
 const farmOpen = ref(false)
 const productOpen = ref(false)
@@ -292,6 +294,44 @@ const onClickOutside = (e) => {
 
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
+
+// Auth integration
+const auth = useAuthStore()
+const router = useRouter()
+
+const isAuthenticated = computed(() => auth.isAuthenticated)
+const user = computed(() => auth.user)
+
+const userInitials = computed(() => {
+  if (!user.value) return ''
+  const f = user.value.firstName ?? ''
+  const l = user.value.lastName ?? ''
+  if (f || l) return `${(f[0] ?? '').toUpperCase()}${(l[0] ?? '').toUpperCase()}`
+  return user.value.email?.slice(0, 2).toUpperCase() ?? ''
+})
+
+const userAvatar = computed(() => {
+  // If you store avatar URLs in user metadata, return it here. Fallback to null.
+  return null
+})
+
+const avatarClass = computed(() => {
+  return 'bg-[#1f7a2e] text-white'
+})
+
+const goToDashboard = () => {
+  if (!user.value) return
+  userMenuOpen.value = false
+  if (user.value.role === 'farmer') return router.push('/farmer/dashboard')
+  if (user.value.role === 'admin') return router.push('/admin/dashboard')
+  return router.push('/')
+}
+
+const handleSignOut = async () => {
+  userMenuOpen.value = false
+  await auth.signOut()
+  router.push('/auth/signin')
+}
 </script>
 
 <style scoped>
