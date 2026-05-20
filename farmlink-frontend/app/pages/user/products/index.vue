@@ -17,7 +17,7 @@
         <p class="text-gray-600 mt-2">Fresh items directly from local farms</p>
       </div>
       </section>
-    <div class="products-layout">
+    <div class="products-layout ps-6 py-12">
 
       <aside class="filter-sidebar">
 

@@ -16,6 +16,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './auth/guards/api-key.guard';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     AdminModule,
     NotificationsModule,
     StripeModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
