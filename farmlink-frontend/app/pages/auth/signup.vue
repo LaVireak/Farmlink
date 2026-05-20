@@ -97,6 +97,8 @@
 							required
 						>
 					</div>
+					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
+					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
 
 					<div class="policy-row">
 						<label class="policy-check">
@@ -105,9 +107,7 @@
 						</label>
 					</div>
 
-					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
-					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
-
+					
 					<button type="submit" :disabled="submitting" class="primary-btn">
 						{{ submitting ? 'Creating account...' : 'Create account' }}
 					</button>
@@ -129,6 +129,11 @@
 					Already have an account?
 					<NuxtLink to="/auth/signin">Sign in</NuxtLink>
 				</p>
+
+				<p class="footer-copy">
+					Want to be a farmer?
+					<NuxtLink to="/auth/farmer-signup">Sign up as a farmer</NuxtLink>
+				</p>
 			</section>
 		</div>
 	</div>
@@ -138,6 +143,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
+import { isValidEmail } from '../../utils/validation';
 
 const router = useRouter();
 const { requestSignupOtp, signInWithGoogle, getPostSignInRoute } = useAuth();
@@ -168,6 +174,11 @@ const onSubmit = async () => {
 
 	if (form.password !== form.confirmPassword) {
 		errorMessage.value = 'Passwords do not match.';
+		return;
+	}
+
+	if (!isValidEmail(form.email)) {
+		errorMessage.value = 'Please enter a valid email address.';
 		return;
 	}
 
