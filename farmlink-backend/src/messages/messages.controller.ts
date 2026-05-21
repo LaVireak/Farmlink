@@ -17,7 +17,6 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto, ConversationDto, PaginationDto } from './dto/message-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Public()
 @Controller('api/messages')
 export class MessagesController {
   constructor(

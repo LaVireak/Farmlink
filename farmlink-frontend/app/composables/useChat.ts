@@ -8,6 +8,7 @@ export const useChat = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const isTyping = ref(false)
+  let pollInterval: ReturnType<typeof setInterval> | null = null
 
   const fetchConversations = async (page: number = 1, limit: number = 10) => {
     loading.value = true
@@ -29,21 +30,48 @@ export const useChat = () => {
   const fetchMessages = async (
     conversationId: string,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
+    isPolling: boolean = false
   ) => {
-    loading.value = true
+    if (!isPolling) {
+      loading.value = true
+    }
     error.value = null
 
     try {
       const data = await chatService.getMessages(conversationId, page, limit)
       if (data?.data) {
-        store.setMessages(conversationId, data.data)
+        const currentMessages = store.messages[conversationId] ?? []
+        const newMessages = data.data
+
+        // Only update if messages have actually changed
+        if (currentMessages.length !== newMessages.length ||
+            currentMessages[currentMessages.length - 1]?.id !== newMessages[newMessages.length - 1]?.id) {
+          store.setMessages(conversationId, newMessages)
+        }
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch messages'
       console.error('Error fetching messages:', err)
     } finally {
-      loading.value = false
+      if (!isPolling) {
+        loading.value = false
+      }
+    }
+  }
+
+  const startPolling = (conversationId: string) => {
+    if (pollInterval) clearInterval(pollInterval)
+
+    pollInterval = setInterval(() => {
+      fetchMessages(conversationId, 1, 20, true)
+    }, 2000)
+  }
+
+  const stopPolling = () => {
+    if (pollInterval) {
+      clearInterval(pollInterval)
+      pollInterval = null
     }
   }
 
@@ -55,6 +83,7 @@ export const useChat = () => {
       if (data?.id) {
         const message: Message = data
         store.addMessage(receiverId, message)
+        store.updateConversation(receiverId, message.content, message.createdAt)
         return message
       }
     } catch (err) {
@@ -82,6 +111,12 @@ export const useChat = () => {
 
   const setActiveConversation = (conversationId: string | null) => {
     store.setActiveConversation(conversationId)
+
+    if (conversationId) {
+      startPolling(conversationId)
+    } else {
+      stopPolling()
+    }
   }
 
   const activeConversation = computed(
@@ -111,6 +146,8 @@ export const useChat = () => {
     markAsRead,
     markConversationAsRead,
     setActiveConversation,
+    startPolling,
+    stopPolling,
     // Computed
     activeConversation,
     activeMessages,

@@ -75,7 +75,7 @@
               :key="msg.id"
               :text="msg.content"
               :time="formatTime(msg.createdAt)"
-              :is-sender="msg.sender.id === user?.id"
+              :is-sender="msg.sender.id === currentUserId"
               :avatar="msg.sender.avatarUrl"
               :sender-name="`${msg.sender.firstName || ''} ${msg.sender.lastName || ''}`.trim()"
             />
@@ -118,6 +118,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useChat } from '~/composables/useChat'
 import { useAuth } from '~/composables/useAuth'
+import MessageBubble from '~/components/common/MessageBubble.vue'
 
 useHead({ title: 'Chat | FarmLink Farmer' })
 
@@ -127,6 +128,18 @@ const { user } = useAuth()
 const search = ref('')
 const newMessage = ref('')
 const messagesArea = ref<HTMLElement | null>(null)
+
+const currentUserId = computed(() => {
+  if (user?.id) return user.id
+  const sessionStr = localStorage.getItem('farmlink.auth.session')
+  if (!sessionStr) return null
+  try {
+    const session = JSON.parse(sessionStr)
+    return session?.user?.id
+  } catch {
+    return null
+  }
+})
 
 // ── Computed ──────────────────────────────────────────────────────
 const filteredConversations = computed(() =>
@@ -179,10 +192,10 @@ async function selectConversation(conv: any) {
 
 async function sendMessage() {
   const text = newMessage.value.trim()
-  if (!text || !activeConv.value || !user?.id) return
+  if (!text || !activeConv.value || !currentUserId.value) return
 
   try {
-    await chat.sendMessage(activeConv.value.id, text, user.id)
+    await chat.sendMessage(activeConv.value.id, text, currentUserId.value)
     newMessage.value = ''
     nextTick(scrollToBottom)
   } catch (err) {

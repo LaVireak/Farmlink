@@ -23,6 +23,15 @@ export const useChatStore = defineStore('chat', () => {
     messages.value[conversationId].push(message)
   }
 
+  const updateConversation = (conversationId: string, lastMessage: string, lastMessageTime: Date) => {
+    const conv = conversations.value.find(c => c.id === conversationId)
+    if (conv) {
+      conv.lastMessage = lastMessage
+      conv.lastMessageTime = lastMessageTime
+      conv.unreadCount = 0
+    }
+  }
+
   const setActiveConversation = (id: string | null) => {
     activeConversationId.value = id
   }
@@ -51,6 +60,7 @@ export const useChatStore = defineStore('chat', () => {
     setConversations,
     setMessages,
     addMessage,
+    updateConversation,
     setActiveConversation,
     setLoading,
     activeConversation,
