@@ -11,7 +11,7 @@
                     <img src="https://i.pravatar.cc/100?img=12" class="w-10 h-10 rounded-full border-2 border-white shadow-md" />
                     <div class="text-left">
                         <p class="text-sm font-black text-gray-800 flex items-center gap-1">
-                            Channary Sok
+                            {{ fullName }}
                             <svg class="w-4 h-4 text-gray-400 group-hover:text-[#0a4d1e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
                         </p>
                     </div>
@@ -20,12 +20,9 @@
                 <div v-show="profileOpen" class="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                     <div class="p-3 border-b">
                         <ul>
-                            <li><NuxtLink to="/admin/settings/profile" class="block p-2 hover:bg-gray-100">Profile</NuxtLink></li>
-                            <li><NuxtLink to="/admin/settings/security" class="block p-2 hover:bg-gray-100">Security</NuxtLink></li>
-                            <li><NuxtLink to="/admin/settings/notifications" class="block p-2 hover:bg-gray-100">Notification</NuxtLink></li>
-                            <li><NuxtLink to="/admin/settings/appearance" class="block p-2 hover:bg-gray-100">Appearance</NuxtLink></li>
-                            <li><NuxtLink to="/admin/settings/team" class="block p-2 hover:bg-gray-100">Team</NuxtLink></li>
-                            <li><NuxtLink to="#" class="block p-2 hover:bg-gray-100">Logout</NuxtLink></li>
+                            <li><NuxtLink to="/farmer/profile" class="block p-2 hover:bg-gray-100">Profile</NuxtLink></li>
+                            <li><NuxtLink to="/farmer/notifications" class="block p-2 hover:bg-gray-100">Notification</NuxtLink></li>
+                            <li><a href="#" @click.prevent="handleLogout" class="block p-2 hover:bg-gray-100 text-red-600 font-medium">Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -35,15 +32,52 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useAuthStore } from '../../stores/auth.store'
+import { useRouter } from 'vue-router'
+
 const props = defineProps({
     title: { type: String, default: 'Setting Profile' }
 })
 const { title } = props
 
+const auth = useAuthStore()
+const router = useRouter()
+
+const user = computed(() => auth.user)
+const fullName = computed(() => {
+  if (!user.value) return 'Channary Sok'
+  const first = user.value.firstName || ''
+  const last = user.value.lastName || user.value.lastname || ''
+  const name = `${first} ${last}`.trim()
+  return name || user.value.email || 'Channary Sok'
+})
+
 const profileOpen = ref(false)
 
-
 const toggleProfile = () => {
-  profileOpen.value = !profileOpen.value}
+  profileOpen.value = !profileOpen.value
+}
 
+const handleLogout = async () => {
+  profileOpen.value = false
+  await auth.signOut()
+  router.push('/auth/signin')
+}
+
+const onClickOutside = (e) => {
+  const menuEl = document.getElementById('profile-menu')
+  if (menuEl && !menuEl.contains(e.target)) {
+    profileOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 </script>
+
