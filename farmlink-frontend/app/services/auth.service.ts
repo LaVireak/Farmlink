@@ -171,21 +171,22 @@ export const authService = {
 
             const pending = getPendingSignup(payload.email);
             if (pending?.password) {
-                const updateResult = await supabase.auth.updateUser({
-                    password: pending.password,
-                    data: {
-                        firstName: pending.firstName,
-                        lastName: pending.lastName,
-                        phone: pending.phone,
-                        farmName: pending.farmName,
-                        address: pending.address,
-                        role: normalizeRoleForSupabase(pending.role),
-                    },
+      
+                await apiFetch('/auth/finalize-signup', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        userId: data.session.user.id,
+                        password: pending.password,
+                        metadata: {
+                            firstName: pending.firstName,
+                            lastName: pending.lastName,
+                            phone: pending.phone,
+                            farmName: pending.farmName,
+                            address: pending.address,
+                            role: normalizeRoleForSupabase(pending.role),
+                        },
+                    }),
                 });
-
-                if (updateResult.error) {
-                    throw new Error(updateResult.error.message || 'Unable to finalize signup.');
-                }
             }
 
             return mapSessionToResult(data.session);

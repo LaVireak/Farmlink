@@ -98,6 +98,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
+import { isValidEmail } from '../../utils/validation'
 
 const email = ref('')
 const loading = ref(false)
@@ -109,6 +110,11 @@ const { requestPasswordResetOtp } = useAuth()
 
 const handleSubmit = async () => {
 	if (!email.value) return
+
+	if (!isValidEmail(email.value)) {
+		error.value = 'Please enter a valid email address.'
+		return
+	}
 
 	loading.value = true
 	error.value = ''

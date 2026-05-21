@@ -50,6 +50,26 @@ export class SupabaseAuthService {
     });
   }
 
+  async finalizeSignup(userId: string, payload: { password?: string; metadata?: Record<string, unknown> }) {
+    if (!userId) {
+      throw new Error('Missing userId');
+    }
+
+    const update: Record<string, unknown> = {};
+    if (payload.password) update['password'] = payload.password;
+    if (payload.metadata) update['user_metadata'] = payload.metadata;
+
+    // Use admin API to update the user using the service role key.
+    // This avoids the client-side update which triggers password-change emails.
+    // supabase-js exposes admin methods under auth.admin
+    const { data, error } = await this.client.auth.admin.updateUserById(userId, update as any);
+    if (error) {
+      throw new Error(error.message || 'Unable to finalize signup');
+    }
+
+    return data;
+  }
+
   async validateToken(accessToken: string): Promise<User> {
     const { data, error } = await this.client.auth.getUser(accessToken);
     if (error || !data?.user) {
