@@ -11,6 +11,7 @@ import { OrdersModule } from './orders/orders.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MessagesModule } from './messages/messages.module';
 import { StripeModule } from './stripe/stripe.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './auth/guards/api-key.guard';
@@ -29,6 +30,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     RewardsModule,
     AdminModule,
     NotificationsModule,
+    MessagesModule,
     StripeModule,
   ],
   controllers: [AppController],
