@@ -2,56 +2,90 @@
   <CommonAppHeader />
 
   <div class="products-page">
-
+    <!-- Banner -->
     <section class="promo-banner">
       <div class="banner-overlay"></div>
+
       <div class="banner-content">
         <span class="banner-pill">🌿 FRESH PICKS</span>
         <h1>Farm Fresh Produce</h1>
-        <p>Harvested daily from local Cambodian farms — delivered straight to your table.</p>
+        <p>
+          Harvested daily from local Cambodian farms — delivered straight to
+          your table.
+        </p>
       </div>
     </section>
+
+    <!-- Intro -->
     <section class="py-8 px-4">
-    <div class="text-center">
+      <div class="text-center">
         <h1 class="text-3xl font-bold">Browse Our Products</h1>
-        <p class="text-gray-600 mt-2">Fresh items directly from local farms</p>
+        <p class="text-gray-600 mt-2">
+          Fresh items directly from local farms
+        </p>
       </div>
-      </section>
+    </section>
+
     <div class="products-layout">
-
+      <!-- Sidebar -->
       <aside class="filter-sidebar">
-
+        <!-- Category -->
         <div class="filter-section">
           <h3 class="filter-title">Category</h3>
+
           <select v-model="selectedCategory" class="filter-select">
             <option value="All">All Categories</option>
-            <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+
+            <option
+              v-for="cat in allCategories"
+              :key="cat"
+              :value="cat"
+            >
+              {{ cat }}
+            </option>
           </select>
         </div>
 
+        <!-- Rating -->
         <div class="filter-section">
           <h3 class="filter-title">Rating</h3>
+
           <div class="rating-filters">
             <button
-              v-for="r in [5, 4, 3, 2, 1]"
+              v-for="r in [5,4,3,2,1]"
               :key="r"
-              :class="['rating-option', minRating === r ? 'rating-active' : '']"
+              :class="[
+                'rating-option',
+                minRating === r ? 'rating-active' : ''
+              ]"
               @click="minRating = minRating === r ? 0 : r"
             >
               <span class="rating-stars">
-                <span v-for="i in 5" :key="i" :class="i <= r ? 'star-on' : 'star-off'">★</span>
+                <span
+                  v-for="i in 5"
+                  :key="i"
+                  :class="i <= r ? 'star-on' : 'star-off'"
+                >
+                  ★
+                </span>
               </span>
+
               <span class="rating-label">& up</span>
             </button>
           </div>
         </div>
 
+        <!-- Price -->
         <div class="filter-section">
           <h3 class="filter-title">Price Range</h3>
+
           <div class="price-slider-wrap">
             <div class="price-value">
-              <span class="price-current">${{ price }}</span>
+              <span class="price-current">
+                ${{ price }}
+              </span>
             </div>
+
             <input
               type="range"
               min="0"
@@ -60,6 +94,7 @@
               class="price-slider"
               :style="{ '--val': (price / 300) * 100 }"
             />
+
             <div class="price-labels">
               <span>$0</span>
               <span>$150</span>
@@ -68,20 +103,21 @@
           </div>
         </div>
 
+        <!-- Clear -->
         <button class="clear-btn" @click="clearFilters">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/>
-            <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-          </svg>
           Clear All Filters
         </button>
-
       </aside>
 
+      <!-- Products -->
       <main class="products-main">
         <div class="results-bar">
-          <p class="results-count">Showing <strong>{{ filteredProducts.length }}</strong> products</p>
+          <p class="results-count">
+            Showing
+            <strong>{{ filteredProducts.length }}</strong>
+            products
+          </p>
+
           <select v-model="sortBy" class="sort-select">
             <option value="default">Sort by: Default</option>
             <option value="price-low">Price: Low to High</option>
@@ -91,28 +127,34 @@
           </select>
         </div>
 
+        <!-- Loading -->
         <div v-if="loading" class="empty-state">
           <p>Loading products...</p>
         </div>
 
+        <!-- Product Grid -->
         <div v-else class="product-grid">
-          <UserProductCard
+          <NuxtLink
             v-for="product in sortedProducts"
             :key="product.id"
-            :product="product"
-            @add-to-cart="handleAddToCart"
-          />
+            :to="`/user/products/${product.id}`"
+            class="product-link"
+          >
+            <UserProductCard
+              :product="product"
+              @add-to-cart="handleAddToCart"
+            />
+          </NuxtLink>
         </div>
 
-        <div v-if="!loading && filteredProducts.length === 0" class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-          </svg>
-          <p>No products match your found</p>
+        <!-- Empty -->
+        <div
+          v-if="!loading && filteredProducts.length === 0"
+          class="empty-state"
+        >
+          <p>No products found</p>
         </div>
       </main>
-
     </div>
   </div>
 
@@ -120,8 +162,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { ref, computed, onMounted } from 'vue'
 
+import CommonAppHeader from '~/components/common/AppHeader.vue'
+import CommonAppFooter from '~/components/common/AppFooter.vue'
+import UserProductCard from '~/components/user/UserProductCard.vue'
+
+import { useAuthStore } from '~/stores/auth.store'
+
+const authStore = useAuthStore()
+
+// ================= STATE =================
 const selectedCategory = ref('All')
 const price = ref(300)
 const minRating = ref(0)
@@ -131,37 +182,34 @@ const loading = ref(false)
 const products = ref([])
 const allCategories = ref([])
 
-onMounted(async () => {
-  await fetchProducts()
-  await fetchCategories()
-})
-
+// ================= FETCH PRODUCTS =================
 const fetchProducts = async () => {
   loading.value = true
+
   try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch('/api/products')
-    // products.value = await res.json()
+    const res = await $fetch('http://localhost:3001/products', {
+      headers: {
+        Authorization: `Bearer ${authStore.accessToken}`
+      }
+    })
+
+    products.value = Array.isArray(res) ? res : []
+
+    allCategories.value = [
+      ...new Set(products.value.map((p) => p.category))
+    ]
+
   } catch (err) {
     console.error('Failed to fetch products:', err)
+    products.value = []
   } finally {
     loading.value = false
   }
 }
 
-const fetchCategories = async () => {
-  try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch('/api/categories')
-    // allCategories.value = await res.json()
+onMounted(fetchProducts)
 
-    // Or derive from products if your API doesn't have a separate endpoint:
-    // allCategories.value = [...new Set(products.value.map(p => p.category))]
-  } catch (err) {
-    console.error('Failed to fetch categories:', err)
-  }
-}
-
+// ================= CLEAR FILTERS =================
 const clearFilters = () => {
   selectedCategory.value = 'All'
   price.value = 300
@@ -169,54 +217,81 @@ const clearFilters = () => {
   sortBy.value = 'default'
 }
 
+// ================= FILTER =================
 const filteredProducts = computed(() => {
-  return products.value.filter(p => {
+  return products.value.filter((p) => {
     const matchCategory =
       selectedCategory.value === 'All' ||
-      selectedCategory.value === p.category
+      p.category === selectedCategory.value
 
     const effectivePrice = p.discount
       ? p.price * (1 - p.discount / 100)
       : p.price
 
     const matchPrice = effectivePrice <= price.value
-    const matchRating = (p.rating || 0) >= minRating.value
 
-    return matchCategory && matchPrice && matchRating
+    const matchRating =
+      (p.rating ?? 0) >= minRating.value
+
+    return (
+      matchCategory &&
+      matchPrice &&
+      matchRating
+    )
   })
 })
 
+// ================= SORT =================
 const sortedProducts = computed(() => {
   const arr = [...filteredProducts.value]
+
   switch (sortBy.value) {
     case 'price-low':
       return arr.sort((a, b) => {
-        const pa = a.discount ? a.price * (1 - a.discount / 100) : a.price
-        const pb = b.discount ? b.price * (1 - b.discount / 100) : b.price
-        return pa - pb
+        const aPrice = a.discount
+          ? a.price * (1 - a.discount / 100)
+          : a.price
+
+        const bPrice = b.discount
+          ? b.price * (1 - b.discount / 100)
+          : b.price
+
+        return aPrice - bPrice
       })
+
     case 'price-high':
       return arr.sort((a, b) => {
-        const pa = a.discount ? a.price * (1 - a.discount / 100) : a.price
-        const pb = b.discount ? b.price * (1 - b.discount / 100) : b.price
-        return pb - pa
+        const aPrice = a.discount
+          ? a.price * (1 - a.discount / 100)
+          : a.price
+
+        const bPrice = b.discount
+          ? b.price * (1 - b.discount / 100)
+          : b.price
+
+        return bPrice - aPrice
       })
+
     case 'rating':
-      return arr.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      return arr.sort(
+        (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
+      )
+
     case 'name':
-      return arr.sort((a, b) => a.name.localeCompare(b.name))
+      return arr.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+
     default:
       return arr
   }
 })
 
-// --- Actions ---
+// ================= CART =================
 const handleAddToCart = (product) => {
-  // TODO: call cart API or use cart store
-  // cartStore.add(product)
+  console.log('Added to cart:', product)
 }
 </script>
-
 
 <style scoped>
 .products-page {
