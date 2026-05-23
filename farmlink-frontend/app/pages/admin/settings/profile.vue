@@ -66,6 +66,7 @@
   import { ref } from 'vue'
   
 definePageMeta({
+  middleware: 'admin',
   layout: 'admin'
 })
   

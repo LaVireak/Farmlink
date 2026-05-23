@@ -255,6 +255,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import { ref } from 'vue'
 // import FarmerSideBar from './FarmerSideBar.vue'
 

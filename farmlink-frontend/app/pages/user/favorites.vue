@@ -142,6 +142,11 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 import { ref, computed } from 'vue';
 
 useHead({

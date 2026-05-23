@@ -414,7 +414,7 @@ import {
     AlertCircle,
 } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ middleware: 'admin',layout: 'admin' })
 
 const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl

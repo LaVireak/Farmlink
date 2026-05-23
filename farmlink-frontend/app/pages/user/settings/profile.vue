@@ -4,6 +4,7 @@ import { useAuthStore } from '../../../stores/auth.store';
 import { getAccessToken } from '../../../services/auth.service';
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 definePageMeta({
+	middleware: 'user',
 	layout: 'user',
 });
 

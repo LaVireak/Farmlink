@@ -4,6 +4,7 @@ import { ref, onMounted, computed } from 'vue';
 import { usePaymentMethods, type SavedCard } from '../../../composables/usePaymentMethods';
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 

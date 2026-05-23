@@ -4,6 +4,7 @@ import { computed, nextTick, ref } from 'vue';
 import { usePaymentMethods } from '../../../composables/usePaymentMethods';
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 

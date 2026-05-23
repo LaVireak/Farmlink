@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../stores/auth.store';
 import { getAccessToken } from '../../../services/auth.service';
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 

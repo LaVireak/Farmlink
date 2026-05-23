@@ -85,6 +85,7 @@
 import { ref, computed, watch } from 'vue'
 
 definePageMeta({
+  middleware: 'admin',
   layout: 'admin'
 })
 

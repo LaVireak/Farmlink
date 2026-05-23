@@ -115,6 +115,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useChat } from '~/composables/useChat'
 import { useAuth } from '~/composables/useAuth'

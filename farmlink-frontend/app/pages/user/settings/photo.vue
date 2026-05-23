@@ -6,6 +6,7 @@ import { getAccessToken } from '../../../services/auth.service';
 const router = useRouter();
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 
