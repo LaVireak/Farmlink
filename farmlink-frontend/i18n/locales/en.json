@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "Loading...",
     "home": "Home",
     "products": "Products",
     "categories": "Categories",
@@ -24,8 +25,45 @@
     "languageEnglish": "English",
     "languageKhmer": "Khmer",
     "darkMode": "Dark mode",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "logOut": "Log Out",
+
+    "searching": "Searching...",
+    "noResults": "No results found for \"{query}\"",
+
+    "allVegetables": "All Vegetables",
+    "allFruits": "All Fruits",
+    "allSupplies": "All Supplies",
+    "shopAllCategories": "Shop All Categories",
+
+    "leafyGreens": "Leafy Greens",
+    "rootCrops": "Root Crops",
+    "cruciferous": "Cruciferous",
+    "organicFresh": "Organic Fresh",
+    "tubersBulbs": "Tubers & Bulbs",
+
+    "citrusFruits": "Citrus Fruits",
+    "berriesMelons": "Berries & Melons",
+    "tropicalFruits": "Tropical Fruits",
+    "orchardPicks": "Orchard Picks",
+    "seasonalSpecials": "Seasonal Specials",
+
+    "heirloomSeeds": "Heirloom Seeds",
+    "starterPlantlets": "Starter Plantlets",
+    "handTools": "Hand Tools",
+    "organicSoils": "Organic Soils",
+    "irrigationGear": "Irrigation Gear",
+
+    "farm1Title": "Farm 1",
+    "farm1Desc": "Organic vegetables & seasonal produce.",
+
+    "farm2Title": "Farm 2",
+    "farm2Desc": "Family-run orchard and beekeeping.",
+
+    "farm3Title": "Farm 3",
+    "farm3Desc": "Hydroponics and greenhouse-grown greens."
   },
+
   "home": {
     "brandBadge": "FarmLink Cambodia",
     "heroTitle1": "Fresh from",
@@ -38,6 +76,7 @@
     "fastDelivery": "Fast delivery",
     "customerRating": "Customer rating",
     "todayFreshPicks": "Today's fresh picks",
+
     "featuredPicks": {
       "greens": {
         "name": "Organic Greens",
@@ -52,78 +91,20 @@
         "excerpt": "Picked this morning"
       }
     },
+
     "popularProducts": "Popular Products",
     "browseAll": "Browse all",
     "farmsAcrossCambodia": "Farms Across Cambodia",
     "exploreProvinces": "Explore provinces",
+    "quickBrowse": "Quick Browse",
+    "exploreCategories": "Explore Fresh Categories",
     "latestStories": "Latest Stories",
     "readJournal": "Read journal",
     "communityReviews": "Community Reviews",
     "score": "4.9 / 5",
-    "view": "View",
-    "products": {
-      "greens": {
-        "name": "Morning Greens Box",
-        "excerpt": "Fresh organic vegetables harvested today."
-      },
-      "mangoes": {
-        "name": "Sweet Mangoes",
-        "excerpt": "Naturally ripened Cambodian mangoes."
-      },
-      "tomatoes": {
-        "name": "Organic Tomatoes",
-        "excerpt": "Farm fresh tomatoes full of flavor."
-      }
-    },
-    "farms": {
-      "takeo": {
-        "name": "Takeo Organic Farm",
-        "province": "Takeo",
-        "description": "Fresh organic vegetables harvested every morning.",
-        "products": "Vegetables & Herbs"
-      },
-      "battambang": {
-        "name": "Battambang Fruit Garden",
-        "province": "Battambang",
-        "description": "Premium tropical fruits from local orchards.",
-        "products": "Mangoes & Dragon Fruit"
-      },
-      "kampot": {
-        "name": "Kampot Pepper Farm",
-        "province": "Kampot",
-        "description": "World famous Kampot pepper directly from farmers.",
-        "products": "Pepper & Spices"
-      },
-      "siemReap": {
-        "name": "Siem Reap Green House",
-        "province": "Siem Reap",
-        "description": "Hydroponic lettuce and premium greens.",
-        "products": "Hydroponic Greens"
-      }
-    },
-    "stories": {
-      "takeo": {
-        "tag": "Harvest diary",
-        "title": "Morning harvest in Takeo",
-        "excerpt": "Experience the beauty of early farm harvesting."
-      },
-      "cooking": {
-        "tag": "Chef notes",
-        "title": "Healthy cooking ideas",
-        "excerpt": "Simple seasonal recipes from local ingredients."
-      }
-    },
-    "reviews": {
-      "sopheap": {
-        "role": "Cafe Owner",
-        "quote": "Fresh delivery every single morning."
-      },
-      "vannak": {
-        "role": "Restaurant Chef",
-        "quote": "The product quality is consistently amazing."
-      }
-    }
+    "view": "View"
   },
+
   "about": {
     "heroBadge": "Our Journey",
     "heroTitle": "Cultivating Direct Connections.",
@@ -157,22 +138,15 @@
       "title": "Digital Ecosystem",
       "description": "We replace intermediaries with a direct digital marketplace, empowering farmers with real-time data.",
       "cards": {
-        "empowered": {
-          "title": "Empowered",
-          "subtitle": "Communities"
-        },
-        "direct": {
-          "title": "Direct",
-          "subtitle": "Delivery"
-        }
+        "empowered": { "title": "Empowered", "subtitle": "Communities" },
+        "direct": { "title": "Direct", "subtitle": "Delivery" }
       }
     },
     "team": {
       "title": "Meet the team",
       "subtitle": "Architects of Sustainability"
     }
-  }
-  ,
+  },
   "contacts": {
     "title": "Get in touch",
     "lead": "Questions, partnerships or feedback — we'd love to hear from you. Reply time usually within 1-2 business days.",
@@ -228,8 +202,7 @@
     "refresh": "Refresh Payment Status",
     "processing": "Processing...",
     "paymentSuccessToast": "Payment successfully processed!"
-  }
-,
+  },
   "products": {
     "banner": {
       "pill": "🌿 FRESH PICKS",
@@ -262,19 +235,24 @@
       "subtitle": "Try adjusting your filters or search keywords."
     },
     "addToCart": "Add to Cart",
-    "notFound": {
-      "title": "Product not found",
-      "return": "Return to Shop"
-    }
+    "notFound": { "title": "Product not found", "return": "Return to Shop" }
   },
   "favorites": {
     "banner": { "pill": "❤️ MY WISHLIST" },
     "title": "My Favorites",
     "subtitle": "Products you've loved — ready to add to your cart whenever you are.",
     "saved": "saved",
-    "sort": { "default": "Sort: Default", "priceLow": "Price: Low to High", "priceHigh": "Price: High to Low", "name": "Name A-Z" },
+    "sort": {
+      "default": "Sort: Default",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "name": "Name A-Z"
+    },
     "clearAll": "Clear All",
-    "empty": { "title": "No favorites yet", "subtitle": "Browse our fresh produce and tap the heart icon to save items here." },
+    "empty": {
+      "title": "No favorites yet",
+      "subtitle": "Browse our fresh produce and tap the heart icon to save items here."
+    },
     "browse": "Browse Products",
     "continue": "Continue browsing products",
     "removed": "Removed from favorites",
@@ -283,12 +261,48 @@
     "keepShopping": "Continue browsing products"
   },
   "farm": {
-    "banner": { "pill": "🌿 FRESH PICKS", "title": "Farm Fresh Produce", "subtitle": "Harvested daily from local Cambodian farms — delivered straight to your table." },
-    "intro": { "title": "Browse Our Farms", "subtitle": "Fresh items directly from local farms" },
-    "filter": { "province": "Province", "allProvinces": "All Provinces", "rating": "Rating", "up": "& up", "clear": "Clear All Filters" },
+    "banner": {
+      "pill": "🌿 FRESH PICKS",
+      "title": "Farm Fresh Produce",
+      "subtitle": "Harvested daily from local Cambodian farms — delivered straight to your table."
+    },
+    "intro": {
+      "title": "Browse Our Farms",
+      "subtitle": "Fresh items directly from local farms"
+    },
+    "filter": {
+      "province": "Province",
+      "allProvinces": "All Provinces",
+      "rating": "Rating",
+      "up": "& up",
+      "clear": "Clear All Filters"
+    },
     "title": "Farms",
     "searchPlaceholder": "Search farms...",
     "view": "View",
     "empty": "No farms match your filters."
+  },
+ 
+  "productsData": {
+    "p1": { "name": "Morning Greens Box", "excerpt": "Fresh organic vegetables harvested today." },
+    "p2": { "name": "Sweet Mangoes", "excerpt": "Naturally ripened Cambodian mangoes." },
+    "p3": { "name": "Organic Tomatoes", "excerpt": "Farm fresh tomatoes full of flavor." },
+    "p4": { "name": "Kampot Spiced Box", "excerpt": "Curated organic spices and selection premium peppers." }
+  },
+  "farmsData": {
+    "f1": { "name": "Battambang Fruit Garden", "description": "Premium tropical fruits from local orchards.", "products": "Mangoes & Dragon Fruit" },
+    "f2": { "name": "Kampot Pepper Farm", "description": "World famous Kampot pepper directly from farmers.", "products": "Pepper & Spices" },
+    "f3": { "name": "Siem Reap Green House", "description": "Hydroponic lettuce and premium greens.", "products": "Hydroponic Greens" }
+  },
+  "blogsData": {
+    "b1": { "title": "Morning harvest in Takeo", "tag": "Harvest diary", "excerpt": "Experience the beauty of early farm harvesting." },
+    "b2": { "title": "Healthy cooking ideas", "tag": "Chef notes", "excerpt": "Simple seasonal recipes from local ingredients." },
+    "b3": { "title": "Sustainably grown Pepper", "tag": "Spice route", "excerpt": "Discover the heritage of organic pepper in Kampot." },
+    "b4": { "title": "Battambang Fruit Orchards", "tag": "Farmer voice", "excerpt": "How community co-ops are boosting local growers." }
+  },
+  "reviewsData": {
+    "r1": { "role": "Cafe Owner", "quote": "Fresh delivery every single morning." },
+    "r2": { "role": "Health Enthusiast", "quote": "The best quality produce and fruit for my family!" }
   }
+
 }
