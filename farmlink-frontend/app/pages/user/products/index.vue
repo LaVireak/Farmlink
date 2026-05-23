@@ -1,5 +1,6 @@
 <template>
   <CommonAppHeader />
+  <CommonAppHeader />
 
   <div class="product-detail-page">
     <div class="detail-container">

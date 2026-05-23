@@ -1,15 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   devServer: {
     port: 3001,
   },
   pages: true,
-  ssr: false, 
+  ssr: false,
   runtimeConfig: {
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+      stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
     },
   },
   css: ['~/assets/css/main.css'],

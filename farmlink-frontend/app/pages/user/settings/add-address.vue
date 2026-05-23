@@ -1,12 +1,30 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
+
+import { useRoute, useRouter } from 'vue-router';
 
 useHead({
   title: 'Add New Address | FarmLink Cambodia',
 });
+
+const route = useRoute();
+const router = useRouter();
+
+const isCheckout = route.query.returnTo === 'checkout';
+
+const cancelRoute = isCheckout ? '/user/checkout/address' : '/user/settings/address';
+
+function saveAndReturn() {
+  if (isCheckout) {
+    router.push('/user/checkout/address?new=1');
+  } else {
+    router.push('/user/settings/address');
+  }
+}
 </script>
 
 <template>
@@ -77,10 +95,10 @@ useHead({
                   </div>
 
                   <div class="flex items-center gap-4 pt-4">
-                    <button class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white px-10 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-lg shadow-lg shadow-[#154212]/10 hover:shadow-[#154212]/20 transition-all active:scale-[0.98]" type="submit">
+                    <button class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white px-10 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-lg shadow-lg shadow-[#154212]/10 hover:shadow-[#154212]/20 transition-all active:scale-[0.98]" type="button" @click="saveAndReturn">
                       Save Address
                     </button>
-                    <NuxtLink class="px-8 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-[#154212] hover:bg-[#e9e8e5] transition-colors" to="/user/settings/address">
+                    <NuxtLink class="px-8 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-[#154212] hover:bg-[#e9e8e5] transition-colors" :to="cancelRoute">
                       Cancel
                     </NuxtLink>
                   </div>

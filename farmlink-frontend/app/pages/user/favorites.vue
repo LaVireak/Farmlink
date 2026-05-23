@@ -285,5 +285,369 @@ function showToast(msg: string) {
 </script>
 
 <style scoped>
+/* ── Page Shell ── */
+.favorites-page {
+  min-height: 100vh;
+  background: #f4f4ee;
+  font-family: 'Inter', sans-serif;
+  padding-top: 18px;
+}
 
+/* ── Banner ── */
+.fav-banner {
+  position: relative;
+  width: 94%;
+  height: 44vh;
+  min-height: 220px;
+  background-image: url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center 60%;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 40px;
+  margin: 0 auto;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 30, 16, 0.82) 0%,
+    rgba(10, 30, 16, 0.50) 55%,
+    rgba(10, 30, 16, 0.20) 100%
+  );
+}
+
+.banner-content {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  padding: 32px 48px;
+}
+
+.banner-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #f9d8d8;
+}
+
+.banner-content h1 {
+  margin: 12px 0 0;
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: #f8faf5;
+}
+
+.banner-content p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #d4e4d6;
+  max-width: 400px;
+}
+
+/* ── Controls ── */
+.sort-select {
+  padding: 7px 12px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 500;
+  color: #42493e;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.sort-select:focus {
+  border-color: #2e7e3f;
+}
+
+.clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: #42493e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-btn:hover {
+  border-color: #b91c1c;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.empty-heart {
+  width: 96px;
+  height: 96px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  margin-bottom: 8px;
+}
+
+.empty-state h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #154212;
+  margin: 0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: #6b7280;
+  max-width: 360px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.browse-btn {
+  margin-top: 8px;
+  display: inline-block;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #2e7e3f, #1f6130);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.browse-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Favorites Grid ── */
+.fav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.fav-card {
+  position: relative;
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid rgba(200, 210, 200, 0.4);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+
+.fav-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+  transform: translateY(-3px);
+}
+
+/* ── Remove Button ── */
+.remove-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #e53e3e;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  z-index: 2;
+}
+
+.fav-card:hover .remove-btn {
+  opacity: 1;
+}
+
+.remove-btn:hover {
+  background: #fff0f0;
+}
+
+/* ── Product Image ── */
+.fav-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.4s ease;
+}
+
+.fav-card:hover .fav-img {
+  transform: scale(1.04);
+}
+
+/* ── Labels ── */
+.label-organic {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.label-origin {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* ── Product Name / Farm ── */
+.fav-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #154212;
+  margin: 0;
+  line-height: 1.25;
+  transition: color 0.2s;
+}
+
+.fav-name:hover {
+  color: #2e7e3f;
+}
+
+.fav-farm {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+/* ── Stars ── */
+.star-on  { color: #f59e0b; font-size: 13px; }
+.star-off { color: #d1d5db; font-size: 13px; }
+
+/* ── Price / Cart ── */
+.fav-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1f6a35;
+}
+
+.cart-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 2px solid #c2c9bb;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #2e7e3f;
+  transition: all 0.2s;
+}
+
+.cart-btn:hover {
+  background: #2e7e3f;
+  border-color: #2e7e3f;
+  color: white;
+}
+
+/* ── Keep Shopping ── */
+.keep-shopping {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+.keep-shopping-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #154212;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: gap 0.2s;
+}
+
+.keep-shopping-link:hover {
+  gap: 12px;
+  color: #2e7e3f;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #064e3b;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 100;
+  animation: toastIn 0.3s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .fav-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .fav-grid { grid-template-columns: 1fr; }
+  .banner-content { padding: 24px 20px; }
+}
 </style>

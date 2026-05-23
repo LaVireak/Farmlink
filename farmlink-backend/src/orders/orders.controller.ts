@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import { Public } from '../auth/decorators/public.decorator';
 import { OrdersService } from './orders.service';
 import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, UpdateOrderStatusDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
 
@@ -48,6 +49,36 @@ export class OrdersController {
   @Get('stats')
   async getOrderStats(): Promise<OrderStatsDto> {
     return this.ordersService.getOrderStats();
+  }
+
+  /**
+   * Create a demo dynamic PayWay QR
+   * POST /api/orders/payments/payway/qr/demo
+   */
+  @Post('payments/payway/qr/demo')
+  @Public()
+  async createDemoPayWayQr(@Body() body: Record<string, any>) {
+    return this.ordersService.createDemoDynamicQr(body as any);
+  }
+
+  /**
+   * Check PayWay transaction status by tranId
+   * GET /api/orders/payments/payway/:tranId/status
+   */
+  @Get('payments/payway/:tranId/status')
+  @Public()
+  async checkPayWayStatus(@Param('tranId') tranId: string) {
+    return this.ordersService.checkPaymentStatus(tranId);
+  }
+
+  /**
+   * PayWay webhook receiver
+   * POST /api/orders/payments/payway/webhook
+   */
+  @Post('payments/payway/webhook')
+  @Public()
+  async payWayWebhook(@Body() payload: Record<string, unknown>) {
+    return this.ordersService.handlePayWayWebhook(payload);
   }
 
   /**

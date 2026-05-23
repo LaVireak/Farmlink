@@ -10,17 +10,18 @@ export const useAuth = () => {
 
   const signIn = (payload: SignInPayload) => auth.signIn(payload);
   const signInWithGoogle = (idToken: string) => auth.signInWithGoogle(idToken);
+  const signInWithFacebook = () => auth.signInWithFacebook();
   const requestSignupOtp = (payload: SignUpPayload) => auth.requestSignupOtp(payload);
   const verifySignupOtp = (email: string, code: string) => auth.verifySignupOtp(email, code);
   const resendSignupOtp = (email: string) => auth.resendSignupOtp(email);
   const requestPasswordResetOtp = (email: string) => authService.requestPasswordResetOtp(email);
   const resendPasswordResetOtp = (email: string) => authService.resendPasswordResetOtp(email);
   const verifyPasswordResetOtp = (email: string, code: string) => authService.verifyPasswordResetOtp({ email, code });
-  const resetPassword = (token: string, password: string) => authService.resetPassword(token, password);
+  const resetPassword = (password: string) => authService.resetPassword(password);
   const submitFarmerOnboarding = (payload: FarmerOnboardingPayload) => authService.submitFarmerOnboarding(payload);
 
   const signOut = async () => {
-    auth.signOut();
+    await auth.signOut();
   };
 
   return {
@@ -29,6 +30,7 @@ export const useAuth = () => {
     ensureHydrated,
     signIn,
     signInWithGoogle,
+    signInWithFacebook,
     requestSignupOtp,
     verifySignupOtp,
     resendSignupOtp,

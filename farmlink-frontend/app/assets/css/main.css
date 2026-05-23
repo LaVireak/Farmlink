@@ -11,7 +11,16 @@
 html,
 body,
 #__nuxt {
-min-height: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#__nuxt::-webkit-scrollbar {
+    display: none;
 }
 
 body {

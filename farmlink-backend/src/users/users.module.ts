@@ -5,9 +5,13 @@ import { UsersService } from './users.service';
 import { User } from './user.entity';
 import { FavoriteFarm } from './favorite-farm.entity';
 import { FavoriteProduct } from './favorite-product.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, FavoriteFarm, FavoriteProduct])],
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([User, FavoriteFarm, FavoriteProduct]),
+  ],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

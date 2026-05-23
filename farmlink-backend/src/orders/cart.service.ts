@@ -78,6 +78,7 @@ export class CartService {
     const items = await Promise.all(
       cart.items.map(async (ci) => {
         const product = await this.productRepo.findOne({ where: { id: ci.productId } });
+        if (!product) throw new NotFoundException(`Product ${ci.productId} not found`);
         return {
           productId: ci.productId,
           farmerId: product.farmerId,

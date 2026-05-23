@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 
 definePageMeta({
+	middleware: 'user',
 	layout: 'user',
 });
 
