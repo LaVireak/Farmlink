@@ -10,7 +10,7 @@
         <aside class="conversations-panel">
           <div class="conv-header">
             <h2>Conversations</h2>
-            <span class="unread-total">{{ totalUnread }}</span>
+            <span class="unread-total">{{ chat.totalUnread.value }}</span>
           </div>
 
           <div class="conv-search">
@@ -23,20 +23,20 @@
               v-for="conv in filteredConversations"
               :key="conv.id"
               class="conv-item"
-              :class="{ active: activeConvId === conv.id }"
+              :class="{ active: chat.activeConversationId.value === conv.id }"
               @click="selectConversation(conv)"
             >
-              <div class="conv-avatar" :style="{ background: conv.color }">
-                {{ conv.name[0].toUpperCase() }}
+              <div class="conv-avatar">
+                {{ getParticipantInitial(conv) }}
               </div>
               <div class="conv-info">
                 <div class="conv-top">
-                  <span class="conv-name">{{ conv.name }}</span>
-                  <span class="conv-time">{{ conv.lastTime }}</span>
+                  <span class="conv-name">{{ getParticipantName(conv) }}</span>
+                  <span class="conv-time">{{ conv.lastMessageTime ? formatLastTime(conv.lastMessageTime) : 'N/A' }}</span>
                 </div>
                 <div class="conv-bottom">
-                  <span class="conv-preview">{{ conv.lastMessage }}</span>
-                  <span v-if="conv.unread > 0" class="conv-badge">{{ conv.unread }}</span>
+                  <span class="conv-preview">{{ conv.lastMessage || 'No messages yet' }}</span>
+                  <span v-if="conv.unreadCount > 0" class="conv-badge">{{ conv.unreadCount }}</span>
                 </div>
               </div>
             </button>
@@ -51,14 +51,14 @@
         <section class="chat-thread" v-if="activeConv">
           <!-- Thread Header -->
           <div class="thread-header">
-            <div class="thread-avatar" :style="{ background: activeConv.color }">
-              {{ activeConv.name[0].toUpperCase() }}
+            <div class="thread-avatar">
+              {{ getParticipantInitial(activeConv) }}
             </div>
             <div>
-              <p class="thread-name">{{ activeConv.name }}</p>
+              <p class="thread-name">{{ getParticipantName(activeConv) }}</p>
               <p class="thread-status">
-                <span class="status-dot" :class="activeConv.online ? 'online' : 'offline'"></span>
-                {{ activeConv.online ? 'Online' : 'Offline' }}
+                <span class="status-dot online"></span>
+                Active Now
               </p>
             </div>
             <div class="thread-actions">
@@ -70,28 +70,20 @@
 
           <!-- Messages -->
           <div class="messages-area" ref="messagesArea">
-            <div v-for="(msg, i) in activeMessages" :key="i" class="message-row" :class="msg.sender === 'farmer' ? 'from-me' : 'from-them'">
-              <div v-if="msg.sender !== 'farmer'" class="msg-avatar" :style="{ background: activeConv.color }">
-                {{ activeConv.name[0].toUpperCase() }}
-              </div>
-              <div class="bubble" :class="msg.sender === 'farmer' ? 'bubble-me' : 'bubble-them'">
-                <p>{{ msg.text }}</p>
-                <span class="msg-time">{{ msg.time }}</span>
-              </div>
-            </div>
-
-            <!-- Typing indicator -->
-            <div v-if="isTyping" class="message-row from-them">
-              <div class="msg-avatar" :style="{ background: activeConv.color }">{{ activeConv.name[0] }}</div>
-              <div class="bubble bubble-them typing-bubble">
-                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-              </div>
-            </div>
+            <MessageBubble
+              v-for="msg in chat.activeMessages.value"
+              :key="msg.id"
+              :text="msg.content"
+              :time="formatTime(msg.createdAt)"
+              :is-sender="msg.sender.id === currentUserId"
+              :avatar="msg.sender.avatarUrl"
+              :sender-name="`${msg.sender.firstName || ''} ${msg.sender.lastName || ''}`.trim()"
+            />
           </div>
 
           <!-- Input Bar -->
           <div class="input-bar">
-            <button class="attach-btn" title="Attach file">
+            <button class="attach-btn" title="Attach file" disabled>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
             <input
@@ -100,11 +92,12 @@
               placeholder="Type a message..."
               @keydown.enter="sendMessage"
               class="msg-input"
+              :disabled="chat.loading.value"
             />
             <button
               @click="sendMessage"
               class="send-btn"
-              :disabled="!newMessage.trim()"
+              :disabled="!newMessage.trim() || chat.loading.value"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -122,117 +115,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
+import { useChat } from '~/composables/useChat'
+import { useAuth } from '~/composables/useAuth'
+import MessageBubble from '~/components/common/MessageBubble.vue'
 
 useHead({ title: 'Chat | FarmLink Farmer' })
 
-// ── Mock conversations (replace with API later) ──────────────────
-const conversations = ref([
-  {
-    id: 1, name: 'Sokha Meas', color: '#2d6a4f', online: true,
-    lastMessage: 'Can I get 5kg delivered?', lastTime: '2m ago', unread: 2,
-    messages: [
-      { sender: 'user',   text: 'Hello! Are the heirloom tomatoes available?', time: '10:30 AM' },
-      { sender: 'farmer', text: 'Yes, we have fresh stock harvested this morning!', time: '10:32 AM' },
-      { sender: 'user',   text: 'Can I get 5kg delivered?', time: '10:35 AM' },
-    ],
-  },
-  {
-    id: 2, name: 'Rathana Chea', color: '#b45309', online: false,
-    lastMessage: 'Thank you so much!', lastTime: '1h ago', unread: 0,
-    messages: [
-      { sender: 'user',   text: 'Is the Kampot pepper still in stock?', time: '9:00 AM' },
-      { sender: 'farmer', text: 'Yes! Premium batch just packed.', time: '9:05 AM' },
-      { sender: 'user',   text: 'Thank you so much!', time: '9:06 AM' },
-    ],
-  },
-  {
-    id: 3, name: 'Piseth Keo', color: '#1e40af', online: true,
-    lastMessage: 'When will it be ready?', lastTime: '3h ago', unread: 1,
-    messages: [
-      { sender: 'user', text: 'I placed order #FL-9021 yesterday.', time: '8:00 AM' },
-      { sender: 'user', text: 'When will it be ready?', time: '8:01 AM' },
-    ],
-  },
-])
+const chat = useChat()
+const { user } = useAuth()
 
 const search = ref('')
-const activeConvId = ref<number | null>(null)
 const newMessage = ref('')
 const messagesArea = ref<HTMLElement | null>(null)
-const isTyping = ref(false)
 
-// ── WebSocket (connect to backend when ready) ─────────────────────
-let ws: WebSocket | null = null;
-
-function connectWebSocket() {
-  // TODO: Replace with your backend WS URL e.g. ws://localhost:3001/chat
-  // ws = new WebSocket('ws://localhost:3001/chat')
-  // ws.onmessage = (event) => {
-  //   const data = JSON.parse(event.data)
-  //   if (data.conversationId === activeConvId.value) {
-  //     activeMessages.value.push({ sender: 'user', text: data.text, time: formatTime() })
-  //     scrollToBottom()
-  //   }
-  // }
-}
+const currentUserId = computed(() => {
+  if (user?.id) return user.id
+  const sessionStr = localStorage.getItem('farmlink.auth.session')
+  if (!sessionStr) return null
+  try {
+    const session = JSON.parse(sessionStr)
+    return session?.user?.id
+  } catch {
+    return null
+  }
+})
 
 // ── Computed ──────────────────────────────────────────────────────
 const filteredConversations = computed(() =>
-  conversations.value.filter(c =>
-    c.name.toLowerCase().includes(search.value.toLowerCase())
+  chat.conversations.value.filter(c =>
+    (c.participant.firstName || c.participant.lastName || 'User')
+      .toLowerCase()
+      .includes(search.value.toLowerCase())
   )
 )
 
-const totalUnread = computed(() =>
-  conversations.value.reduce((sum, c) => sum + c.unread, 0)
-)
-
 const activeConv = computed(() =>
-  conversations.value.find(c => c.id === activeConvId.value) ?? null
+  chat.conversations.value.find(c => c.id === chat.activeConversationId.value) ?? null
 )
 
-const activeMessages = computed(() => activeConv.value?.messages ?? [])
+const getParticipantName = (conv: any) =>
+  `${conv.participant.firstName || ''} ${conv.participant.lastName || ''}`.trim() || 'User'
+
+const getParticipantInitial = (conv: any) =>
+  (conv.participant.firstName?.[0] || conv.participant.lastName?.[0] || 'U').toUpperCase()
+
+const formatTime = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatLastTime = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
 
 // ── Actions ───────────────────────────────────────────────────────
-function selectConversation(conv: any) {
-  activeConvId.value = conv.id
-  conv.unread = 0
+async function selectConversation(conv: any) {
+  chat.setActiveConversation(conv.id)
+  await chat.fetchMessages(conv.id, 1, 20)
+  if (conv.unreadCount > 0) {
+    await chat.markConversationAsRead(conv.id)
+  }
   nextTick(scrollToBottom)
 }
 
-function formatTime() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-function sendMessage() {
+async function sendMessage() {
   const text = newMessage.value.trim()
-  if (!text || !activeConv.value) return
+  if (!text || !activeConv.value || !currentUserId.value) return
 
-  activeConv.value.messages.push({ sender: 'farmer', text, time: formatTime() })
-  activeConv.value.lastMessage = text
-  activeConv.value.lastTime = 'Just now'
-  newMessage.value = ''
-
-  // TODO: send via WebSocket
-  // ws?.send(JSON.stringify({ conversationId: activeConvId.value, text, sender: 'farmer' }))
-
-  // Simulate user typing reply (remove when WS is connected)
-  simulateReply()
-  nextTick(scrollToBottom)
-}
-
-function simulateReply() {
-  isTyping.value = true
-  setTimeout(() => {
-    isTyping.value = false
-    activeConv.value?.messages.push({
-      sender: 'user',
-      text: 'Got it, thanks! 🙏',
-      time: formatTime(),
-    })
+  try {
+    await chat.sendMessage(activeConv.value.id, text, currentUserId.value)
+    newMessage.value = ''
     nextTick(scrollToBottom)
-  }, 2000)
+  } catch (err) {
+    console.error('Failed to send message:', err)
+  }
 }
 
 function scrollToBottom() {
@@ -241,8 +209,9 @@ function scrollToBottom() {
   }
 }
 
-onMounted(connectWebSocket)
-onUnmounted(() => { if (ws) ws.close() })
+onMounted(async () => {
+  await chat.fetchConversations(1, 10)
+})
 </script>
 
 <style scoped>
@@ -357,6 +326,7 @@ onUnmounted(() => { if (ws) ws.close() })
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #15803d 0%, #2d6a4f 100%);
 }
 
 .conv-info { flex: 1; min-width: 0; }
