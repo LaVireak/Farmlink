@@ -6,6 +6,15 @@ import {
   type AdminUserAttributes,
   type User as SupabaseUser,
 } from '@supabase/supabase-js';
+// Provide a WebSocket transport for Node.js <22 (node:20 alpine image)
+let wsTransport: any = undefined;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  wsTransport = require('ws');
+} catch (err) {
+  // ws may not be installed in some environments; we'll handle at runtime
+  wsTransport = undefined as any;
+}
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
@@ -59,6 +68,9 @@ export class SupabaseAuthService {
         persistSession: false,
         detectSessionInUrl: false,
       },
+      // If a ws transport is available, pass it to the realtime client to avoid
+      // runtime errors on Node.js versions without native WebSocket support.
+      ...(wsTransport ? { realtime: { transport: wsTransport } } : {}),
     });
   }
 

@@ -29,13 +29,20 @@ export class UsersService {
 
   async updateProfile(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
-    const { avatarDataUrl, ...profileUpdates } = updateUserDto;
+    const { avatarDataUrl, avatarUrl, ...profileUpdates } = updateUserDto;
     const updatedUser = this.userRepository.merge(user, profileUpdates);
 
-    if (avatarDataUrl) {
+    const stagedAvatarDataUrl =
+      avatarDataUrl ?? (this.isDataUrl(avatarUrl) ? avatarUrl : undefined);
+
+    if (avatarUrl && !this.isDataUrl(avatarUrl)) {
+      updatedUser.avatarUrl = avatarUrl;
+    }
+
+    if (stagedAvatarDataUrl) {
       updatedUser.avatarUrl = await this.supabaseAuthService.uploadAvatarImage(
         id,
-        avatarDataUrl,
+        stagedAvatarDataUrl,
       );
     }
 
@@ -50,6 +57,10 @@ export class UsersService {
   async remove(id: string): Promise<void> {
     const user = await this.findById(id);
     await this.userRepository.remove(user);
+  }
+
+  private isDataUrl(value?: string): value is string {
+    return typeof value === 'string' && value.startsWith('data:');
   }
 
   // --- Favorites ---
