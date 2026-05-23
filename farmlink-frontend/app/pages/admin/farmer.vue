@@ -496,7 +496,7 @@ import AdminFarmerTable from '~/components/admin/AdminFarmerTable.vue'
 definePageMeta({ layout: 'admin' })
 
 const config  = useRuntimeConfig()
-const baseURL = config.public.apiBase
+const baseURL = config.public.apiUrl
 
 const allFarmers     = ref([])
 const allBuyers      = ref([])
