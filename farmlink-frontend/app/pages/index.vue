@@ -57,6 +57,7 @@
               <span>Customer rating</span>
             </div>
           </div>
+
         </div>
 
         <div class="hero-right-content">
@@ -358,6 +359,7 @@
           </article>
         </div>
       </section>
+
     </main>
 
     <CommonAppFooter />
@@ -387,6 +389,7 @@ const products = [
     price: '$3.20',
     image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
   },
+
   {
     id: '4',
     name: 'Kampot Spiced Box',
@@ -405,6 +408,18 @@ const provinceFarms = [
     rating: '4.9',
     image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
   },
+
+  {
+    id: '3',
+    name: 'Organic Tomatoes',
+    excerpt: 'Farm fresh tomatoes full of flavor.',
+    price: '$3.20',
+    image:
+      'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
+  }
+]
+
+const provinceFarms = [
   {
     name: 'Battambang Fruit Garden',
     province: 'Battambang',
@@ -413,6 +428,7 @@ const provinceFarms = [
     rating: '4.8',
     image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'
   },
+
   {
     name: 'Kampot Pepper Farm',
     province: 'Kampot',
@@ -473,12 +489,26 @@ const reviews = [
     quote: 'Fresh delivery every single morning.',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
   },
+
+  {
+    name: 'Siem Reap Green House',
+    province: 'Siem Reap',
+    description: 'Hydroponic lettuce and premium greens.',
+    products: 'Hydroponic Greens',
+    rating: '4.9',
+    image:
+      'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80'
+  }
+]
+
+const blogPosts = [
   {
     name: 'Vannak R.',
     role: 'Restaurant Chef',
     quote: 'The product quality is consistently amazing.',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
   },
+
   {
     name: 'Bona K.',
     role: 'Healthy Eater',

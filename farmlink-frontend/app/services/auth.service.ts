@@ -25,8 +25,20 @@ export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
 });
 
 export const getAccessToken = async (): Promise<string | null> => {
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
+  if (typeof window === 'undefined') return null;
+
+  const sessionStr = localStorage.getItem('farmlink.auth.session');
+  if (!sessionStr) {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+
+  try {
+    const session = JSON.parse(sessionStr);
+    return session.accessToken ?? null;
+  } catch {
+    return null;
+  }
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';

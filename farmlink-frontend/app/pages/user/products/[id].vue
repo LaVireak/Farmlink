@@ -3,137 +3,170 @@
 
   <div class="product-detail-page">
     <div class="detail-container">
-      
+
+      <!-- Breadcrumb -->
       <nav class="breadcrumbs">
         <NuxtLink to="/">Home</NuxtLink>
+
         <span class="separator">/</span>
-        <NuxtLink to="/user/products/products">Products</NuxtLink>
+
+        <NuxtLink to="/user/products">
+          Products
+        </NuxtLink>
+
         <span class="separator">/</span>
-        <span class="current">{{ product?.name || 'Loading...' }}</span>
+
+        <span class="current">
+          {{ product?.name || 'Loading...' }}
+        </span>
       </nav>
 
+      <!-- Product -->
       <div v-if="product" class="main-content">
+
+        <!-- Image -->
         <div class="gallery-section">
           <div class="main-image-wrap">
-            <img :src="activeImage" :alt="product.name" class="main-image" />
-            <span v-if="product.badge" :class="['card-badge', badgeClass]">{{ product.badge }}</span>
+            <img
+              :src="activeImage"
+              :alt="product.name"
+              class="main-image"
+            />
+
+            <span
+              v-if="product.badge"
+              :class="['card-badge', badgeClass]"
+            >
+              {{ product.badge }}
+            </span>
           </div>
         </div>
 
+        <!-- Info -->
         <div class="info-section">
-          <div class="product-category">{{ product.category }}</div>
-          <h1 class="product-title">{{ product.name }}</h1>
-          
+
+          <div class="product-category">
+            {{ product.category }}
+          </div>
+
+          <h1 class="product-title">
+            {{ product.name }}
+          </h1>
+
+          <!-- Rating -->
           <div class="product-rating">
             <span class="stars">
-              <span v-for="i in 5" :key="i" :class="i <= Math.round(product.rating || 5) ? 'star-filled' : 'star-empty'">★</span>
+              <span
+                v-for="i in 5"
+                :key="i"
+                :class="
+                  i <= Math.round(product.rating || 5)
+                    ? 'star-filled'
+                    : 'star-empty'
+                "
+              >
+                ★
+              </span>
             </span>
-            <span class="rating-text">{{ (product.rating || 5).toFixed(1) }} ({{ reviews.length }} reviews)</span>
+
+            <span class="rating-text">
+              {{ (product.rating || 5).toFixed(1) }}
+            </span>
           </div>
 
+          <!-- Price -->
           <div class="product-price-block">
-            <span class="price">${{ discountedPrice }}</span>
-            <span v-if="product.discount" class="original-price">${{ product.price.toFixed(2) }}</span>
-            <span v-if="product.discount" class="discount-tag">-{{ product.discount }}%</span>
+
+            <span class="price">
+              ${{ discountedPrice }}
+            </span>
+
+            <span
+              v-if="product.discount"
+              class="original-price"
+            >
+              ${{ product.price.toFixed(2) }}
+            </span>
+
+            <span
+              v-if="product.discount"
+              class="discount-tag"
+            >
+              -{{ product.discount }}%
+            </span>
           </div>
 
-          <p class="short-desc">{{ product.description }}</p>
+          <!-- Description -->
+          <p class="short-desc">
+            {{ product.description }}
+          </p>
 
+          <!-- Quantity -->
           <div class="action-block">
+
             <div class="quantity-selector">
-              <button @click="decrease" class="qty-btn" aria-label="Decrease quantity">−</button>
-              <span class="qty-val">{{ quantity }}</span>
-              <button @click="increase" class="qty-btn" aria-label="Increase quantity">+</button>
+              <button
+                @click="decrease"
+                class="qty-btn"
+              >
+                −
+              </button>
+
+              <span class="qty-val">
+                {{ quantity }}
+              </span>
+
+              <button
+                @click="increase"
+                class="qty-btn"
+              >
+                +
+              </button>
             </div>
-            
-            <button @click="addToCart" class="add-to-cart-btn">
+
+            <button
+              @click="addToCart"
+              class="add-to-cart-btn"
+            >
               Add to Cart
             </button>
           </div>
 
-          <div class="delivery-info">
-            <div class="info-item">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1" ry="1"></rect><line x1="12" y1="8" x2="12" y2="21"></line><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8"></path></svg>
-              <span>Freshly packed from <strong>Organic Dreams Farm</strong></span>
-            </div>
-            <div class="info-item">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <span>Estimated Delivery: <strong>Tomorrow, 8 AM - 12 PM</strong></span>
-            </div>
-          </div>
-          
-          <div class="thumbnail-row mt-6" v-if="product.gallery && product.gallery.length > 1">
-            <button 
-              v-for="(img, idx) in product.gallery" 
-              :key="idx" 
-              :class="['thumb-btn', { active: activeImage === img }]"
+          <!-- Gallery -->
+          <div
+            class="thumbnail-row mt-6"
+            v-if="product.gallery?.length > 1"
+          >
+            <button
+              v-for="(img, idx) in product.gallery"
+              :key="idx"
+              :class="[
+                'thumb-btn',
+                { active: activeImage === img }
+              ]"
               @click="activeImage = img"
             >
-              <img :src="img" :alt="`Thumbnail ${idx + 1}`" />
+              <img :src="img" />
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Loading -->
       <div v-else-if="loading" class="loading-state">
         <p>Loading product...</p>
       </div>
 
+      <!-- Not Found -->
       <div v-else class="not-found">
         <h2>Product not found</h2>
-        <NuxtLink to="/user/products/products" class="back-link">Return to Shop</NuxtLink>
-      </div>
 
-      <div v-if="product" class="tabs-section">
-        <div class="tabs-header">
-          <button 
-            v-for="tab in ['Description', 'Farm Info', 'Reviews']" 
-            :key="tab"
-            :class="['tab-btn', { active: activeTab === tab }]"
-            @click="activeTab = tab"
-          >
-            {{ tab }}
-          </button>
-        </div>
-        
-        <div class="tab-content">
-          <div v-if="activeTab === 'Description'">
-            <h3 class="tab-title">The Harvest Story</h3>
-            <p>{{ product.description }}</p>
-            <p class="mt-4">Our produce is grown without synthetic pesticides or fertilizers, ensuring that you get the freshest, healthiest ingredients for your family's table. We believe in sustainable farming practices that nurture the soil and protect the environment.</p>
-          </div>
-          
-          <div v-else-if="activeTab === 'Farm Info'">
-            <h3 class="tab-title">About Organic Dreams Farm</h3>
-            <p>Located in the heart of Cambodia, Organic Dreams Farm is dedicated to sustainable agriculture and community support. With over 20 years of experience, our farmers bring a wealth of knowledge and passion to every crop.</p>
-          </div>
-          
-          <div v-else-if="activeTab === 'Reviews'">
-            <h3 class="tab-title">Customer Reviews ({{ reviews.length }})</h3>
-            <div class="reviews-list">
-              <div v-for="review in reviews" :key="review.name" class="review-card">
-                <div class="review-header">
-                  <span class="reviewer-name">{{ review.name }}</span>
-                  <span class="stars"><span class="star-filled" v-for="i in 5" :key="i">★</span></span>
-                </div>
-                <p class="review-comment">{{ review.comment }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="product" class="related-products">
-        <h2 class="section-title">You May Also Like</h2>
-        <div class="product-grid">
-          <UserProductCard 
-            v-for="relProd in relatedProducts" 
-            :key="relProd.id" 
-            :product="relProd" 
-            @add-to-cart="handleRelatedAddToCart"
-            @save-product="handleRelatedSave"
-          />
-        </div>
+        <NuxtLink
+          to="/user/products"
+          class="back-link"
+        >
+          Return to Shop
+        </NuxtLink>
       </div>
 
     </div>
@@ -145,14 +178,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
-import UserProductCard from '~/components/user/UserProductCard.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
 
 const product = ref(null)
+
 const reviews = ref([
   { name: 'Sokha Rith', comment: 'Extremely fresh and well packaged. Best organic produce in Cambodia!' },
   { name: 'Dara Pich', comment: 'Very clean and high quality. Will definitely order again next week!' }
@@ -160,25 +194,32 @@ const reviews = ref([
 const relatedProducts = ref([])
 const activeImage = ref('')
 const quantity = ref(1)
-const isSaved = ref(false)
-const activeTab = ref('Description')
-const loading = ref(false)
 
+const loading = ref(false)
 onMounted(async () => {
   await fetchProduct()
   await fetchRelatedProducts()
 })
 
+// ================= FETCH PRODUCT =================
 const fetchProduct = async () => {
   loading.value = true
+
   try {
-    const res = await $fetch(`${config.public.apiUrl}/products/${route.params.id}`)
+    const res = await $fetch(
+      `http://localhost:3001/products/${route.params.id}`
+    )
+
     product.value = res
-    if (res && res.image) {
-      activeImage.value = res.image
-    }
+
+    activeImage.value =
+      res.gallery?.[0] ||
+      res.image ||
+      '/images/placeholder.jpg'
+
   } catch (err) {
     console.error('Failed to fetch product:', err)
+    product.value = null
   } finally {
     loading.value = false
   }
@@ -195,35 +236,52 @@ const fetchRelatedProducts = async () => {
   }
 }
 
+// ================= PRICE =================
 const discountedPrice = computed(() => {
   if (product.value?.discount) {
-    return (product.value.price * (1 - product.value.discount / 100)).toFixed(2)
+    return (
+      product.value.price *
+      (1 - product.value.discount / 100)
+    ).toFixed(2)
   }
-  return product.value ? product.value.price.toFixed(2) : '0.00'
+
+  return product.value
+    ? product.value.price.toFixed(2)
+    : '0.00'
 })
 
+// ================= BADGE =================
 const badgeClass = computed(() => {
-  const badge = (product.value?.badge || '').toLowerCase()
+  const badge = (
+    product.value?.badge || ''
+  ).toLowerCase()
+
   if (badge === 'sale') return 'badge-sale'
   if (badge === 'new') return 'badge-new'
   if (badge === 'best seller') return 'badge-best'
+
   return 'badge-default'
 })
 
-const increase = () => quantity.value++
-const decrease = () => { if (quantity.value > 1) quantity.value-- }
+// ================= QUANTITY =================
+const increase = () => {
+  quantity.value++
+}
 
+const decrease = () => {
+  if (quantity.value > 1) {
+    quantity.value--
+  }
+}
+
+// ================= CART =================
 const addToCart = () => {
-}
-
-const toggleSave = () => {
-  isSaved.value = !isSaved.value
-}
-
-const handleRelatedAddToCart = (prod) => {
-}
-
-const handleRelatedSave = (prod) => {
+  console.log(
+    'Added to cart:',
+    product.value,
+    'Quantity:',
+    quantity.value
+  )
 }
 </script>
 

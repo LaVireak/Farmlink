@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 import { computed, nextTick, ref } from 'vue';
+import { usePaymentMethods } from '../../../composables/usePaymentMethods';
 
 definePageMeta({
   layout: 'user',
@@ -27,6 +28,8 @@ const cardExpiryMount = ref<HTMLDivElement | null>(null);
 const cardCvcMount = ref<HTMLDivElement | null>(null);
 const cardError = ref('');
 const isProcessing = ref(false);
+
+const { addPaymentMethod } = usePaymentMethods();
 
 const previewName = computed(() => (cardholderName.value.trim() ? cardholderName.value.toUpperCase() : 'YOUR NAME HERE'));
 
@@ -90,26 +93,29 @@ async function savePaymentMethod() {
   isProcessing.value = true;
   cardError.value = '';
 
-  // In a real app, you would create a SetupIntent on the backend and get the client_secret.
-  // Here, we simulate creating a payment method directly to test the card on the frontend!
+  // Step 1: Create the PaymentMethod token on Stripe's side
   const { error, paymentMethod } = await stripe.value.createPaymentMethod({
     type: 'card',
     card: cardNumberElement.value!,
     billing_details: {
-      name: cardholderName.value || 'John Doe',
+      name: cardholderName.value || undefined,
     },
   });
 
   if (error) {
     cardError.value = error.message || 'An error occurred while processing the card.';
     isProcessing.value = false;
-  } else {
-    // Success! We generated a secure token for the mock card!
-    console.log('Success! Payment Method ID:', paymentMethod.id);
-    alert(`Success! Card saved securely with Stripe.\nPayment Method ID: ${paymentMethod.id}`);
-    
-    // Redirect back to payment methods
+    return;
+  }
+
+  // Step 2: Persist it on the backend (attaches to Stripe Customer)
+  try {
+    await addPaymentMethod(paymentMethod.id, false);
     navigateTo('/user/settings/payment');
+  } catch (e: any) {
+    cardError.value = e.message || 'Failed to save card. Please try again.';
+  } finally {
+    isProcessing.value = false;
   }
 }
 </script>

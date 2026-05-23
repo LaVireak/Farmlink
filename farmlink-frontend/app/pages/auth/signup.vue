@@ -136,6 +136,15 @@
 							<span>I agree to the Terms of Service and Privacy Policy</span>
 						</label>
 					</div>
+					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
+					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
+
+					<div class="policy-row">
+						<label class="policy-check">
+							<input v-model="form.agree" type="checkbox">
+							<span>I agree to the Terms of Service and Privacy Policy</span>
+						</label>
+					</div>
 
 					
 					<button type="submit" :disabled="submitting" class="primary-btn">

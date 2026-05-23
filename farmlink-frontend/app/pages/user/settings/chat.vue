@@ -1,122 +1,77 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { useChat } from '~/composables/useChat';
+import { useAuth } from '~/composables/useAuth';
 
 definePageMeta({ layout: 'user' });
 useHead({ title: 'Chat with Farmers | FarmLink Cambodia' });
 
-// ── Contacts ──────────────────────────────────────────────────────
-const contacts = ref([
-  {
-    id: 1,
-    name: 'Battambang Organic Collective',
-    role: 'Farm Cooperative',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxSIvKIuR2BqsWIsER071js2ywfi7CP5m9mS8WzX1VFEam_p3bKUUBDfpomQgp2Uvp2PjuNwLmT8W3GAfvhbsNLcYqc6fyI5e9wOgdOAWo-FXd6TFHIyp7dsEJbVDxVZRQOeoU9AlMe452vG5o6NtXf3wpWD-UQ0ob3tIb47t1MtHcAajUd-XoMjdUUFMwSW7E6uxB2TKRsqLcsulOKrq5i1J28fVvVP_1NUUNa0izLItmVgu8tAz9A7NNfUr1G7xELqixhRGcsMg',
-    lastMessage: 'Your lemongrass bundle has been packed and is ready for pickup.',
-    time: '10:42 AM', unread: 2, online: true,
-  },
-  {
-    id: 2,
-    name: 'Sovan M.',
-    role: 'Delivery Driver',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCue0B4_ZvopNVjR-6-vhcuCHlBeyqg7zLD4Ln8Lzy6pz-pXXbUqyIAKDDWXLfKtGwrnFcCvpSZ1HSIj5FMyjTlFqTB5gTIZYOgJViFeFkjdP8GPGYNmQfd-2t0sPaH3blZFs8euiU8IM6f5SHXLYWeybixRLzRN0nvOFB9wC-RnZZcPwIFw2n8CYmmqEC6vNVz8qH39rxdPEvxhrhaAS6PrEZ3qD4gQY-HpwsWYJBk0jFUpwt4TKjd4G3RVRu1DNXOhu1KzCC-2hU',
-    lastMessage: 'I am arriving in 5 minutes.',
-    time: 'Yesterday', unread: 0, online: false,
-  },
-  {
-    id: 3,
-    name: 'Kampot Pepper Co-op',
-    role: 'Farm',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgMohAYMYvy24VC4cbZzvKKFljvShhZMXBZCF4cf4dZGjsUixpeeKru7S3WtXMiwQp2LBQK0vcuiH1JUUVUBl_9dGrGCBHG-R8rP3dp4z7jl3UA7XRLibf577RhpqmtXpnvJPqvLW3hAxcFqCo0dTs9ZByVvaZpW7a7ZYxV4y-VikVogv2x_qn9Hl8ZeMm0zRoretMsuUe9-3O1eRooYUPF0rvlAWl2jg7RfMPORbcJ93HRuvdIpk7xDT-8ndIrS2uX_Gpi1l-M3M',
-    lastMessage: 'Thank you for your order! We hope you enjoy the pepper.',
-    time: 'Mon', unread: 0, online: true,
-  },
-]);
-
+const chat = useChat();
+const { user } = useAuth();
 const search = ref('');
-const activeContactId = ref<number | null>(1);
 const newMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
-const isTyping = ref(false);
 
-// ── Computed ──────────────────────────────────────────────────────
-const filteredContacts = computed(() =>
-  contacts.value.filter(c => c.name.toLowerCase().includes(search.value.toLowerCase()))
-);
-
-const totalUnread = computed(() =>
-  contacts.value.reduce((sum, c) => sum + c.unread, 0)
-);
-
-const activeContact = computed(() =>
-  contacts.value.find(c => c.id === activeContactId.value) ?? null
-);
-
-const allMessages = ref<Record<number, Array<{ id: number; sender: string; text: string; time: string }>>>({
-  1: [
-    { id: 1, sender: 'farmer', text: 'Hello! Thank you for ordering from our collective. We are preparing your Fresh Lemongrass and Dragon Fruit.', time: '10:30 AM' },
-    { id: 2, sender: 'user',   text: 'Hi! Could you make sure the lemongrass is extra fresh? I need it for a soup tonight.', time: '10:35 AM' },
-    { id: 3, sender: 'farmer', text: 'Absolutely. We will pick the best stalks for you. Your lemongrass bundle has been packed and is ready for pickup.', time: '10:42 AM' },
-  ],
-  2: [
-    { id: 1, sender: 'farmer', text: 'I am on my way with your delivery!', time: 'Yesterday' },
-    { id: 2, sender: 'farmer', text: 'I am arriving in 5 minutes.', time: 'Yesterday' },
-  ],
-  3: [
-    { id: 1, sender: 'farmer', text: 'Thank you for your order! We hope you enjoy the Kampot pepper.', time: 'Mon' },
-  ],
+const currentUserId = computed(() => {
+  if (user?.id) return user.id;
+  const sessionStr = localStorage.getItem('farmlink.auth.session');
+  if (!sessionStr) return null;
+  try {
+    const session = JSON.parse(sessionStr);
+    return session?.user?.id;
+  } catch {
+    return null;
+  }
 });
 
-const messages = computed(() => allMessages.value[activeContactId.value ?? 0] ?? []);
+onMounted(async () => {
+  await chat.fetchConversations(1, 10);
+});
 
-// ── WebSocket ─────────────────────────────────────────────────────
-let ws: WebSocket | null = null;
+const filteredContacts = computed(() => {
+  const name = search.value.toLowerCase();
+  return chat.conversations.value.filter(c =>
+    (c.participant.firstName || c.participant.lastName || 'User')
+      .toLowerCase()
+      .includes(name)
+  );
+});
 
-function connectWebSocket() {
-  // TODO: ws = new WebSocket('ws://localhost:3001/chat')
-  // ws.onmessage = (event) => { ... push incoming message ... }
-}
+const totalUnread = computed(() =>
+  chat.conversations.value.reduce((sum, c) => sum + c.unreadCount, 0)
+);
 
-// ── Actions ───────────────────────────────────────────────────────
-function selectContact(contact: any) {
-  activeContactId.value = contact.id;
-  contact.unread = 0;
+const activeContact = computed(() => {
+  if (!chat.activeConversationId.value) return null;
+  return chat.conversations.value.find(c => c.id === chat.activeConversationId.value) ?? null;
+});
+
+const messages = computed(() => chat.messages.value);
+
+async function selectContact(conversation: any) {
+  chat.setActiveConversation(conversation.id);
+  await chat.fetchMessages(conversation.id, 1, 20);
+  if (conversation.unreadCount > 0) {
+    await chat.markConversationAsRead(conversation.id);
+  }
   nextTick(scrollToBottom);
 }
 
-function formatTime() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatTime(date: Date) {
+  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function sendMessage() {
+async function sendMessage() {
   const text = newMessage.value.trim();
-  if (!text || !activeContactId.value) return;
+  if (!text || !activeContact.value || !currentUserId.value) return;
 
-  const id = activeContactId.value;
-  if (!allMessages.value[id]) allMessages.value[id] = [];
-  allMessages.value[id].push({ id: Date.now(), sender: 'user', text, time: formatTime() });
-
-  const contact = contacts.value.find(c => c.id === id);
-  if (contact) { contact.lastMessage = text; contact.time = 'Just now'; }
-
-  newMessage.value = '';
-  nextTick(scrollToBottom);
-
-  // Simulate farmer reply (remove when WebSocket connected)
-  simulateReply(id);
-}
-
-function simulateReply(contactId: number) {
-  isTyping.value = true;
-  setTimeout(() => {
-    isTyping.value = false;
-    allMessages.value[contactId]?.push({
-      id: Date.now(),
-      sender: 'farmer',
-      text: 'Thank you! We will get back to you shortly. 🌿',
-      time: formatTime(),
-    });
+  try {
+    await chat.sendMessage(activeContact.value.id, text, currentUserId.value);
+    newMessage.value = '';
     nextTick(scrollToBottom);
-  }, 2200);
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
 }
 
 function scrollToBottom() {
@@ -124,8 +79,6 @@ function scrollToBottom() {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
 }
 
-onMounted(connectWebSocket);
-onUnmounted(() => { if (ws) ws.close(); });
 </script>
 
 <template>
@@ -157,21 +110,20 @@ onUnmounted(() => { if (ws) ws.close(); });
                   v-for="contact in filteredContacts"
                   :key="contact.id"
                   class="conv-item"
-                  :class="{ active: activeContactId === contact.id }"
+                  :class="{ active: chat.activeConversationId.value === contact.id }"
                   @click="selectContact(contact)"
                 >
                   <div class="conv-avatar-wrap">
-                    <img :src="contact.avatar" :alt="contact.name" class="conv-avatar-img" />
-                    <span v-if="contact.online" class="online-dot"></span>
+                    <img :src="contact.participant.avatarUrl || 'https://via.placeholder.com/42'" :alt="contact.participant.firstName" class="conv-avatar-img" />
                   </div>
                   <div class="conv-info">
                     <div class="conv-top">
-                      <span class="conv-name">{{ contact.name }}</span>
-                      <span class="conv-time" :class="{ 'green': contact.unread }">{{ contact.time }}</span>
+                      <span class="conv-name">{{ contact.participant.firstName }} {{ contact.participant.lastName }}</span>
+                      <span class="conv-time" :class="{ 'green': contact.unreadCount }">{{ new Date(contact.lastMessageTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
                     </div>
                     <div class="conv-bottom">
-                      <span class="conv-preview" :class="{ bold: contact.unread }">{{ contact.lastMessage }}</span>
-                      <span v-if="contact.unread > 0" class="conv-badge">{{ contact.unread }}</span>
+                      <span class="conv-preview" :class="{ bold: contact.unreadCount }">{{ contact.lastMessage || 'No messages yet' }}</span>
+                      <span v-if="contact.unreadCount > 0" class="conv-badge">{{ contact.unreadCount }}</span>
                     </div>
                   </div>
                 </button>
@@ -185,63 +137,44 @@ onUnmounted(() => { if (ws) ws.close(); });
               <!-- Thread Header -->
               <div class="thread-header">
                 <div class="thread-avatar-wrap">
-                  <img :src="activeContact.avatar" :alt="activeContact.name" class="thread-avatar-img" />
+                  <img :src="activeContact.participant.avatarUrl || 'https://via.placeholder.com/42'" :alt="activeContact.participant.firstName" class="thread-avatar-img" />
                 </div>
                 <div>
-                  <p class="thread-name">{{ activeContact.name }}</p>
+                  <p class="thread-name">{{ activeContact.participant.firstName }} {{ activeContact.participant.lastName }}</p>
                   <p class="thread-status">
-                    <span class="status-dot" :class="activeContact.online ? 'online' : 'offline'"></span>
-                    {{ activeContact.online ? 'Online' : 'Offline' }} · {{ activeContact.role }}
+                    <span class="status-dot online"></span>
+                    Online
                   </p>
-                </div>
-                <div class="thread-actions">
-                  <button class="thread-action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    <span>View Profile</span>
-                  </button>
                 </div>
               </div>
 
               <!-- Messages -->
               <div class="messages-area" ref="messagesContainer">
                 <div
-                  v-for="(msg, i) in messages"
-                  :key="i"
+                  v-for="msg in chat.activeMessages.value"
+                  :key="msg.id"
                   class="message-row"
-                  :class="msg.sender === 'user' ? 'from-me' : 'from-them'"
+                  :class="msg.sender.id === currentUserId ? 'from-me' : 'from-them'"
                 >
-                  <div v-if="msg.sender !== 'user'" class="msg-avatar-wrap">
-                    <img :src="activeContact.avatar" :alt="activeContact.name" class="msg-avatar-img" />
+                  <div v-if="msg.sender.id !== currentUserId" class="msg-avatar-wrap">
+                    <img :src="msg.sender.avatarUrl || 'https://via.placeholder.com/30'" :alt="msg.sender.firstName" class="msg-avatar-img" />
                   </div>
-                  <div class="bubble" :class="msg.sender === 'user' ? 'bubble-me' : 'bubble-them'">
-                    <p>{{ msg.text }}</p>
+                  <div class="bubble" :class="msg.sender.id === currentUserId ? 'bubble-me' : 'bubble-them'">
+                    <p>{{ msg.content }}</p>
                     <span class="msg-time">
-                      {{ msg.time }}
-                      <span v-if="msg.sender === 'user'" class="read-tick">✓✓</span>
+                      {{ formatTime(msg.createdAt) }}
+                      <span v-if="msg.sender.id === currentUserId && msg.isRead" class="read-tick">✓✓</span>
                     </span>
-                  </div>
-                </div>
-
-                <!-- Typing indicator -->
-                <div v-if="isTyping" class="message-row from-them">
-                  <div class="msg-avatar-wrap">
-                    <img :src="activeContact.avatar" :alt="activeContact.name" class="msg-avatar-img" />
-                  </div>
-                  <div class="bubble bubble-them typing-bubble">
-                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
                   </div>
                 </div>
               </div>
 
               <!-- Input Bar -->
               <div class="input-bar">
-                <button class="attach-btn" title="Attach image">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                </button>
                 <input
                   v-model="newMessage"
                   type="text"
-                  :placeholder="'Type a message to ' + activeContact.name.split(' ')[0] + '...'"
+                  :placeholder="'Type a message to ' + activeContact.participant.firstName + '...'"
                   @keydown.enter="sendMessage"
                   class="msg-input"
                 />
