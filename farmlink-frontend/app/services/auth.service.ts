@@ -6,6 +6,43 @@ import type {
     UserRole,
     VerifyOtpPayload,
 } from '../types/auth.type';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+if (!supabaseUrl) {
+    throw new Error('Supabase is not configured. Set VITE_SUPABASE_URL.');
+}
+
+if (!supabaseAnonKey) {
+    throw new Error('Supabase is not configured. Set VITE_SUPABASE_ANON_KEY.');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+  },
+});
+
+export const getAccessToken = async (): Promise<string | null> => {
+  if (typeof window === 'undefined') return null;
+
+  const sessionStr = localStorage.getItem('farmlink.auth.session');
+  if (!sessionStr) {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+
+  try {
+    const session = JSON.parse(sessionStr);
+    return session.accessToken ?? null;
+  } catch {
+    return null;
+  }
+};
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 

@@ -1,191 +1,448 @@
 <template>
   <div class="home-page">
     <CommonAppHeader />
-    
 
     <main class="home-main">
+
+      <!-- HERO -->
       <section class="hero-shell">
         <img
           class="hero-image"
-          src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=1800&q=80"
-          alt="Seasonal harvest"
-        >
+          src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=2000&q=80"
+          alt="Farm"
+        />
+
         <div class="hero-overlay"></div>
 
-        <div class="hero-content">
-          <span class="hero-pill">TAKEO PROVINCE DIRECT</span>
-          <p class="hero-season">SEASON HARVEST</p>
-          <h1>
-            Monsoon's Finest
-            <span>Tropical Harvest</span>
-          </h1>
-          <p class="hero-copy">
-            Experience the peak of Cambodia's rainy season. Sun-ripened, hand-picked, and delivered from Takeo's fertile plains to your table within 24 hours.
-          </p>
+        <div class="hero-glow glow-1"></div>
+        <div class="hero-glow glow-2"></div>
 
-          <div class="hero-actions">
-            <NuxtLink to="/user/products" class="btn btn-primary">Shop The Season</NuxtLink>
-            <NuxtLink to="/about" class="btn btn-ghost">Meet the Farmers</NuxtLink>
-          </div>
-        </div>
-      </section>
+        <div class="hero-inner">
 
-      <section class="section-head">
-        <div>
-          <h2>Featured Local Farms</h2>
-          <p>Direct partnerships with Cambodia's most dedicated organic growers.</p>
-        </div>
+          <!-- LEFT -->
+          <div class="hero-left">
 
-        <NuxtLink to="/about" class="view-all">View All Regions</NuxtLink>
-      </section>
+            <span class="pill">
+              {{ t('home.brandBadge') }}
+            </span>
 
-      <section class="featured-grid">
-        <article class="farm-card farm-card-main">
-          <img src="https://images.unsplash.com/photo-1627483262769-74ed89bc247a?auto=format&fit=crop&w=1000&q=80" alt="Takeo organic farm">
-          <div class="farm-gradient"></div>
-          <div class="farm-content">
-            <h3>Takeo Organic Garden Park</h3>
-            <p>★ 4.9 12.4 km away</p>
-          </div>
-          <button class="farm-arrow" type="button">↗</button>
-        </article>
+            <h1>
+              {{ t('home.heroTitle1') }}
+              <span>{{ t('home.heroTitleHighlight') }}</span>
+              {{ t('home.heroTitle2') }}
+            </h1>
 
-        <article class="farm-card farm-card-small">
-          <img src="https://images.unsplash.com/photo-1580428180121-4b3cdb3f0f87?auto=format&fit=crop&w=900&q=80" alt="Kampong cham greens">
-          <div class="farm-gradient"></div>
-          <div class="farm-content">
-            <h3>Kampong Cham Greens</h3>
-            <p>Specializing in heirloom leafy vegetables</p>
-          </div>
-        </article>
+            <p class="lead">
+              {{ t('home.heroLead') }}
+            </p>
 
-        <article class="farm-card farm-card-small">
-          <img src="https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?auto=format&fit=crop&w=900&q=80" alt="Battambang orchard">
-          <div class="farm-gradient"></div>
-          <div class="farm-content">
-            <h3>Battambang Orchard</h3>
-            <p>Famous for dragon fruit and longan</p>
-          </div>
-        </article>
-      </section>
+            <div class="actions">
+              <NuxtLink
+                to="/user/products"
+                class="btn primary"
+              >
+                {{ t('home.exploreProducts') }}
+              </NuxtLink>
 
-      <section class="picked-row">
-        <h2>Picked For You</h2>
-        <div class="carousel-ctrl">
-          <button type="button">‹</button>
-          <button type="button">›</button>
-        </div>
-      </section>
+              <NuxtLink
+                to="/about"
+                class="btn secondary"
+              >
+                {{ t('home.learnMore') }}
+              </NuxtLink>
+            </div>
 
-      <section class="product-grid">
-        <article v-for="product in pickedProducts" :key="product.name" class="product-card">
-          <img :src="product.image" :alt="product.name">
-          <h3>{{ product.name }}</h3>
-          <p>{{ product.meta }}</p>
-          <div class="product-bottom">
-            <span>${{ product.price }}</span>
-            <button type="button">+</button>
-          </div>
-        </article>
-      </section>
+            <div class="hero-stats">
 
-      <section class="bottom-grid">
-        <aside class="recently-viewed">
-          <h3>Recently Viewed</h3>
+              <div class="stat-card">
+                <strong>240+</strong>
+                <span>{{ t('home.partnerFarms') }}</span>
+              </div>
 
-          <div v-for="item in recentItems" :key="item.name" class="recent-item">
-            <img :src="item.image" :alt="item.name">
-            <div>
-              <p>{{ item.name }}</p>
-              <span>{{ item.price }}</span>
+              <div class="stat-card">
+                <strong>24h</strong>
+                <span>{{ t('home.fastDelivery') }}</span>
+              </div>
+
+              <div class="stat-card">
+                <strong>4.9★</strong>
+                <span>{{ t('home.customerRating') }}</span>
+              </div>
+
             </div>
           </div>
-        </aside>
 
-        <article class="subscribe-card">
-          <h3>Stay Rooted with Phum Garden</h3>
-          <p>Weekly agricultural updates, seasonal recipes, and exclusive farm-to-table events across Cambodia.</p>
+          <!-- RIGHT FLOATING CARD -->
+          <div class="hero-floating-card">
 
-          <div class="subscribe-form">
-            <input type="email" placeholder="Your Email Address">
-            <button type="button">Subscribe Now</button>
+            <h3>{{ t('home.todayFreshPicks') }}</h3>
+
+            <div class="floating-product">
+              <img
+                src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80"
+              />
+
+              <div>
+                <strong>Organic Greens</strong>
+                <p>Harvested 3 hours ago</p>
+              </div>
+            </div>
+
+            <div class="floating-product">
+              <img
+                src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80"
+              />
+
+              <div>
+                <strong>Sweet Mangoes</strong>
+                <p>Fresh from Battambang</p>
+              </div>
+            </div>
+
+            <div class="floating-product">
+              <img
+                src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80"
+              />
+
+              <div>
+                <strong>Fresh Tomatoes</strong>
+                <p>Picked this morning</p>
+              </div>
+            </div>
+
           </div>
 
-          <small>We respect your privacy. No spam, just nature's goodness.</small>
-        </article>
+        </div>
       </section>
+
+      <!-- PRODUCTS -->
+      <section class="section">
+
+        <div class="section-head">
+          <h2>{{ t('home.popularProducts') }}</h2>
+
+          <NuxtLink
+            to="/user/products"
+            class="view-all"
+          >
+            {{ t('home.browseAll') }} →
+          </NuxtLink>
+        </div>
+
+        <div class="products-grid">
+
+          <article
+            class="product"
+            v-for="p in products"
+            :key="p.id"
+          >
+            <img :src="p.image" :alt="p.name" />
+
+            <div class="product-body">
+
+              <h3>{{ p.name }}</h3>
+
+              <p class="muted">
+                {{ p.excerpt }}
+              </p>
+
+              <div class="product-row">
+                <strong class="price">
+                  {{ p.price }}
+                </strong>
+
+                <NuxtLink
+                  :to="`/user/products/${p.id}`"
+                  class="view-product"
+                >
+                  {{ t('home.view') }} →
+                </NuxtLink>
+              </div>
+
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- FARMS BY PROVINCE -->
+      <section class="section">
+
+        <div class="section-head">
+          <h2>{{ t('home.farmsAcrossCambodia') }}</h2>
+
+          <NuxtLink
+            to="/about"
+            class="view-all"
+          >
+            {{ t('home.exploreProvinces') }} →
+          </NuxtLink>
+        </div>
+
+        <div class="province-grid">
+
+          <article
+            class="province-card"
+            v-for="farm in provinceFarms"
+            :key="farm.name"
+          >
+
+            <img
+              :src="farm.image"
+              :alt="farm.name"
+            />
+
+            <div class="province-overlay"></div>
+
+            <div class="province-content">
+
+              <span class="province-badge">
+                {{ farm.province }}
+              </span>
+
+              <h3>{{ farm.name }}</h3>
+
+              <p>
+                {{ farm.description }}
+              </p>
+
+              <div class="province-footer">
+                <span>{{ farm.products }}</span>
+                <span class="rating">★ {{ farm.rating }}</span>
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+      </section>
+
+      <!-- BLOG -->
+      <section class="section">
+
+        <div class="section-head">
+          <h2>{{ t('home.latestStories') }}</h2>
+
+          <NuxtLink
+            to="/about"
+            class="view-all"
+          >
+            {{ t('home.readJournal') }} →
+          </NuxtLink>
+        </div>
+
+        <div class="marquee-wrap">
+
+          <div class="marquee-track">
+
+            <article
+              class="blog"
+              v-for="post in blogPosts"
+              :key="'b1' + post.title"
+            >
+              <img :src="post.image" />
+
+              <div class="blog-body">
+
+                <span class="tag">
+                  {{ post.tag }}
+                </span>
+
+                <h3>{{ post.title }}</h3>
+
+                <p class="muted">
+                  {{ post.excerpt }}
+                </p>
+
+              </div>
+            </article>
+
+            <!-- duplicate -->
+            <article
+              class="blog"
+              v-for="post in blogPosts"
+              :key="'b2' + post.title"
+            >
+              <img :src="post.image" />
+
+              <div class="blog-body">
+
+                <span class="tag">
+                  {{ post.tag }}
+                </span>
+
+                <h3>{{ post.title }}</h3>
+
+                <p class="muted">
+                  {{ post.excerpt }}
+                </p>
+
+              </div>
+            </article>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="section">
+
+        <div class="section-head">
+          <h2>{{ t('home.communityReviews') }}</h2>
+
+          <div class="score">
+            {{ t('home.score') }}
+          </div>
+        </div>
+
+        <div class="marquee-wrap">
+
+          <div class="marquee-track reverse">
+
+            <article
+              class="review"
+              v-for="r in reviews"
+              :key="'r1' + r.name"
+            >
+
+              <div class="review-top">
+
+                <img :src="r.avatar" />
+
+                <div>
+                  <strong>{{ r.name }}</strong>
+                  <p class="muted">{{ r.role }}</p>
+                </div>
+
+              </div>
+
+              <div class="quote">
+                "{{ r.quote }}"
+              </div>
+
+            </article>
+
+            <!-- duplicate -->
+            <article
+              class="review"
+              v-for="r in reviews"
+              :key="'r2' + r.name"
+            >
+
+              <div class="review-top">
+
+                <img :src="r.avatar" />
+
+                <div>
+                  <strong>{{ r.name }}</strong>
+                  <p class="muted">{{ r.role }}</p>
+                </div>
+
+              </div>
+
+              <div class="quote">
+                "{{ r.quote }}"
+              </div>
+
+            </article>
+
+          </div>
+        </div>
+      </section>
+
     </main>
+
     <CommonAppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-const pickedProducts = [
-  {
-    name: 'Mangoes (Keo Chen)',
-    meta: '1kg - Takeo Garden',
-    price: '4.50',
-    image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    name: 'Angkor Bok Choy',
-    meta: '500g - Siem Reap Farms',
-    price: '1.20',
-    image: 'https://images.unsplash.com/photo-1603046891744-76e6481f2f20?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    name: 'Purple Dragon Fruit',
-    meta: 'Per piece - Kampong Speu',
-    price: '2.10',
-    image: 'https://images.unsplash.com/photo-1596591868231-05e4f9f67ec6?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    name: 'Cambodian Longan',
-    meta: '500g - Battambang',
-    price: '3.75',
-    image: 'https://images.unsplash.com/photo-1645268703244-3c2ca3ca40d8?auto=format&fit=crop&w=600&q=80',
-  },
-];
+import { computed } from 'vue'
 
-const recentItems = [
+const { t } = useI18n()
+
+const products = computed(() => [
   {
-    name: 'Sweet Carrots',
-    price: '$1.50 / kg',
-    image: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?auto=format&fit=crop&w=400&q=80',
+    id: '1',
+    name: t('home.products.greens.name'),
+    excerpt: t('home.products.greens.excerpt'),
+    price: '$6.50',
+    image:
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80'
   },
   {
-    name: 'Wild Berries',
-    price: '$5.20 / pack',
-    image: 'https://images.unsplash.com/photo-1563746098251-d35aef196e83?auto=format&fit=crop&w=400&q=80',
+    id: '2',
+    name: t('home.products.mangoes.name'),
+    excerpt: t('home.products.mangoes.excerpt'),
+    price: '$4.20',
+    image:
+      'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80'
   },
   {
-    name: 'Kampot Durian',
-    price: '$12.00 / kg',
-    image: 'https://images.unsplash.com/photo-1625231183176-71980a90b6f9?auto=format&fit=crop&w=400&q=80',
-  },
-];
+    id: '3',
+    name: t('home.products.tomatoes.name'),
+    excerpt: t('home.products.tomatoes.excerpt'),
+    price: '$3.20',
+    image:
+      'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
+  }
+])
+
+const provinceFarms = computed(() => [
+  { name: t('home.farms.takeo.name'), province: 'Takeo', description: t('home.farms.takeo.description'), products: t('home.farms.takeo.products'), rating: '4.9', image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80' },
+  { name: t('home.farms.battambang.name'), province: 'Battambang', description: t('home.farms.battambang.description'), products: t('home.farms.battambang.products'), rating: '4.8', image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80' },
+  { name: t('home.farms.kampot.name'), province: 'Kampot', description: t('home.farms.kampot.description'), products: t('home.farms.kampot.products'), rating: '5.0', image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=1200&q=80' },
+  { name: t('home.farms.siemReap.name'), province: 'Siem Reap', description: t('home.farms.siemReap.description'), products: t('home.farms.siemReap.products'), rating: '4.9', image: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80' }
+])
+
+const blogPosts = computed(() => [
+  { title: t('home.stories.takeo.title'), tag: t('home.stories.takeo.tag'), excerpt: t('home.stories.takeo.excerpt'), image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80' },
+  { title: t('home.stories.cooking.title'), tag: t('home.stories.cooking.tag'), excerpt: t('home.stories.cooking.excerpt'), image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80' }
+])
+
+const reviews = computed(() => [
+  { name: 'Sopheap N.', role: t('home.reviews.sopheap.role'), quote: t('home.reviews.sopheap.quote'), avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+  { name: 'Vannak R.', role: t('home.reviews.vannak.role'), quote: t('home.reviews.vannak.quote'), avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' }
+])
 </script>
 
 <style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 .home-page {
+  background:
+    radial-gradient(circle at top left, rgba(144,238,144,0.15), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(240,201,74,0.15), transparent 30%),
+    #fffdf4;
+
   min-height: 100vh;
-  background: #f4f4ee;
-  color: #1f251f;
+  color: #132a13;
+  font-family: Inter, sans-serif;
 }
 
 .home-main {
-  width: min(1080px, 100%);
-  margin: 0 auto;
-  padding: 12px 14px 38px;
-  display: grid;
-  gap: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
 }
+
+/* HERO */
 
 .hero-shell {
   position: relative;
-  border-radius: 20px;
+  min-height: 100vh;
+  border-radius: 32px;
   overflow: hidden;
-  min-height: 370px;
 }
 
 .hero-image {
@@ -199,438 +456,467 @@ const recentItems = [
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(7, 12, 12, 0.86) 0%, rgba(9, 12, 12, 0.34) 54%, rgba(9, 12, 12, 0.2) 100%);
+  background: linear-gradient(
+    110deg,
+    rgba(0,0,0,0.78),
+    rgba(0,0,0,0.25)
+  );
 }
 
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 480px;
-  padding: 30px 22px;
-}
-
-.hero-pill {
-  display: inline-block;
-  padding: 6px 12px;
+.hero-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
   border-radius: 999px;
-  background: #f5dfac;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  filter: blur(120px);
+}
+
+.glow-1 {
+  background: #38b000;
+  top: -120px;
+  left: -120px;
+}
+
+.glow-2 {
+  background: #f0c94a;
+  bottom: -120px;
+  right: -120px;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  align-items: center;
+  gap: 60px;
+  padding: 80px;
+}
+
+.hero-left {
+  color: white;
+}
+
+.pill {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(12px);
   font-weight: 700;
-  color: #564315;
 }
 
-.hero-season {
-  margin: 12px 0 8px;
-  color: #b99350;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 34px;
-  line-height: 0.95;
+.hero-left h1 {
+  font-size: clamp(54px, 8vw, 92px);
+  line-height: 1;
+  margin: 24px 0;
+  font-weight: 900;
 }
 
-.hero-content h1 {
-  margin: 0;
-  color: #fbfcf7;
-  font-size: clamp(28px, 4vw, 44px);
-  line-height: 0.95;
-  font-weight: 800;
-}
-
-.hero-content h1 span {
+.hero-left h1 span {
   display: block;
-  color: #9ff2b2;
+  color: #9ef01a;
 }
 
-.hero-copy {
-  margin: 12px 0 0;
-  color: #dce3dc;
-  font-size: 14px;
-  line-height: 1.32;
-  max-width: 460px;
+.lead {
+  max-width: 620px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.8);
 }
 
-.hero-actions {
-  margin-top: 14px;
+.actions {
   display: flex;
-  gap: 8px;
+  gap: 16px;
+  margin-top: 32px;
 }
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 9px 16px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
+  padding: 14px 24px;
+  border-radius: 14px;
   text-decoration: none;
+  font-weight: 700;
+  transition: 0.3s ease;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #2e7e3f, #1f6130);
-  color: #ecf7ef;
+.btn:hover {
+  transform: translateY(-4px);
 }
 
-.btn-ghost {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fcfef8;
+.btn.primary {
+  background: linear-gradient(135deg,#38b000,#008000);
+  color: white;
 }
+
+.btn.secondary {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  padding: 18px 22px;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 24px;
+}
+
+.hero-floating-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 28px;
+  backdrop-filter: blur(20px);
+  padding: 28px;
+  color: white;
+  animation: floatCard 5s ease-in-out infinite;
+}
+
+.hero-floating-card h3 {
+  margin-bottom: 18px;
+}
+
+.floating-product {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+}
+
+.floating-product img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+@keyframes floatCard {
+  0%,100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* SECTION */
 
 .section-head {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  gap: 18px;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
-.section-head h2,
-.picked-row h2 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 0.98;
-  font-weight: 800;
-}
-
-.section-head p {
-  margin: 8px 0 0;
-  color: #5c625c;
-  font-size: 14px;
+.section-head h2 {
+  font-size: 42px;
+  font-weight: 900;
 }
 
 .view-all {
+  color: #2d6a4f;
   font-weight: 700;
-  color: #2a6d3b;
   text-decoration: none;
-  font-size: 14px;
 }
 
-.featured-grid {
+/* PRODUCTS */
+
+.products-grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.85fr;
-  gap: 14px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
 
-.farm-card {
-  position: relative;
-  border-radius: 16px;
+.product {
+  background: white;
+  border-radius: 24px;
   overflow: hidden;
-  min-height: 170px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.05);
+  transition: 0.4s ease;
 }
 
-.farm-card img {
+.product:hover {
+  transform: translateY(-12px);
+}
+
+.product img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.product-body {
+  padding: 20px;
+}
+
+.product-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+.price {
+  color: #38b000;
+}
+
+.view-product {
+  color: #2d6a4f;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* MARQUEE */
+
+.marquee-wrap {
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee-track {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  animation: scrollLeft 30s linear infinite;
+}
+
+.marquee-track.reverse {
+  animation: scrollRight 30s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollLeft {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scrollRight {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* PROVINCE FARMS */
+
+.province-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.province-card {
+  position: relative;
+  height: 420px;
+  border-radius: 28px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.5s ease;
+}
+
+.province-card:hover {
+  transform: translateY(-10px);
+}
+
+.province-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: 0.6s ease;
 }
 
-.farm-card-main {
-  grid-row: span 2;
-  min-height: 310px;
+.province-card:hover img {
+  transform: scale(1.08);
 }
 
-.farm-gradient {
+.province-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 14, 12, 0.05) 0%, rgba(10, 14, 12, 0.68) 82%);
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.78),
+    rgba(0,0,0,0.12)
+  );
 }
 
-.farm-content {
+.province-content {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 14px;
-  color: #f4f5f0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 28px;
+  color: white;
+  z-index: 2;
 }
 
-.farm-content h3 {
-  margin: 0;
-  font-size: 22px;
-  line-height: 1.05;
-}
-
-.farm-content p {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #e6eadf;
-}
-
-.farm-arrow {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
-  background: #e7eee7;
-  color: #1d4928;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.picked-row {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.carousel-ctrl {
-  display: flex;
-  gap: 12px;
-}
-
-.carousel-ctrl button {
-  width: 36px;
-  height: 36px;
+.province-badge {
+  display: inline-block;
+  padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid #c6cdc5;
-  background: transparent;
-  font-size: 18px;
-  color: #526152;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(12px);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
 }
 
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+.province-content h3 {
+  font-size: 26px;
+  margin-bottom: 12px;
 }
 
-.product-card {
-  background: #f5f5f3;
-  border-radius: 16px;
-  padding: 12px;
+.province-content p {
+  color: rgba(255,255,255,0.82);
+  line-height: 1.7;
+  margin-bottom: 18px;
 }
 
-.product-card img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.product-card h3 {
-  margin: 12px 0 2px;
-  font-size: 17px;
-  line-height: 1.1;
-}
-
-.product-card p {
-  margin: 0;
-  color: #657066;
-  font-size: 12px;
-}
-
-.product-bottom {
-  margin-top: 8px;
+.province-footer {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-}
-
-.product-bottom span {
-  font-size: 24px;
-  color: #1f6a35;
-  font-weight: 800;
-}
-
-.product-bottom button {
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 10px;
-  background: #9be0a1;
-  color: #1a5b2f;
-  font-size: 20px;
-}
-
-.bottom-grid {
-  margin-top: 8px;
-  display: grid;
-  grid-template-columns: 190px 1fr;
-  gap: 16px;
-  align-items: end;
-}
-
-.recently-viewed h3 {
-  margin: 0 0 14px;
-  font-size: 24px;
-}
-
-.recent-item {
-  display: flex;
-  gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
-}
-
-.recent-item img {
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
-.recent-item p {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.recent-item span {
-  color: #566156;
-  font-size: 11px;
-}
-
-.subscribe-card {
-  background: linear-gradient(135deg, #2f7642, #2e6f3f);
-  border-radius: 18px;
-  padding: 18px;
-  color: #eff7ee;
-}
-
-.subscribe-card h3 {
-  margin: 0;
-  font-size: 30px;
-  line-height: 1.02;
-  max-width: 360px;
-}
-
-.subscribe-card p {
-  margin: 12px 0 0;
-  max-width: 520px;
   font-size: 14px;
-  color: #dce9dd;
 }
 
-.subscribe-form {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: 1fr 170px;
-  gap: 10px;
-}
-
-.subscribe-form input,
-.subscribe-form button {
-  height: 44px;
-  border-radius: 10px;
-  border: none;
-}
-
-.subscribe-form input {
-  background: rgba(255, 255, 255, 0.14);
-  color: #e8f0e8;
-  padding: 0 12px;
-  font-size: 13px;
-}
-
-.subscribe-form input::placeholder {
-  color: #bdd4c0;
-}
-
-.subscribe-form button {
-  background: #edf2ec;
-  color: #2d6c3f;
-  font-size: 13px;
+.rating {
+  color: #ffd166;
   font-weight: 700;
 }
 
-.subscribe-card small {
-  display: block;
-  margin-top: 8px;
-  color: #c4d7c6;
-  font-size: 10px;
-}
-
-@media (max-width: 1200px) {
-  .hero-shell {
-    min-height: 520px;
-  }
-
-  .section-head h2,
-  .picked-row h2,
-  .hero-season,
-  .subscribe-card h3 {
-    font-size: 42px;
-  }
-
-  .hero-copy,
-  .section-head p,
-  .product-card h3 {
-    font-size: 20px;
-  }
-
-  .btn,
-  .view-all,
-  .subscribe-card p,
-  .product-card p {
-    font-size: 16px;
-  }
-
-  .product-bottom span {
-    font-size: 30px;
+@media (max-width: 1100px) {
+  .province-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 960px) {
-  .featured-grid,
-  .bottom-grid {
+@media (max-width: 700px) {
+  .province-grid {
     grid-template-columns: 1fr;
   }
 
-  .farm-card-main {
-    grid-row: auto;
-    min-height: 340px;
-  }
-
-  .product-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .hero-content {
-    padding: 36px 22px;
-  }
-
-  .subscribe-card {
-    padding: 28px;
-  }
-
-  .subscribe-form {
-    grid-template-columns: 1fr;
+  .province-card {
+    height: 360px;
   }
 }
 
-@media (max-width: 560px) {
-  .home-main {
-    padding: 14px 12px 44px;
-    gap: 20px;
+/* BLOG */
+
+.blog {
+  flex: 0 0 360px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.05);
+  transition: 0.4s ease;
+}
+
+.blog:hover {
+  transform: translateY(-10px);
+}
+
+.blog img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.blog-body {
+  padding: 20px;
+}
+
+.tag {
+  display: inline-block;
+  background: #f0c94a;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.blog h3 {
+  margin: 14px 0;
+}
+
+/* REVIEWS */
+
+.review {
+  flex: 0 0 360px;
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.05);
+}
+
+.review-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-top img {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+}
+
+.quote {
+  margin-top: 18px;
+  line-height: 1.8;
+  font-style: italic;
+}
+
+.muted {
+  color: #666;
+}
+
+/* MOBILE */
+
+@media (max-width: 900px) {
+
+  .hero-inner {
+    grid-template-columns: 1fr;
+    padding: 32px;
   }
 
-  .hero-shell {
-    min-height: 430px;
-    border-radius: 22px;
+  .products-grid {
+    grid-template-columns: 1fr;
   }
 
-  .hero-copy {
-    font-size: 15px;
-  }
-
-  .hero-actions {
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    width: 100%;
-  }
-
-  .section-head {
+  .hero-stats {
     flex-direction: column;
-    align-items: start;
   }
 
-  .product-grid {
-    grid-template-columns: 1fr;
+  .blog,
+  .review {
+    flex: 0 0 300px;
   }
+
+  .hero-left h1 {
+    font-size: 54px;
+  }
+
 }
 </style>
