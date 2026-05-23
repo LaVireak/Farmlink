@@ -122,6 +122,11 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 const customerName = ref('Johnathan')
 
 const items = ref([

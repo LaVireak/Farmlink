@@ -93,6 +93,12 @@ defineProps({
     default: 84.20
   }
 })
+
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 </script>
 
 <style scoped>

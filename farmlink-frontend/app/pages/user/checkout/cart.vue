@@ -164,6 +164,11 @@
 <script setup lang="ts">
 import { useCart } from '@/composables/useCart';
 
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 const{  
   cart,
   recommendations,

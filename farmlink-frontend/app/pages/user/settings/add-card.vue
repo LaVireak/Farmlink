@@ -3,6 +3,7 @@ import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 import { computed, nextTick, ref } from 'vue';
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 

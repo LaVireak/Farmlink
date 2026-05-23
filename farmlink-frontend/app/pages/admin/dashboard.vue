@@ -134,6 +134,7 @@ ChartJS.register(
 )
 
 definePageMeta({
+    middleware: 'admin',
     layout: 'admin',
 })
 

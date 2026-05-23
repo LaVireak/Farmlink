@@ -233,6 +233,11 @@ import { onMounted, watch } from 'vue'
 import { useQR } from '@/composables/useQR'
 import QrcodeVue from 'qrcode.vue'
 
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 const {
   testAmount,
   qrValue,

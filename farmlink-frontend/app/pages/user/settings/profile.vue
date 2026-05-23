@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 definePageMeta({
+	middleware: 'user',
 	layout: 'user',
 });
 

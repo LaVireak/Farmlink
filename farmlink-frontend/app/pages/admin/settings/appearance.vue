@@ -83,6 +83,7 @@
 import { h } from 'vue'
 
 definePageMeta({
+  middleware: 'admin',
   layout: 'admin'
 })
 

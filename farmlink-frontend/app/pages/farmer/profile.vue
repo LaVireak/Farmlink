@@ -198,6 +198,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import { ref } from 'vue'
 
 // Sample reactive data (replace with real API data)

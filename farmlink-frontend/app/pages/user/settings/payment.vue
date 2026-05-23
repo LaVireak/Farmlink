@@ -3,6 +3,7 @@ import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 import { ref } from 'vue';
 
 definePageMeta({
+  middleware: 'user',
   layout: 'user',
 });
 

@@ -12,7 +12,7 @@
           <p class="text-gray-700 mb-4">{{ entry.description }}</p>
           <p class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</p>
           <div class="mt-4">
-            <NuxtLink to="/farmer/guild/guildbook" class="inline-block px-3 py-1 bg-gray-100 rounded">Back to Guild</NuxtLink>
+            <NuxtLink to="/farmer/guildbook" class="inline-block px-3 py-1 bg-gray-100 rounded">Back to Guild</NuxtLink>
           </div>
         </div>
 
@@ -23,6 +23,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 
