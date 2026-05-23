@@ -86,64 +86,72 @@ const badgeClass = computed(() => {
   return 'badge-default'
 })
 </script>
-
-<style scoped>
+<style scoped>
 .product-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #f8f8f6;
-  border-radius: 8px;
+  background: #ffffff;
+  border-radius: 20px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  border: 1px solid rgba(19, 42, 19, 0.05);
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 10px 30px rgba(13, 40, 24, 0.02);
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.10), 0 4px 10px rgba(0,0,0,0.06);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(13, 40, 24, 0.06);
+  border-color: rgba(45, 106, 79, 0.12);
 }
 
 /* BADGE */
 .card-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   z-index: 2;
   padding: 4px 10px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
 .badge-sale {
   background: #fee2e2;
   color: #b91c1c;
+  border-color: rgba(185, 28, 28, 0.12);
 }
 
 .badge-new {
   background: #dbeafe;
   color: #1d4ed8;
+  border-color: rgba(29, 78, 216, 0.12);
 }
 
 .badge-best {
-  background: #fef3c7;
-  color: #b45309;
+  background: #FFF7DA;
+  color: #b78a00;
+  border-color: rgba(183, 138, 0, 0.15);
 }
 
 .badge-default {
-  background: #dcfce7;
-  color: #15803d;
+  background: #e9f5db;
+  color: #2d6a4f;
+  border-color: rgba(45, 106, 79, 0.12);
 }
 
 .card-image-wrap {
   position: relative;
   overflow: hidden;
+  border-radius: 20px 20px 0 0;
 }
 
 .card-image-wrap img {
@@ -151,7 +159,7 @@ const badgeClass = computed(() => {
   aspect-ratio: 4 / 3;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .product-card:hover .card-image-wrap img {
@@ -178,18 +186,18 @@ const badgeClass = computed(() => {
 }
 
 .action-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: white;
-  color: #1b1c1a;
+  color: #132a13;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
 }
 
 .action-btn:hover {
@@ -200,37 +208,43 @@ const badgeClass = computed(() => {
   color: #ef4444;
 }
 
-.add-btn:hover {
-  background: #2e7e3f;
-  color: white;
-}
-
 .card-body {
-  padding: 12px 14px 14px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
 }
 
 .card-category {
-  font-size: 10px;
-  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #2e7e3f;
+  letter-spacing: 0.05em;
+  background-color: #e9f5db;
+  color: #2d6a4f;
+  padding: 3px 8px;
+  border-radius: 5px;
+  width: max-content;
 }
 
 .card-title {
   margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: #1b1c1a;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #132a13;
+  transition: color 0.3s ease;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.product-card:hover .card-title {
+  color: #2d6a4f;
 }
 
 .card-rating {
@@ -243,29 +257,25 @@ const badgeClass = computed(() => {
 .stars {
   display: flex;
   gap: 1px;
-  font-size: 12px;
+  font-size: 0.72rem;
   line-height: 1;
-}
-
-.star-filled {
-  color: #f59e0b;
-}
-
-.star-empty {
-  color: #d1d5db;
+  color: #ffc107;
 }
 
 .rating-text {
-  font-size: 11px;
-  color: #6b7280;
-  font-weight: 500;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.72rem;
+  color: #5c6f5c;
+  font-weight: 700;
 }
 
 .card-price-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(19, 42, 19, 0.06);
+  padding-top: 12px;
 }
 
 .card-prices {
@@ -276,45 +286,49 @@ const badgeClass = computed(() => {
 }
 
 .card-price {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1f6a35;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #1f7a2e;
 }
 
 .card-original-price {
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #9ca3af;
   text-decoration: line-through;
 }
 
 .card-discount-tag {
-  font-size: 10px;
-  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
   color: #dc2626;
   background: #fef2f2;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .card-add-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
-  border-radius: 8px;
-  background: #2e7e3f;
-  color: #fff;
+  border-radius: 10px;
+  background: rgba(45, 106, 79, 0.06);
+  border: 1px solid rgba(45, 106, 79, 0.12);
+  color: #2d6a4f;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, transform 0.2s;
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   flex-shrink: 0;
 }
 
 .card-add-btn:hover {
-  background: #589866;
-  color: #fff;
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #2d6a4f, #1b4332);
+  border-color: #1b4332;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 106, 79, 0.18);
 }
-
 </style>

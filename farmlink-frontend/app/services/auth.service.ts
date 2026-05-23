@@ -47,8 +47,17 @@ const normalizeRoleForSupabase = (role?: string): string => {
 export const mapSupabaseUser = (user: SupabaseUser): AuthUser => {
     const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
     const role = typeof metadata.role === 'string' ? metadata.role : undefined;
-    const firstName = typeof metadata.firstName === 'string' ? metadata.firstName : undefined;
-    const lastName = typeof metadata.lastName === 'string' ? metadata.lastName : undefined;
+    const firstName = typeof metadata.firstName === 'string' ? metadata.firstName
+        : typeof metadata.full_name === 'string' ? metadata.full_name.split(' ')[0]
+        : typeof metadata.name === 'string' ? metadata.name.split(' ')[0]
+        : undefined;
+    const lastName = typeof metadata.lastName === 'string' ? metadata.lastName
+        : typeof metadata.full_name === 'string' ? metadata.full_name.split(' ').slice(1).join(' ')
+        : typeof metadata.name === 'string' ? metadata.name.split(' ').slice(1).join(' ')
+        : undefined;
+    const avatarUrl = typeof metadata.avatar_url === 'string' ? metadata.avatar_url
+        : typeof metadata.picture === 'string' ? metadata.picture
+        : undefined;
 
     return {
         id: user.id,
@@ -56,6 +65,7 @@ export const mapSupabaseUser = (user: SupabaseUser): AuthUser => {
         role: normalizeRoleFromSupabase(role),
         firstName,
         lastName,
+        avatarUrl,
         createdAt: typeof user.created_at === 'string' ? user.created_at : undefined,
         updatedAt: typeof user.updated_at === 'string' ? user.updated_at : undefined,
     };
@@ -219,6 +229,28 @@ export const authService = {
         }
 
         return mapSessionToResult(data.session);
+    },
+
+    async facebookSignIn(): Promise<void> {
+        const redirectTo = `${window.location.origin}/auth/callback`;
+        console.log('[Facebook Login] [auth.service] facebookSignIn() called');
+        console.log('[Facebook Login] [auth.service] redirectTo:', redirectTo);
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'facebook',
+            options: { redirectTo },
+        });
+
+        console.log('[Facebook Login] [auth.service] Supabase response — data:', data);
+        console.log('[Facebook Login] [auth.service] Supabase response — error:', error);
+
+        if (error) {
+            console.error('[Facebook Login] [auth.service] Supabase returned an error:', error.message);
+            throw new Error(error.message || 'Unable to sign in with Facebook.');
+        }
+
+        console.log('[Facebook Login] [auth.service] No error — Supabase should be redirecting the browser to:', data?.url);
+        // Supabase will redirect the browser — no return value needed.
     },
 
     async requestPasswordResetOtp(email: string): Promise<{ message: string }> {

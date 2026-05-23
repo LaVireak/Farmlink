@@ -261,36 +261,87 @@
 
         <!-- User Profile Dropdown -->
         <div class="relative" id="user-menu">
-          <button @click.stop="toggleUserMenu" class="bg-[#1f7a2e] text-white px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
-            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Avatar button: photo → initials → person icon -->
+          <button
+            @click.stop="toggleUserMenu"
+            class="bg-[#1f7a2e] text-white px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+          >
+            <!-- Social login: real profile photo -->
+            <img
+              v-if="userAvatar"
+              :src="userAvatar"
+              alt="Profile"
+              class="w-7 h-7 rounded-full object-cover"
+              referrerpolicy="no-referrer"
+            />
+            <!-- Email/password login: initials -->
+            <span
+              v-else-if="isAuthenticated && userInitials"
+              class="w-7 h-7 flex items-center justify-center text-sm font-bold rounded-full"
+            >
+              {{ userInitials }}
+            </span>
+            <!-- Not logged in: default person icon -->
+            <svg
+              v-else
+              class="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
             </svg>
           </button>
-          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-            <div class="p-2 border-b">
+
+          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <!-- User info strip when logged in -->
+            <div v-if="isAuthenticated" class="px-3 py-2 border-b bg-gray-50">
+              <p class="text-xs font-semibold text-gray-800 truncate">
+                {{ user?.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : user?.email }}
+              </p>
+              <p class="text-[10px] text-gray-400 truncate">{{ user?.role }}</p>
+            </div>
+
+            <div class="p-2">
               <ul>
                 <li>
-                  <NuxtLink to="/user/settings/profile" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100">
+                  <NuxtLink to="/user/settings/profile" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
                     <Settings class="w-4 h-4 text-gray-600" />
-                    <span>Settings</span>
+                    <span class="text-sm">Settings</span>
                   </NuxtLink>
                 </li>
                 <li>
-                  <button class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100">
+                  <button class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100 rounded">
                     <Globe class="w-4 h-4 text-gray-600" />
-                    <span>Language</span>
+                    <span class="text-sm">Language</span>
                   </button>
                 </li>
                 <li>
-                  <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100">
-                    <Moon class="w-4 h-4 text-gray- 600" />
-                    <span>Dark Mode</span>
+                  <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100 rounded">
+                    <Moon class="w-4 h-4 text-gray-600" />
+                    <span class="text-sm">Dark Mode</span>
                   </button>
                 </li>
-                <li>
-                  <NuxtLink to="/auth/signin" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100">
+                <li class="border-t mt-1 pt-1">
+                  <!-- Logged in → Log Out -->
+                  <button
+                    v-if="isAuthenticated"
+                    @click="handleSignOut"
+                    class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-red-50 text-red-600 rounded"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                    </svg>
+                    <span class="text-sm font-medium">Log Out</span>
+                  </button>
+                  <!-- Not logged in → Sign In -->
+                  <NuxtLink
+                    v-else
+                    to="/auth/signin"
+                    class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded"
+                  >
                     <Users class="w-4 h-4 text-gray-600" />
-                    <span>Sign In</span>
+                    <span class="text-sm">Sign In</span>
                   </NuxtLink>
                 </li>
               </ul>
@@ -470,8 +521,9 @@ const userInitials = computed(() => {
 })
 
 const userAvatar = computed(() => {
-  // If you store avatar URLs in user metadata, return it here. Fallback to null.
-  return null
+  // avatarUrl is populated by mapSupabaseUser from OAuth user_metadata (Google, Facebook).
+  // Returns undefined for email/password logins → header falls back to initials.
+  return auth.user?.avatarUrl ?? null
 })
 
 const avatarClass = computed(() => {

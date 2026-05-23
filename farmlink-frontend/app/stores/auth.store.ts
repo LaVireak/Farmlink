@@ -99,6 +99,13 @@ export const useAuthStore = defineStore('auth', () => {
         return result;
     };
 
+    const signInWithFacebook = async () => {
+        console.log('[Facebook Login] [auth.store] signInWithFacebook() called — delegating to authService.facebookSignIn()');
+        // Triggers a browser redirect — no session returned here.
+        await authService.facebookSignIn();
+        console.log('[Facebook Login] [auth.store] authService.facebookSignIn() resolved without throwing');
+    };
+
     const requestSignupOtp = async (payload: SignUpPayload) => {
         await authService.requestSignupOtp(payload);
         return { email: payload.email };
@@ -129,6 +136,7 @@ export const useAuthStore = defineStore('auth', () => {
         hydrated,
         signIn,
         signInWithGoogle,
+        signInWithFacebook,
         requestSignupOtp,
         verifySignupOtp,
         resendSignupOtp,

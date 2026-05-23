@@ -12,7 +12,6 @@ import { AuthController } from './auth.controller';
   ],
   providers: [SupabaseAuthService],
   controllers: [AuthController],
-  providers: [SupabaseAuthService],
   exports: [SupabaseAuthService],
 })
 export class AuthModule {}
