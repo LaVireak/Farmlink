@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, onMounted } from 'vue';
+import { useAuthStore } from '../../stores/auth.store';
+
 type SidebarKey = 'profile' | 'edit' | 'payment' | 'address' | 'purchaseHistory' | 'chat';
 
 const props = withDefaults(
@@ -9,6 +12,51 @@ const props = withDefaults(
 		active: 'profile',
 	}
 );
+
+const auth = useAuthStore();
+
+onMounted(() => {
+	void auth.hydrate();
+});
+
+const user = computed(() => auth.user);
+
+const displayName = computed(() => {
+	if (!auth.hydrated) return 'Loading profile...';
+	if (!user.value) return 'Guest User';
+
+	const firstName = user.value.firstName?.trim() ?? '';
+	const lastName = user.value.lastName?.trim() ?? user.value.lastname?.trim() ?? '';
+	return [firstName, lastName].filter(Boolean).join(' ') || user.value.email;
+});
+
+const displayRole = computed(() => {
+	if (!auth.hydrated) return 'Loading account...';
+
+	switch (user.value?.role) {
+		case 'admin':
+			return 'Admin Account';
+		case 'farmer':
+			return 'Farmer Account';
+		case 'consumer':
+			return 'Customer Account';
+		default:
+			return 'Account';
+	}
+});
+
+const avatarInitials = computed(() => {
+	if (!user.value) return 'FM';
+
+	const firstName = user.value.firstName?.trim() ?? '';
+	const lastName = user.value.lastName?.trim() ?? user.value.lastname?.trim() ?? '';
+	const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.trim();
+
+	if (initials) return initials.toUpperCase();
+	return user.value.email.slice(0, 2).toUpperCase() || 'FM';
+});
+
+const avatarUrl = computed(() => user.value?.avatarUrl ?? '');
 
 const menuItems: Array<{
 	key: SidebarKey;
@@ -29,14 +77,13 @@ const menuItems: Array<{
 	<aside class="w-full md:w-[280px] shrink-0">
 		<div class="bg-white rounded-2xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
 			<div class="flex items-center gap-3 mb-5">
-				<img
-					src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA83x8AHQV-oGz8CINH3SrXquf2gJKH9G9CVM3OVmDN3cB3DlMZ8OKkFiQ6GOy52l0KObZYfls2JxyvOI98GKD7NfFwfqx0DFo0t-2YFkuLovUIbiufm26ot4sXnGGxIM2I2HJDVGlcryJSFSWwtSvjU_kM5Ukd7XLzqRh0TtvXigMvcnSSB_3sieWsfz6wndum2oJtb1LLll8OD48U8SyMvtpcYou8NOZi9JGGjQyxIbbVWefdH5bFmPhCa9meAhjW2CO_fJBhigk"
-					alt="User avatar"
-					class="w-14 h-14 rounded-full object-cover"
-				/>
+				<div class="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-[#154212] via-[#1f7a2e] to-[#006e1c] flex items-center justify-center text-white shrink-0 shadow-sm">
+					<img v-if="avatarUrl" :src="avatarUrl" alt="Profile avatar" class="w-full h-full object-cover" />
+					<span v-else class="text-sm font-black font-[Manrope,sans-serif] tracking-tight">{{ avatarInitials }}</span>
+				</div>
 				<div>
-					<h3 class="font-[Manrope,sans-serif] text-2xl leading-none font-extrabold text-zinc-900">Sophal Saman</h3>
-					<p class="text-sm text-zinc-500 font-medium mt-1">Premium Member</p>
+					<h3 class="font-[Manrope,sans-serif] text-2xl leading-none font-extrabold text-zinc-900">{{ displayName }}</h3>
+					<p class="text-sm text-zinc-500 font-medium mt-1">{{ displayRole }}</p>
 				</div>
 			</div>
 			<nav class="space-y-2">

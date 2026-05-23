@@ -61,6 +61,11 @@ export const mapSupabaseUser = (user: SupabaseUser): AuthUser => {
     const role = typeof metadata.role === 'string' ? metadata.role : undefined;
     const firstName = typeof metadata.firstName === 'string' ? metadata.firstName : undefined;
     const lastName = typeof metadata.lastName === 'string' ? metadata.lastName : undefined;
+    const avatarUrl = typeof metadata.avatarUrl === 'string'
+        ? metadata.avatarUrl
+        : typeof metadata.avatar_url === 'string'
+            ? metadata.avatar_url
+            : undefined;
 
     return {
         id: user.id,
@@ -68,6 +73,7 @@ export const mapSupabaseUser = (user: SupabaseUser): AuthUser => {
         role: normalizeRoleFromSupabase(role),
         firstName,
         lastName,
+        avatarUrl,
         createdAt: typeof user.created_at === 'string' ? user.created_at : undefined,
         updatedAt: typeof user.updated_at === 'string' ? user.updated_at : undefined,
     };

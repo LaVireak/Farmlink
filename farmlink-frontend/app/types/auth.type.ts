@@ -7,6 +7,7 @@ export interface AuthUser {
     firstName?: string;
     lastName?: string;
     lastname?: string;
+    avatarUrl?: string;
     status?: string;
     createdAt?: string;
     updatedAt?: string;

@@ -5,6 +5,7 @@ import { User } from './user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FavoriteFarm } from './favorite-farm.entity';
 import { FavoriteProduct } from './favorite-product.entity';
+import { SupabaseAuthService } from '../auth/supabase-auth.service';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,7 @@ export class UsersService {
     private readonly favoriteFarmRepository: Repository<FavoriteFarm>,
     @InjectRepository(FavoriteProduct)
     private readonly favoriteProductRepository: Repository<FavoriteProduct>,
+    private readonly supabaseAuthService: SupabaseAuthService,
   ) {}
 
   async findById(id: string): Promise<User> {
@@ -27,8 +29,25 @@ export class UsersService {
 
   async updateProfile(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findById(id);
-    const updatedUser = this.userRepository.merge(user, updateUserDto);
-    return this.userRepository.save(updatedUser);
+    const { avatarDataUrl, avatarUrl, ...profileUpdates } = updateUserDto;
+    const updatedUser = this.userRepository.merge(user, profileUpdates);
+
+    const stagedAvatarDataUrl =
+      avatarDataUrl ?? (this.isDataUrl(avatarUrl) ? avatarUrl : undefined);
+
+    if (avatarUrl && !this.isDataUrl(avatarUrl)) {
+      updatedUser.avatarUrl = avatarUrl;
+    }
+
+    if (stagedAvatarDataUrl) {
+      updatedUser.avatarUrl = await this.supabaseAuthService.uploadAvatarImage(
+        id,
+        stagedAvatarDataUrl,
+      );
+    }
+
+    const savedUser = await this.userRepository.save(updatedUser);
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {
@@ -40,31 +59,59 @@ export class UsersService {
     await this.userRepository.remove(user);
   }
 
+  private isDataUrl(value?: string): value is string {
+    return typeof value === 'string' && value.startsWith('data:');
+  }
+
   // --- Favorites ---
 
   async getFavoriteFarms(consumerId: string): Promise<FavoriteFarm[]> {
-    return this.favoriteFarmRepository.find({ where: { consumerId }, relations: ['farmer'] });
+    return this.favoriteFarmRepository.find({
+      where: { consumerId },
+      relations: ['farmer'],
+    });
   }
 
-  async addFavoriteFarm(consumerId: string, farmerId: string): Promise<FavoriteFarm> {
-    const favorite = this.favoriteFarmRepository.create({ consumerId, farmerId });
+  async addFavoriteFarm(
+    consumerId: string,
+    farmerId: string,
+  ): Promise<FavoriteFarm> {
+    const favorite = this.favoriteFarmRepository.create({
+      consumerId,
+      farmerId,
+    });
     return this.favoriteFarmRepository.save(favorite);
   }
 
-  async removeFavoriteFarm(consumerId: string, farmerId: string): Promise<void> {
+  async removeFavoriteFarm(
+    consumerId: string,
+    farmerId: string,
+  ): Promise<void> {
     await this.favoriteFarmRepository.delete({ consumerId, farmerId });
   }
 
   async getFavoriteProducts(consumerId: string): Promise<FavoriteProduct[]> {
-    return this.favoriteProductRepository.find({ where: { consumerId }, relations: ['product'] });
+    return this.favoriteProductRepository.find({
+      where: { consumerId },
+      relations: ['product'],
+    });
   }
 
-  async addFavoriteProduct(consumerId: string, productId: string): Promise<FavoriteProduct> {
-    const favorite = this.favoriteProductRepository.create({ consumerId, productId });
+  async addFavoriteProduct(
+    consumerId: string,
+    productId: string,
+  ): Promise<FavoriteProduct> {
+    const favorite = this.favoriteProductRepository.create({
+      consumerId,
+      productId,
+    });
     return this.favoriteProductRepository.save(favorite);
   }
 
-  async removeFavoriteProduct(consumerId: string, productId: string): Promise<void> {
+  async removeFavoriteProduct(
+    consumerId: string,
+    productId: string,
+  ): Promise<void> {
     await this.favoriteProductRepository.delete({ consumerId, productId });
   }
 }
