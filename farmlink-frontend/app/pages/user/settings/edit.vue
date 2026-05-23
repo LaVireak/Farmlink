@@ -109,6 +109,7 @@ const saveProfile = async () => {
         lastName: form.value.lastName.trim(),
         phoneNumber: form.value.phoneNumber.trim(),
         languagePref: form.value.languagePref.trim(),
+        avatarDataUrl: auth.pendingAvatarUrl ?? undefined,
       }),
     });
 

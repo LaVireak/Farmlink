@@ -1,14 +1,17 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createClient, type SupabaseClient, type User as SupabaseUser } from '@supabase/supabase-js';
-import { Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
+import {
+  createClient,
+  type AdminUserAttributes,
+  type User as SupabaseUser,
+} from '@supabase/supabase-js';
 import * as bcrypt from 'bcrypt';
-import ws from 'ws';
-import { User } from '../users/user.entity';
+import { randomBytes } from 'crypto';
+import { Repository } from 'typeorm';
 import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
+import { User } from '../users/user.entity';
 
 type SupabaseMetadata = {
   role?: string;
@@ -20,9 +23,16 @@ type SupabaseMetadata = {
   avatarUrl?: string;
 };
 
+type ParsedImage = {
+  buffer: Buffer;
+  mimeType: string;
+  ext: string;
+};
+
 @Injectable()
 export class SupabaseAuthService {
-  private readonly client: SupabaseClient;
+  private readonly client: ReturnType<typeof createClient>;
+  private readonly avatarBucket: string;
 
   constructor(
     private readonly config: ConfigService,
@@ -35,13 +45,15 @@ export class SupabaseAuthService {
       this.config.get<string>('SUPABASE_ANON_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase Auth is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+      throw new Error(
+        'Supabase Auth is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
+      );
     }
 
+    this.avatarBucket =
+      this.config.get<string>('SUPABASE_AVATAR_BUCKET') || 'avatars';
+
     this.client = createClient(supabaseUrl, supabaseKey, {
-      realtime: {
-        transport: ws,
-      },
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -50,19 +62,25 @@ export class SupabaseAuthService {
     });
   }
 
-  async finalizeSignup(userId: string, payload: { password?: string; metadata?: Record<string, unknown> }) {
+  async finalizeSignup(
+    userId: string,
+    payload: { password?: string; metadata?: Record<string, unknown> },
+  ) {
     if (!userId) {
       throw new Error('Missing userId');
     }
 
-    const update: Record<string, unknown> = {};
-    if (payload.password) update['password'] = payload.password;
-    if (payload.metadata) update['user_metadata'] = payload.metadata;
+    const update: AdminUserAttributes = {};
+    if (payload.password) update.password = payload.password;
+    if (payload.metadata) update.user_metadata = payload.metadata;
 
     // Use admin API to update the user using the service role key.
     // This avoids the client-side update which triggers password-change emails.
     // supabase-js exposes admin methods under auth.admin
-    const { data, error } = await this.client.auth.admin.updateUserById(userId, update as any);
+    const { data, error } = await this.client.auth.admin.updateUserById(
+      userId,
+      update,
+    );
     if (error) {
       throw new Error(error.message || 'Unable to finalize signup');
     }
@@ -83,7 +101,68 @@ export class SupabaseAuthService {
     return this.getOrCreateLocalUser(data.user);
   }
 
-  private async getOrCreateLocalUser(supabaseUser: SupabaseUser): Promise<User> {
+  async uploadAvatarImage(userId: string, dataUrl: string): Promise<string> {
+    const image = this.parseDataUrl(dataUrl);
+    const fileName = `${userId}-${Date.now()}.${image.ext}`;
+    const storagePath = `users/${fileName}`;
+
+    const { error: uploadError } = await this.client.storage
+      .from(this.avatarBucket)
+      .upload(storagePath, image.buffer, {
+        contentType: image.mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message || 'Unable to upload avatar');
+    }
+
+    const { data } = this.client.storage
+      .from(this.avatarBucket)
+      .getPublicUrl(storagePath);
+    const publicUrl = data?.publicUrl;
+    if (!publicUrl) {
+      throw new Error('Unable to resolve uploaded avatar URL');
+    }
+
+    await this.syncAvatarMetadata(userId, publicUrl);
+
+    return publicUrl;
+  }
+
+  private async syncAvatarMetadata(
+    userId: string,
+    avatarUrl: string,
+  ): Promise<void> {
+    const { data, error } = await this.client.auth.admin.getUserById(userId);
+    if (error) {
+      throw new Error(error.message || 'Unable to load Supabase user');
+    }
+
+    const currentMetadata = (data.user?.user_metadata ??
+      {}) as SupabaseMetadata;
+    const update: AdminUserAttributes = {
+      user_metadata: {
+        ...currentMetadata,
+        avatarUrl,
+      },
+    };
+
+    const { error: updateError } = await this.client.auth.admin.updateUserById(
+      userId,
+      update,
+    );
+
+    if (updateError) {
+      throw new Error(
+        updateError.message || 'Unable to update Supabase avatar metadata',
+      );
+    }
+  }
+
+  private async getOrCreateLocalUser(
+    supabaseUser: SupabaseUser,
+  ): Promise<User> {
     const metadata = (supabaseUser.user_metadata ?? {}) as SupabaseMetadata;
     const email = (supabaseUser.email ?? '').toLowerCase();
 
@@ -96,7 +175,10 @@ export class SupabaseAuthService {
     });
 
     if (!user) {
-      const passwordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
+      const passwordHash = await bcrypt.hash(
+        randomBytes(32).toString('hex'),
+        10,
+      );
       user = new User();
       user.id = supabaseUser.id;
       user.email = email;
@@ -153,5 +235,33 @@ export class SupabaseAuthService {
       default:
         return UserRole.CONSUMER;
     }
+  }
+
+  private parseDataUrl(dataUrl: string): ParsedImage {
+    const match = /^data:([^;]+);base64,(.*)$/.exec(dataUrl);
+    if (!match) {
+      throw new UnauthorizedException('Invalid avatar payload');
+    }
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const ext = this.resolveExtension(mimeType);
+
+    return {
+      buffer: Buffer.from(base64Data, 'base64'),
+      mimeType,
+      ext,
+    };
+  }
+
+  private resolveExtension(mimeType: string): string {
+    const map: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+
+    return map[mimeType] ?? 'jpg';
   }
 }
