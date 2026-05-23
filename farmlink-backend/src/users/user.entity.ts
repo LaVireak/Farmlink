@@ -53,6 +53,9 @@ export class User {
   @Column('varchar', { name: 'language_pref', length: 5, default: 'kh' })
   languagePref: string;
 
+  @Column('varchar', { name: 'stripe_customer_id', nullable: true, length: 255 })
+  stripeCustomerId: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
