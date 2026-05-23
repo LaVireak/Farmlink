@@ -1,135 +1,140 @@
 <template>
-	<div class="min-h-screen bg-[#f7f5ef] flex items-center justify-center px-4 py-10">
-		<div class="w-full max-w-6xl grid md:grid-cols-2 gap-10 items-center">
-			<div class="relative hidden md:block">
-				<img
-					src="https://images.unsplash.com/photo-1542838132-92c53300491e"
-					class="rounded-3xl w-full h-[520px] object-cover shadow-md"
-				>
+	<div class="auth-page">
+		<div class="auth-shell">
+			<section class="hero-panel">
+				<div class="hero-image-wrap">
+					<img
+						src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80"
+						alt="Fresh produce and market goods"
+						class="hero-image"
+					>
 
-				<div class="absolute bottom-6 right-6 bg-yellow-400 text-slate-800 px-5 py-4 rounded-2xl shadow-md text-sm italic">
-					Rooted in community,<br>
-					grown for you.
+					<div class="hero-overlay">
+						<span class="eyebrow">Trusted marketplace</span>
+						<h2>Join a modern farm-to-table experience.</h2>
+						<p>Build your account, save favorites, and connect with verified farmers in one secure place.</p>
+					</div>
 				</div>
-			</div>
 
-			<div>
-				<span class="bg-emerald-800 text-white text-xs px-3 py-1 rounded-full">
-					Register as a Customer
-				</span>
+				<div class="feature-grid">
+					<div class="feature-card">
+						<span class="feature-label">Secure sign-up</span>
+						<strong>OTP verification</strong>
+						<p>Confirm your email with a code before activating your account.</p>
+					</div>
+					<div class="feature-card">
+						<span class="feature-label">Personalized</span>
+						<strong>Tailored profiles</strong>
+						<p>Save your name and preferences for a smoother experience.</p>
+					</div>
+				</div>
+			</section>
 
-				<h1 class="text-4xl font-serif mt-3 text-green-900">
-					Create your account
-				</h1>
+			<section class="form-panel">
+				<div class="form-badge">Create account</div>
+				<h1>Sign up for FarmLink</h1>
+				<p class="form-intro">Get started with a polished account flow built for secure, professional onboarding.</p>
 
-				<p class="text-slate-600 mt-2 mb-6">
-					Start your journey toward honest, farm-fresh sourcing today.
-				</p>
-
-				<form class="space-y-4" @submit.prevent="onSubmit">
-					<div class="grid grid-cols-2 gap-4">
-						<div>
-							<label class="text-xs text-slate-500">FIRST NAME</label>
+				<form class="auth-form" @submit.prevent="onSubmit">
+					<div class="name-grid">
+						<div class="field">
+							<label for="firstName">First name</label>
 							<input
-								v-model="form.firstName"
+								id="firstName"
+								v-model.trim="form.firstName"
 								type="text"
-								class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
 								placeholder="Julian"
+								autocomplete="given-name"
 								required
 							>
 						</div>
 
-						<div>
-							<label class="text-xs text-slate-500">LAST NAME</label>
+						<div class="field">
+							<label for="lastName">Last name</label>
 							<input
-								v-model="form.lastName"
+								id="lastName"
+								v-model.trim="form.lastName"
 								type="text"
-								class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
 								placeholder="Barnes"
+								autocomplete="family-name"
 								required
 							>
 						</div>
 					</div>
 
-					<div>
-						<label class="text-xs text-slate-500">EMAIL ADDRESS</label>
+					<div class="field">
+						<label for="email">Email address</label>
 						<input
-							v-model="form.email"
+							id="email"
+							v-model.trim="form.email"
 							type="email"
-							class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
 							placeholder="julian@field.com"
+							autocomplete="email"
 							required
 						>
 					</div>
 
-					<div>
-						<label class="text-xs text-slate-500">PASSWORD</label>
+					<div class="field">
+						<label for="password">Password</label>
 						<input
+							id="password"
 							v-model="form.password"
 							type="password"
-							class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
-							placeholder="••••••••"
+							placeholder="Create a secure password"
+							autocomplete="new-password"
 							required
 						>
 					</div>
 
-					<div>
-						<label class="text-xs text-slate-500">CONFIRM PASSWORD</label>
+					<div class="field">
+						<label for="confirmPassword">Confirm password</label>
 						<input
+							id="confirmPassword"
 							v-model="form.confirmPassword"
 							type="password"
-							class="w-full mt-1 bg-[#f7efcf] px-3 py-2 rounded-md outline-none"
-							placeholder="••••••••"
+							placeholder="Re-enter your password"
+							autocomplete="new-password"
 							required
 						>
 					</div>
+					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
+					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
 
-					<label class="flex items-start gap-2 text-sm text-slate-600">
-						<input v-model="form.agree" type="checkbox" class="mt-1 accent-emerald-700">
-						<span>
-							I agree to the
-							<a href="#" class="text-emerald-700 underline">Terms of Service</a>
-							and
-							<a href="#" class="text-emerald-700 underline">Privacy Policy</a>
-						</span>
-					</label>
-
-					<p v-if="errorMessage" class="text-sm text-red-600">
-						{{ errorMessage }}
-					</p>
-
-					<button
-						type="submit"
-						:disabled="submitting"
-						class="w-full bg-green-900 text-white py-3 rounded-full text-sm font-semibold hover:bg-green-800 transition"
-					>
-						{{ submitting ? 'Creating...' : 'Create Your Account' }}
-					</button>
-
-					<div class="flex items-center gap-3 my-4">
-						<div class="flex-1 h-px bg-slate-300"></div>
-						<span class="text-xs text-slate-400">OR JOIN WITH</span>
-						<div class="flex-1 h-px bg-slate-300"></div>
+					<div class="policy-row">
+						<label class="policy-check">
+							<input v-model="form.agree" type="checkbox">
+							<span>I agree to the Terms of Service and Privacy Policy</span>
+						</label>
 					</div>
 
-					<div class="flex flex-col items-center gap-2">
-						<div ref="googleButton" class="w-full flex justify-center"></div>
-						<p v-if="googleSubmitting" class="text-xs text-slate-500">
-							Signing up with Google...
-						</p>
-						<p v-if="googleError" class="text-xs text-red-600">
-							{{ googleError }}
-						</p>
+					
+					<button type="submit" :disabled="submitting" class="primary-btn">
+						{{ submitting ? 'Creating account...' : 'Create account' }}
+					</button>
+
+					<div class="divider">
+						<span></span>
+						<p>or continue with</p>
+						<span></span>
+					</div>
+
+					<div class="social-stack">
+						<div ref="googleButton" class="google-slot"></div>
+						<p v-if="googleSubmitting" class="feedback">Signing up with Google...</p>
+						<p v-if="googleError" class="feedback feedback-error">{{ googleError }}</p>
 					</div>
 				</form>
 
-				<p class="text-center text-sm text-slate-600 mt-6">
+				<p class="footer-copy">
 					Already have an account?
-					<NuxtLink to="/auth/signin" class="text-emerald-700 font-semibold">
-						Log in here
-					</NuxtLink>
+					<NuxtLink to="/auth/signin">Sign in</NuxtLink>
 				</p>
-			</div>
+
+				<p class="footer-copy">
+					Want to be a farmer?
+					<NuxtLink to="/auth/farmer-signup">Sign up as a farmer</NuxtLink>
+				</p>
+			</section>
 		</div>
 	</div>
 </template>
@@ -138,6 +143,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
+import { isValidEmail } from '../../utils/validation';
 
 const router = useRouter();
 const { requestSignupOtp, signInWithGoogle, getPostSignInRoute } = useAuth();
@@ -168,6 +174,11 @@ const onSubmit = async () => {
 
 	if (form.password !== form.confirmPassword) {
 		errorMessage.value = 'Passwords do not match.';
+		return;
+	}
+
+	if (!isValidEmail(form.email)) {
+		errorMessage.value = 'Please enter a valid email address.';
 		return;
 	}
 
@@ -259,3 +270,485 @@ onMounted(() => {
 	tryInit();
 });
 </script>
+
+<style scoped>
+:root {
+	--bg: #f4f7f2;
+	--card: rgba(255, 255, 255, 0.72);
+	--border: rgba(255, 255, 255, 0.3);
+	--text: #0f172a;
+	--muted: #64748b;
+	--green: #166534;
+	--green-dark: #0f4f29;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+.auth-page {
+	position: relative;
+	min-height: 100vh;
+	padding: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background:
+		radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 30%),
+		radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.12), transparent 30%),
+		linear-gradient(135deg, #f4f7f2, #eef3ea);
+}
+
+/* floating blur background */
+.auth-page::before,
+.auth-page::after {
+	content: '';
+	position: absolute;
+	width: 420px;
+	height: 420px;
+	border-radius: 50%;
+	filter: blur(90px);
+	opacity: 0.4;
+	z-index: 0;
+}
+
+.auth-page::before {
+	top: -120px;
+	left: -120px;
+	background: #4ade80;
+}
+
+.auth-page::after {
+	right: -120px;
+	bottom: -120px;
+	background: #86efac;
+}
+
+.auth-shell {
+	position: relative;
+	z-index: 2;
+	width: min(1240px, 100%);
+	display: grid;
+	grid-template-columns: 1.08fr 0.92fr;
+	gap: 28px;
+	align-items: stretch;
+}
+
+/* glass cards */
+.hero-panel,
+.form-panel {
+	position: relative;
+	background: var(--card);
+	backdrop-filter: blur(22px);
+	-webkit-backdrop-filter: blur(22px);
+	border: 1px solid var(--border);
+	border-radius: 34px;
+	box-shadow:
+		0 10px 40px rgba(15, 23, 42, 0.06),
+		0 2px 10px rgba(15, 23, 42, 0.04);
+	overflow: hidden;
+}
+
+/* hero section */
+.hero-panel {
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.hero-image-wrap {
+	position: relative;
+	min-height: 500px;
+	border-radius: 28px;
+	overflow: hidden;
+}
+
+.hero-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transform: scale(1.02);
+	transition: transform 0.8s ease;
+}
+
+.hero-panel:hover .hero-image {
+	transform: scale(1.06);
+}
+
+.hero-overlay {
+	position: absolute;
+	inset: 0;
+	padding: 36px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	background:
+		linear-gradient(
+			180deg,
+			rgba(15, 23, 42, 0.02),
+			rgba(15, 23, 42, 0.78)
+		);
+	color: white;
+}
+
+.eyebrow,
+.form-badge {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	padding: 8px 14px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+}
+
+.eyebrow {
+	background: rgba(255,255,255,0.14);
+	border: 1px solid rgba(255,255,255,0.2);
+	backdrop-filter: blur(10px);
+}
+
+.hero-overlay h2 {
+	margin: 18px 0 12px;
+	font-size: clamp(38px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 0.95;
+	max-width: 10ch;
+	letter-spacing: -0.04em;
+}
+
+.hero-overlay p {
+	max-width: 42ch;
+	font-size: 15px;
+	line-height: 1.7;
+	color: rgba(255,255,255,0.84);
+}
+
+/* feature cards */
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
+}
+
+.feature-card {
+	padding: 22px;
+	border-radius: 24px;
+	background: rgba(255,255,255,0.7);
+	border: 1px solid rgba(255,255,255,0.45);
+	backdrop-filter: blur(14px);
+	transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+}
+
+.feature-label {
+	display: inline-block;
+	margin-bottom: 10px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #64748b;
+}
+
+.feature-card strong {
+	display: block;
+	font-size: 20px;
+	color: #0f172a;
+	margin-bottom: 8px;
+}
+
+.feature-card p {
+	color: #64748b;
+	line-height: 1.6;
+	font-size: 14px;
+}
+
+/* form side */
+.form-panel {
+	padding: 44px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.form-badge {
+	background: rgba(22,101,52,0.08);
+	color: var(--green);
+	border: 1px solid rgba(22,101,52,0.12);
+}
+
+.form-panel h1 {
+	margin: 18px 0 12px;
+	font-size: clamp(40px, 5vw, 56px);
+	font-weight: 800;
+	line-height: 0.95;
+	letter-spacing: -0.05em;
+	color: var(--text);
+}
+
+.form-intro {
+	font-size: 15px;
+	line-height: 1.7;
+	color: var(--muted);
+	margin-bottom: 28px;
+	max-width: 46ch;
+}
+
+.auth-form {
+	display: grid;
+	gap: 18px;
+}
+
+.name-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 14px;
+}
+
+.field {
+	display: grid;
+	gap: 8px;
+}
+
+.field label {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #475569;
+}
+
+.field input {
+	width: 100%;
+	height: 56px;
+	padding: 0 18px;
+	border-radius: 18px;
+	border: 1px solid rgba(15,23,42,0.08);
+	background: rgba(255,255,255,0.7);
+	font-size: 15px;
+	color: #0f172a;
+	outline: none;
+	transition: all 0.25s ease;
+	backdrop-filter: blur(10px);
+}
+
+.field input::placeholder {
+	color: #94a3b8;
+}
+
+.field input:hover {
+	border-color: rgba(22,101,52,0.22);
+}
+
+.field input:focus {
+	background: white;
+	border-color: rgba(22,101,52,0.5);
+	box-shadow:
+		0 0 0 4px rgba(22,101,52,0.08),
+		0 8px 20px rgba(22,101,52,0.08);
+	transform: translateY(-1px);
+}
+
+/* checkbox */
+.policy-check {
+	display: flex;
+	gap: 12px;
+	font-size: 14px;
+	line-height: 1.6;
+	color: #475569;
+}
+
+.policy-check input {
+	accent-color: var(--green);
+	margin-top: 4px;
+}
+
+/* helper text */
+.helper-copy,
+.feedback,
+.footer-copy {
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--muted);
+}
+
+.feedback {
+	padding: 14px;
+	border-radius: 16px;
+	background: rgba(255,255,255,0.75);
+	border: 1px solid rgba(15,23,42,0.06);
+}
+
+.feedback-error {
+	color: #b42318;
+	background: rgba(254,242,242,0.9);
+	border-color: rgba(180,35,24,0.12);
+}
+
+/* premium button */
+.primary-btn {
+	position: relative;
+	height: 56px;
+	border: none;
+	border-radius: 18px;
+	background:
+		linear-gradient(
+			135deg,
+			#22c55e,
+			#166534
+		);
+	color: white;
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	overflow: hidden;
+	transition: all 0.25s ease;
+	box-shadow:
+		0 10px 25px rgba(22,101,52,0.22),
+		0 2px 10px rgba(22,101,52,0.12);
+}
+
+.primary-btn::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(
+			120deg,
+			transparent,
+			rgba(255,255,255,0.22),
+			transparent
+		);
+	transform: translateX(-100%);
+	transition: transform 0.8s ease;
+}
+
+.primary-btn:hover::before {
+	transform: translateX(100%);
+}
+
+.primary-btn:hover:not(:disabled) {
+	transform: translateY(-2px);
+	box-shadow:
+		0 16px 34px rgba(22,101,52,0.3),
+		0 6px 18px rgba(22,101,52,0.16);
+}
+
+.primary-btn:disabled {
+	opacity: 0.75;
+	cursor: not-allowed;
+}
+
+/* divider */
+.divider {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 4px 0;
+}
+
+.divider span {
+	flex: 1;
+	height: 1px;
+	background: rgba(15,23,42,0.08);
+}
+
+.divider p {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #94a3b8;
+	white-space: nowrap;
+}
+
+/* google */
+.social-stack {
+	display: grid;
+	gap: 10px;
+}
+
+.google-slot {
+	display: flex;
+	justify-content: center;
+	min-height: 46px;
+}
+
+/* footer */
+.footer-copy {
+	margin-top: 18px;
+	text-align: center;
+}
+
+.footer-copy a {
+	color: var(--green);
+	font-weight: 700;
+	text-decoration: none;
+	position: relative;
+}
+
+.footer-copy a::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	bottom: -2px;
+	width: 100%;
+	height: 2px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: right;
+	transition: transform 0.3s ease;
+}
+
+.footer-copy a:hover::after {
+	transform: scaleX(1);
+	transform-origin: left;
+}
+
+/* responsive */
+@media (max-width: 1024px) {
+	.auth-shell {
+		grid-template-columns: 1fr;
+	}
+
+	.hero-image-wrap {
+		min-height: 360px;
+	}
+}
+
+@media (max-width: 720px) {
+	.auth-page {
+		padding: 16px;
+	}
+
+	.hero-panel,
+	.form-panel {
+		padding: 20px;
+		border-radius: 26px;
+	}
+
+	.name-grid,
+	.feature-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.hero-overlay {
+		padding: 24px;
+	}
+
+	.hero-overlay h2,
+	.form-panel h1 {
+		font-size: 38px;
+	}
+}
+</style>

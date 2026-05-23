@@ -9,12 +9,13 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
-  
+  @Public()
   @Get()
   getProducts(
     @Query('category') category?: string,
@@ -26,10 +27,10 @@ export class ProductsController {
     );
   }
 
-  
+  @Public()
   @Get(':id')
   getOne(@Param('id') id: string) {
-    return this.productService.findOne(Number(id));
+    return this.productService.findOne(id);
   }
 
 
@@ -38,15 +39,15 @@ export class ProductsController {
     return this.productService.create(body);
   }
 
-  
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {
-    return this.productService.update(Number(id), body);
+    return this.productService.update(id, body);
   }
 
-  
+
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.productService.remove(Number(id));
+    return this.productService.remove(id);
   }
 }

@@ -80,7 +80,7 @@
 
           <!-- Continue Shopping -->
            <button class="mt-6 bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/shipping" class="text-white no-underline">
+            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
               Continue Shopping
             </NuxtLink>
           </button>
@@ -140,7 +140,7 @@
           </div>
 
           <button class="w-full mt-6 bg-green-700 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/shipping" class="text-white no-underline">
+            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
               Proceed to Checkout
             </NuxtLink>
           </button>

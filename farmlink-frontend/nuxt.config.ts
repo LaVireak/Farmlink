@@ -7,12 +7,19 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+      stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
     },
   },
-  css: ['@/assets/css/main.css'],
+  css: ['~/assets/css/main.css'],
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
   tailwindcss: {
     configPath: '~/tailwind.config.ts'
+  },
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
   },
   app: {
     head: {
@@ -35,5 +42,4 @@ export default defineNuxtConfig({
       ],
     },
   },
-  css: ['~/assets/css/main.css'],
 })

@@ -150,9 +150,13 @@ import CommonAppFooter from '~/components/common/AppFooter.vue'
 import UserProductCard from '~/components/user/UserProductCard.vue'
 
 const route = useRoute()
+const config = useRuntimeConfig()
 
 const product = ref(null)
-const reviews = ref([])
+const reviews = ref([
+  { name: 'Sokha Rith', comment: 'Extremely fresh and well packaged. Best organic produce in Cambodia!' },
+  { name: 'Dara Pich', comment: 'Very clean and high quality. Will definitely order again next week!' }
+])
 const relatedProducts = ref([])
 const activeImage = ref('')
 const quantity = ref(1)
@@ -162,18 +166,17 @@ const loading = ref(false)
 
 onMounted(async () => {
   await fetchProduct()
-  await fetchReviews()
   await fetchRelatedProducts()
 })
 
 const fetchProduct = async () => {
   loading.value = true
   try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch(`/api/products/${route.params.id}`)
-    // const data = await res.json()
-    // product.value = data
-    // activeImage.value = data.image
+    const res = await $fetch(`${config.public.apiUrl}/products/${route.params.id}`)
+    product.value = res
+    if (res && res.image) {
+      activeImage.value = res.image
+    }
   } catch (err) {
     console.error('Failed to fetch product:', err)
   } finally {
@@ -181,21 +184,12 @@ const fetchProduct = async () => {
   }
 }
 
-const fetchReviews = async () => {
-  try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch(`/api/products/${route.params.id}/reviews`)
-    // reviews.value = await res.json()
-  } catch (err) {
-    console.error('Failed to fetch reviews:', err)
-  }
-}
-
 const fetchRelatedProducts = async () => {
   try {
-    // TODO: replace with your API endpoint
-    // const res = await fetch(`/api/products/${route.params.id}/related`)
-    // relatedProducts.value = await res.json()
+    const res = await $fetch(`${config.public.apiUrl}/products`)
+    if (res && Array.isArray(res)) {
+      relatedProducts.value = res.filter(p => String(p.id) !== String(route.params.id)).slice(0, 4)
+    }
   } catch (err) {
     console.error('Failed to fetch related products:', err)
   }
