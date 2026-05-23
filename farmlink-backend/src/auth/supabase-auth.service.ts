@@ -1,12 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  createClient,
-  type AdminUserAttributes,
-  type User as SupabaseUser,
-} from '@supabase/supabase-js';
-// Provide a WebSocket transport for Node.js <22 (node:20 alpine image)
+import { createClient, type SupabaseClient, type User as SupabaseUser } from '@supabase/supabase-js';
+import { Repository } from 'typeorm';
+import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcrypt';
+import ws from 'ws';
+import { User } from '../users/user.entity';
+import { UserRole } from '../common/enums/role.enum';
+import { UserStatus } from '../common/enums/user-status.enum';
+
 let wsTransport: any = undefined;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -15,12 +18,6 @@ try {
   // ws may not be installed in some environments; we'll handle at runtime
   wsTransport = undefined as any;
 }
-import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
-import { Repository } from 'typeorm';
-import { UserRole } from '../common/enums/role.enum';
-import { UserStatus } from '../common/enums/user-status.enum';
-import { User } from '../users/user.entity';
 
 type SupabaseMetadata = {
   role?: string;
@@ -89,10 +86,7 @@ export class SupabaseAuthService {
     // Use admin API to update the user using the service role key.
     // This avoids the client-side update which triggers password-change emails.
     // supabase-js exposes admin methods under auth.admin
-    const { data, error } = await this.client.auth.admin.updateUserById(
-      userId,
-      update,
-    );
+    const { data, error } = await this.client.auth.admin.updateUserById(userId, update as any);
     if (error) {
       throw new Error(error.message || 'Unable to finalize signup');
     }
