@@ -183,13 +183,23 @@ import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 
 const route = useRoute()
+const config = useRuntimeConfig()
 
 const product = ref(null)
 
+const reviews = ref([
+  { name: 'Sokha Rith', comment: 'Extremely fresh and well packaged. Best organic produce in Cambodia!' },
+  { name: 'Dara Pich', comment: 'Very clean and high quality. Will definitely order again next week!' }
+])
+const relatedProducts = ref([])
 const activeImage = ref('')
 const quantity = ref(1)
 
 const loading = ref(false)
+onMounted(async () => {
+  await fetchProduct()
+  await fetchRelatedProducts()
+})
 
 // ================= FETCH PRODUCT =================
 const fetchProduct = async () => {
@@ -215,7 +225,16 @@ const fetchProduct = async () => {
   }
 }
 
-onMounted(fetchProduct)
+const fetchRelatedProducts = async () => {
+  try {
+    const res = await $fetch(`${config.public.apiUrl}/products`)
+    if (res && Array.isArray(res)) {
+      relatedProducts.value = res.filter(p => String(p.id) !== String(route.params.id)).slice(0, 4)
+    }
+  } catch (err) {
+    console.error('Failed to fetch related products:', err)
+  }
+}
 
 // ================= PRICE =================
 const discountedPrice = computed(() => {

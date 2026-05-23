@@ -416,7 +416,10 @@ import {
 
 definePageMeta({ layout: 'admin' })
 
-const fallbackImage = 'https://via.placeholder.com/80x80?text=IMG'
+const config  = useRuntimeConfig()
+const baseURL = config.public.apiUrl
+
+const fallbackImage = 'https://placehold.co/80x80?text=IMG'
 
 const loading  = ref(false)
 const products = ref([])
@@ -498,10 +501,54 @@ function setTrendRange(range) {
 }
 
 
+// Map backend status enum → UI display string
+function mapStatus(s) {
+    return {
+        active:         'Approved',
+        inactive:       'Rejected',
+        pending_review: 'Pending',
+        out_of_stock:   'Suspended',
+    }[s] ?? 'Pending'
+}
+
+// Map UI display string → backend status enum (for PATCH calls)
+function reverseStatus(s) {
+    return {
+        Approved:  'active',
+        Rejected:  'inactive',
+        Pending:   'pending_review',
+        Suspended: 'out_of_stock',
+    }[s] ?? 'pending_review'
+}
+
 async function fetchProducts() {
     loading.value = true
     try {
-        
+        // Fetch all products (no pagination) so client-side search/filter works
+        const res = await $fetch(`${baseURL}/admin/products`, {
+            params: { take: 1000 },
+            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+        })
+        const raw = res?.data ?? res ?? []
+        products.value = raw.map(p => ({
+            id:              p.id,
+            name:            p.nameEn ?? p.name_en ?? p.name ?? '—',
+            price:           parseFloat(p.pricePerUnit ?? p.price_per_unit ?? 0).toFixed(2),
+            image:           p.thumbnailUrl ?? p.thumbnail_url ?? '',
+            status:          mapStatus(p.status),
+            category:        p.category?.name ?? p.categoryId ?? 'Other',
+            farmer:          p.farmer?.user
+                                 ? `${p.farmer.user.firstName ?? ''} ${p.farmer.user.lastName ?? ''}`.trim()
+                                 : (p.farmer?.farmName ?? '—'),
+            description:     p.description ?? '',
+            featured:        p.isFeatured ?? false,
+            submittedAt:     p.createdAt
+                                 ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                 : '—',
+            rejectionReason: p.rejectionReason ?? null,
+        }))
+        // Derive category list from loaded data
+        categories.value = [...new Set(products.value.map(p => p.category).filter(Boolean))]
     } catch (e) {
         showToast('Failed to load products', 'error')
     } finally {
@@ -511,7 +558,7 @@ async function fetchProducts() {
 
 async function fetchGoals() {
     try {
-        
+        // Goals are derived from products data once loaded
     } catch (e) {
         showToast('Failed to load goals', 'error')
     }
@@ -519,7 +566,7 @@ async function fetchGoals() {
 
 async function fetchActivity() {
     try {
-       
+        // Activity feed is maintained locally via addActivity()
     } catch (e) {
         showToast('Failed to load activity', 'error')
     }
@@ -598,6 +645,10 @@ async function approveProduct(id) {
     const p = products.value.find(x => x.id === id)
     if (!p) return
     try {
+        await $fetch(`${baseURL}/admin/products/${id}/approve`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+        })
         p.status          = 'Approved'
         p.rejectionReason = null
         addActivity(`${p.name} by ${p.farmer} approved`, 'bg-green-500')
@@ -640,6 +691,11 @@ async function executeReject() {
     const p = products.value.find(x => x.id === rejectModal.value.product?.id)
     if (!p) return
     try {
+        await $fetch(`${baseURL}/admin/products/${p.id}/reject`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+            body: { reason: rejectModal.value.reason, note: rejectModal.value.note },
+        })
         p.status          = 'Rejected'
         p.rejectionReason = rejectModal.value.note
             ? `${rejectModal.value.reason} — ${rejectModal.value.note}`
