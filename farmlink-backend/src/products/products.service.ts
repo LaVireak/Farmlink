@@ -1,89 +1,87 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Product } from './product.entity';
+import { Category } from './category.entity';
+import { ProductStatus } from '../common/enums/product.enum';
 
 @Injectable()
 export class ProductsService {
+  constructor(
+    @InjectRepository(Product)
+    private productRepo: Repository<Product>,
+    @InjectRepository(Category)
+    private categoryRepo: Repository<Category>,
+  ) {}
 
-  private products = [
-    { id: 1, name: 'Fresh Green Beans', category: 'Vegetable', price: 4.5, image: '/images/beans.jpg' },
-    { id: 2, name: 'Fresh Broccoli', category: 'Vegetable', price: 3.75, image: '/images/broccoli.jpg' },
-    { id: 3, name: 'Fresh Bell Peppers', category: 'Vegetable', price: 2.1, image: '/images/pepper.jpg' },
-    { id: 4, name: 'Fresh Cucumbers', category: 'Vegetable', price: 2.5, image: '/images/cucumber.jpg' },
-    { id: 5, name: 'Fresh Grapes', category: 'Fruit', price: 5.5, image: '/images/grape.jpg' },
-    { id: 6, name: 'Fresh Apples', category: 'Fruit', price: 3.99, image: '/images/apple.jpg' },
-    { id: 7, name: 'Fresh Oranges', category: 'Fruit', price: 4.2, image: '/images/orange.jpg' },
-    { id: 8, name: 'Fresh Bananas', category: 'Fruit', price: 2.8, image: '/images/bananas.jpg' },
-    { id: 9, name: 'Organic Tomatoes', category: 'Organic', price: 5.2, image: '/images/tomatoes.jpg' },
-    { id: 10, name: 'Organic Cabbage', category: 'Organic', price: 3.5, image: '/images/cabbage.jpg' },
-    { id: 11, name: 'Organic Lettuce', category: 'Organic', price: 4.0, image: '/images/lettuce.jpg' },
-    { id: 12, name: 'Heirloom Carrots', category: 'Organic', price: 4.95, image: '/images/carrot.jpg' },
-  ];
+  // Normalize a Product entity to the shape the frontend expects
+  private normalize(p: Product) {
+    return {
+      id: p.id,
+      name: p.nameEn,
+      category: (p.category as any)?.nameEn || null,
+      price: Number(p.pricePerUnit),
+      image: p.thumbnailUrl || null,
+      description: p.description || null,
+      rating: p.avgRating ? Number(p.avgRating) : null,
+      badge: p.isOrganic ? 'Organic' : null,
+      discount: null,
+      unit: p.unit,
+      stock: p.stockQuantity,
+    };
+  }
 
   // GET ALL
-  findAll(category?: string, maxPrice?: number) {
-    let result = this.products;
+  async findAll(category?: string, maxPrice?: number): Promise<any[]> {
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.category', 'category')
+      .where('p.status = :status', { status: ProductStatus.ACTIVE });
 
     if (category) {
-      const categories = category.split(',');
-      result = result.filter(p => categories.includes(p.category));
+      const cats = category.split(',');
+      qb.andWhere('category.nameEn IN (:...cats)', { cats });
     }
 
     if (maxPrice) {
-      result = result.filter(p => p.price <= maxPrice);
+      qb.andWhere('p.pricePerUnit <= :maxPrice', { maxPrice });
     }
 
-    return result;
+    const products = await qb.orderBy('p.createdAt', 'DESC').getMany();
+    return products.map((p) => this.normalize(p));
   }
 
   // GET ONE
-  findOne(id: number) {
-    const product = this.products.find(p => p.id === id);
+  async findOne(id: string): Promise<any> {
+    const product = await this.productRepo.findOne({
+      where: { id },
+      relations: ['category', 'images'],
+    });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    return product;
+    return this.normalize(product);
   }
 
   // CREATE
-  create(data: any) {
-    const newProduct = {
-      id: this.products.length + 1, // simple auto increment
-      ...data,
-    };
-
-    this.products.push(newProduct);
-    return newProduct;
+  async create(data: any) {
+    const product = this.productRepo.create(data);
+    return this.productRepo.save(product);
   }
 
   // UPDATE
-  update(id: number, data: any) {
-    const index = this.products.findIndex(p => p.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException('Product not found');
-    }
-
-    this.products[index] = {
-      ...this.products[index],
-      ...data,
-    };
-
-    return this.products[index];
+  async update(id: string, data: any) {
+    const product = await this.productRepo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    Object.assign(product, data);
+    return this.productRepo.save(product);
   }
 
   // DELETE
-  remove(id: number) {
-    const index = this.products.findIndex(p => p.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException('Product not found');
-    }
-
-    const deleted = this.products[index];
-    this.products.splice(index, 1);
-
-    return {
-      message: 'Product deleted successfully',
-      data: deleted,
-    };
+  async remove(id: string) {
+    const product = await this.productRepo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    await this.productRepo.remove(product);
+    return { message: 'Product deleted successfully' };
   }
 }

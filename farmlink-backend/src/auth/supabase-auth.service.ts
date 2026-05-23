@@ -67,6 +67,10 @@ export class SupabaseAuthService {
       throw new Error(error.message || 'Unable to finalize signup');
     }
 
+    if (data?.user) {
+      await this.getOrCreateLocalUser(data.user);
+    }
+
     return data;
   }
 
@@ -94,6 +98,7 @@ export class SupabaseAuthService {
     if (!user) {
       const passwordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
       user = new User();
+      user.id = supabaseUser.id;
       user.email = email;
       user.passwordHash = passwordHash;
       user.role = this.normalizeRole(metadata.role);
