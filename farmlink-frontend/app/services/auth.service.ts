@@ -230,17 +230,20 @@ export const authService = {
         return mapSessionToResult(data.session);
     },
 
-    async googleSignIn(idToken: string): Promise<SignInResult> {
-        const { data, error } = await supabase.auth.signInWithIdToken({
+    async googleSignIn(): Promise<void> {
+        const redirectTo = `${window.location.origin}/auth/callback`;
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            token: idToken,
+            options: { redirectTo },
         });
 
-        if (error || !data.session) {
-            throw new Error(error?.message || 'Unable to sign in with Google.');
+        if (error) {
+            throw new Error(error.message || 'Unable to sign in with Google.');
         }
 
-        return mapSessionToResult(data.session);
+        console.log('[Google Login] Supabase redirect URL:', data?.url);
+        // Supabase will redirect the browser — no return value needed.
     },
 
     async facebookSignIn(): Promise<void> {

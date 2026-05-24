@@ -127,15 +127,7 @@
 							</button>
 						</div>
 					</div>
-					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
-					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
-
-					<div class="policy-row">
-						<label class="policy-check">
-							<input v-model="form.agree" type="checkbox">
-							<span>I agree to the Terms of Service and Privacy Policy</span>
-						</label>
-					</div>
+		
 					<p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
 					<p v-else class="helper-copy">Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
 
@@ -171,7 +163,7 @@
 								<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
 								<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
 							</svg>
-							{{ googleSubmitting ? '…' : 'Google' }}
+							{{ googleSubmitting ? 'Redirecting…' : 'Google' }}
 						</button>
 
 						<!-- FACEBOOK -->
@@ -189,7 +181,7 @@
 					</div>
 
 					<p v-if="googleError" class="feedback feedback-error">{{ googleError }}</p>
-					<p v-if="googleSubmitting" class="feedback">Signing up with Google...</p>
+					<p v-if="googleSubmitting" class="feedback">Redirecting to Google...</p>
 					<p v-if="facebookError" class="feedback feedback-error">{{ facebookError }}</p>
 				</form>
 
@@ -208,19 +200,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
 import { isValidEmail } from '../../utils/validation';
 
 const router = useRouter();
-const { requestSignupOtp, signInWithGoogle, getPostSignInRoute } = useAuth();
+const { requestSignupOtp, signInWithGoogle } = useAuth();
 
 const submitting = ref(false);
 const errorMessage = ref('');
 const googleSubmitting = ref(false);
 const googleError = ref('');
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 const facebookSubmitting = ref(false);
 const facebookError = ref('');
 const showPassword = ref(false);
@@ -272,47 +263,16 @@ const onSubmit = async () => {
 	}
 };
 
-const handleGoogleCredential = async (credential?: string) => {
-	if (!credential) {
-		googleError.value = 'Google sign-up failed to return credentials.';
-		return;
-	}
-
+const handleGoogleClick = async () => {
 	googleSubmitting.value = true;
 	googleError.value = '';
 
 	try {
-		const result = await signInWithGoogle(credential);
-		await router.push(getPostSignInRoute(result.user.role));
+		await signInWithGoogle();
 	} catch (error) {
 		googleError.value = error instanceof Error ? error.message : 'Unable to sign up with Google.';
-	} finally {
 		googleSubmitting.value = false;
 	}
-};
-
-const initializeGoogle = () => {
-	const google = (window as typeof window & { google?: any }).google;
-
-	if (!google?.accounts?.id) {
-		return false;
-	}
-
-	google.accounts.id.initialize({
-		client_id: googleClientId,
-		callback: (response: { credential?: string }) => handleGoogleCredential(response.credential),
-	});
-
-	return true;
-};
-
-const handleGoogleClick = () => {
-	const google = (window as typeof window & { google?: any }).google;
-	if (!google?.accounts?.id) {
-		googleError.value = 'Google sign-up is not ready yet.';
-		return;
-	}
-	google.accounts.id.prompt();
 };
 
 const handleFacebook = async () => {
@@ -327,30 +287,6 @@ const handleFacebook = async () => {
 	}
 };
 
-onMounted(() => {
-	if (!googleClientId) {
-		googleError.value = 'Google sign-up is not configured.';
-		return;
-	}
-
-	let attempts = 0;
-	const maxAttempts = 25;
-	const tryInit = () => {
-		attempts += 1;
-		if (initializeGoogle()) {
-			return;
-		}
-
-		if (attempts >= maxAttempts) {
-			googleError.value = 'Google sign-up failed to load.';
-			return;
-		}
-
-		setTimeout(tryInit, 200);
-	};
-
-	tryInit();
-});
 </script>
 
 <style scoped>
