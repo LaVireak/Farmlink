@@ -2,6 +2,7 @@
   <div class="home-page">
     <CommonAppHeader />
 
+    <!-- HERO SECTION -->
     <section class="hero-section-full">
       <img
         class="hero-bg-image"
@@ -9,7 +10,6 @@
         alt="Lush sunlit organic vegetable farm crops"
       />
       <div class="hero-dark-overlay"></div>
-      
       <div class="hero-ambient-glow glow-left"></div>
       <div class="hero-ambient-glow glow-right"></div>
 
@@ -17,89 +17,60 @@
         <div class="hero-left-content">
           <span class="elegant-pill">
             <span class="material-symbols-outlined icon-spin-eco">eco</span>
-            FarmLink Cambodia
+            {{ t('home.brandBadge') }}
           </span>
-
           <h1>
-            Fresh from 
-            <span class="glowing-highlight">local farms</span> 
-            to your table.
+            {{ t('home.heroTitle1') }}
+            <span class="glowing-highlight">{{ t('home.heroTitleHighlight') }}</span>
+            {{ t('home.heroTitle2') }}
           </h1>
-
-          <p class="lead-text">
-            Premium seasonal produce delivered directly from trusted Cambodian smallholders to homes and businesses across Phnom Penh.
-          </p>
+          <p class="lead-text">{{ t('home.heroLead') }}</p>
 
           <div class="hero-cta-actions">
             <NuxtLink to="/user/products" class="btn-elegant primary">
-              <span>Explore Products</span>
+              <span>{{ t('home.exploreProducts') }}</span>
             </NuxtLink>
-
             <NuxtLink to="/about" class="btn-elegant secondary">
-              <span>Learn More</span>
+              <span>{{ t('home.learnMore') }}</span>
               <span class="material-symbols-outlined">arrow_forward</span>
             </NuxtLink>
           </div>
 
           <div class="hero-stats-row">
-            <div class="stat-bubble">
-              <strong>240+</strong>
-              <span>Partner farms</span>
-            </div>
-
-            <div class="stat-bubble">
-              <strong>24h</strong>
-              <span>Fast delivery</span>
-            </div>
-
-            <div class="stat-bubble">
-              <strong>4.9★</strong>
-              <span>Customer rating</span>
-            </div>
+            <div class="stat-bubble"><strong>240+</strong><span>{{ t('home.partnerFarms') }}</span></div>
+            <div class="stat-bubble"><strong>24h</strong><span>{{ t('home.fastDelivery') }}</span></div>
+            <div class="stat-bubble"><strong>4.9★</strong><span>{{ t('home.customerRating') }}</span></div>
           </div>
-
         </div>
 
         <div class="hero-right-content">
           <div class="glass-picks-widget">
             <div class="glass-widget-header">
               <span class="pulse-indicator"></span>
-              <h3>Today's Fresh Picks</h3>
+              <h3>{{ t('home.todayFreshPicks') }}</h3>
             </div>
-
             <div class="glass-widget-list">
               <div class="glass-pick-row">
-                <img
-                  src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80"
-                  alt="Organic Greens"
-                />
+                <img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80" alt="Organic Greens" />
                 <div class="pick-meta">
-                  <strong>Organic Greens</strong>
-                  <p>Harvested 3 hours ago</p>
+                  <strong>{{ t('home.featuredPicks.greens.name') }}</strong>
+                  <p>{{ t('home.featuredPicks.greens.excerpt') }}</p>
                 </div>
                 <span class="pick-price">$6.50</span>
               </div>
-
               <div class="glass-pick-row">
-                <img
-                  src="https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80"
-                  alt="Sweet Mangoes"
-                />
+                <img src="https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80" alt="Sweet Mangoes" />
                 <div class="pick-meta">
-                  <strong>Sweet Mangoes</strong>
-                  <p>Fresh from Battambang</p>
+                  <strong>{{ t('home.featuredPicks.mangoes.name') }}</strong>
+                  <p>{{ t('home.featuredPicks.mangoes.excerpt') }}</p>
                 </div>
                 <span class="pick-price">$4.20</span>
               </div>
-
               <div class="glass-pick-row">
-                <img
-                  src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=200&q=80"
-                  alt="Fresh Tomatoes"
-                />
+                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=200&q=80" alt="Fresh Tomatoes" />
                 <div class="pick-meta">
-                  <strong>Fresh Tomatoes</strong>
-                  <p>Picked this morning</p>
+                  <strong>{{ t('home.featuredPicks.tomatoes.name') }}</strong>
+                  <p>{{ t('home.featuredPicks.tomatoes.excerpt') }}</p>
                 </div>
                 <span class="pick-price">$3.20</span>
               </div>
@@ -110,99 +81,78 @@
     </section>
 
     <main class="home-main">
-      
+      <!-- CATEGORIES SECTION -->
       <section class="section categories-section">
         <div class="section-head center">
-          <span class="subtitle">Quick Browse</span>
-          <h2>Explore Fresh Categories</h2>
+          <span class="subtitle">{{ t('home.quickBrowse') }}</span>
+          <h2>{{ t('home.exploreCategories') }}</h2>
         </div>
-        
         <div class="categories-grid">
           <NuxtLink to="/user/products?category=vegetables" class="category-pill-card card-veg">
-            <div class="icon-circle bg-green">
-              <span class="material-symbols-outlined">eco</span>
-            </div>
+            <div class="icon-circle bg-green"><span class="material-symbols-outlined">eco</span></div>
             <div class="card-info">
-              <span>Vegetables</span>
-              <p class="card-desc">Freshly harvested daily Takeo greens</p>
+              <span>{{ t('common.vegetables') }}</span>
+              <p class="card-desc">{{ t('common.allVegetables') }}</p>
             </div>
             <span class="chevron-arrow material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
-          
           <NuxtLink to="/user/products?category=fruits" class="category-pill-card card-fruit">
-            <div class="icon-circle bg-yellow">
-              <span class="material-symbols-outlined">spa</span>
-            </div>
+            <div class="icon-circle bg-yellow"><span class="material-symbols-outlined">spa</span></div>
             <div class="card-info">
-              <span>Fresh Fruits</span>
-              <p class="card-desc">Sweet, sun-ripened local mangoes</p>
+              <span>{{ t('common.fruits') }}</span>
+              <p class="card-desc">{{ t('common.allFruits') }}</p>
             </div>
             <span class="chevron-arrow material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
-          
           <NuxtLink to="/user/products?category=supplies" class="category-pill-card card-supplies">
-            <div class="icon-circle bg-orange">
-              <span class="material-symbols-outlined">potted_plant</span>
-            </div>
+            <div class="icon-circle bg-orange"><span class="material-symbols-outlined">potted_plant</span></div>
             <div class="card-info">
-              <span>Farm Supplies</span>
-              <p class="card-desc">High-quality clean seeds & tools</p>
+              <span>{{ t('common.toolsEquipment') }}</span>
+              <p class="card-desc">{{ t('common.allSupplies') }}</p>
             </div>
             <span class="chevron-arrow material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
-          
           <NuxtLink to="/user/products?category=all-organic" class="category-pill-card card-organic">
-            <div class="icon-circle bg-red">
-              <span class="material-symbols-outlined">local_florist</span>
-            </div>
+            <div class="icon-circle bg-red"><span class="material-symbols-outlined">local_florist</span></div>
             <div class="card-info">
-              <span>100% Organic</span>
-              <p class="card-desc">Certified chemical-free harvests</p>
+              <span>{{ t('common.organicFresh') }}</span>
+              <p class="card-desc">{{ t('common.shopAllCategories') }}</p>
             </div>
             <span class="chevron-arrow material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
         </div>
       </section>
 
+      <!-- DYNAMIC PRODUCTS SECTION -->
       <section class="section products-section">
         <div class="section-head">
           <div>
-            <span class="subtitle">Curated Favorites</span>
-            <h2>Popular Products</h2>
+            <span class="subtitle">{{ t('common.popular') }}</span>
+            <h2>{{ t('home.popularProducts') }}</h2>
           </div>
           <NuxtLink to="/user/products" class="view-all">
-            <span>Browse all products</span>
+            <span>{{ t('home.browseAll') }}</span>
             <span class="material-symbols-outlined">arrow_right_alt</span>
           </NuxtLink>
         </div>
 
         <div class="products-grid">
-          <article
-            class="product-card"
-            v-for="p in products"
-            :key="p.id"
-          >
+          <article v-for="p in products" :key="p.id" class="product-card">
             <div class="product-img-wrap">
-              <img :src="p.image" :alt="p.name" loading="lazy" />
-              <span class="popular-badge">Popular Product</span>
+              <img :src="p.image" :alt="t(p.keyPrefix + '.name')" loading="lazy" />
+              <span class="popular-badge">{{ t('common.popular') }}</span>
             </div>
-
             <div class="product-body">
               <div class="product-meta-row">
-                <span class="category-tag">Seasonal Pick</span>
-                <span class="product-rating">
-                  <span class="star-icon">★</span> 4.9
-                </span>
+                <span class="category-tag">{{ t('common.popular') }}</span>
+                <span class="product-rating"><span class="star-icon">★</span> 4.9</span>
               </div>
-              <h3>{{ p.name }}</h3>
-              <p class="muted-text">
-                {{ p.excerpt }}
-              </p>
-
+              <h3>{{ t(p.keyPrefix + '.name') }}</h3>
+              <p class="muted-text">{{ t(p.keyPrefix + '.excerpt') }}</p>
               <div class="product-row">
                 <strong class="price">{{ p.price }}</strong>
                 <NuxtLink :to="`/user/products/${p.id}`" class="view-product-btn">
-                  <span>Details</span>
+                  <span>{{ t('home.view') }}</span>
                   <span class="material-symbols-outlined">visibility</span>
                 </NuxtLink>
               </div>
@@ -211,116 +161,98 @@
         </div>
       </section>
 
+      <!-- DYNAMIC PROVINCES/FARMS SECTION -->
       <section class="section provinces-section">
         <div class="section-head">
           <div>
-            <span class="subtitle">Direct Sourcing</span>
-            <h2>Farms Across Cambodia</h2>
+            <span class="subtitle">{{ t('common.farm') }}</span>
+            <h2>{{ t('home.farmsAcrossCambodia') }}</h2>
           </div>
           <NuxtLink to="/about" class="view-all">
-            <span>Explore provinces</span>
+            <span>{{ t('home.exploreProvinces') }}</span>
             <span class="material-symbols-outlined">map</span>
           </NuxtLink>
         </div>
 
         <div class="province-grid">
-          <article
-            class="province-card"
-            v-for="farm in provinceFarms"
-            :key="farm.name"
-          >
+          <article v-for="farm in provinceFarms" :key="farm.keyPrefix" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="farm.name" loading="lazy" />
+              <img :src="farm.image" :alt="t(farm.keyPrefix + '.name')" loading="lazy" />
             </div>
             <div class="province-overlay"></div>
-
             <div class="province-content">
               <span class="province-badge">{{ farm.province }}</span>
-              <h3>{{ farm.name }}</h3>
-              <p class="province-desc">{{ farm.description }}</p>
-
+              <h3>{{ t(farm.keyPrefix + '.name') }}</h3>
+              <p class="province-desc">{{ t(farm.keyPrefix + '.description') }}</p>
               <div class="province-footer">
                 <span class="farm-products">
                   <span class="material-symbols-outlined">restaurant_menu</span>
-                  {{ farm.products }}
+                  {{ t(farm.keyPrefix + '.products') }}
                 </span>
-                <span class="rating">
-                  <span class="star-icon">★</span> {{ farm.rating }}
-                </span>
+                <span class="rating"><span class="star-icon">★</span> {{ farm.rating }}</span>
               </div>
             </div>
           </article>
         </div>
       </section>
 
+      <!-- COMMITMENT VALUES SECTION -->
       <section class="section values-section">
         <div class="section-head">
           <div>
-            <span class="subtitle">Our Commitment</span>
-            <h2>Why Buy From FarmLink?</h2>
+            <span class="subtitle">{{ t('about.heroBadge') }}</span>
+            <h2>{{ t('about.heroTitle') }}</h2>
           </div>
         </div>
-
         <div class="values-grid">
           <div class="value-card">
-            <div class="value-icon bg-green">
-              <span class="material-symbols-outlined">electric_bolt</span>
-            </div>
-            <h3>Same-Day Harvest</h3>
-            <p>Picked at the break of dawn and delivered straight to your door within 24 hours to ensure unparalleled freshness, crispness, and peak nutritional density.</p>
+            <div class="value-icon bg-green"><span class="material-symbols-outlined">electric_bolt</span></div>
+            <h3>{{ t('about.missions.directConnection.title') }}</h3>
+            <p>{{ t('about.missions.directConnection.description') }}</p>
           </div>
-
           <div class="value-card">
-            <div class="value-icon bg-yellow">
-              <span class="material-symbols-outlined">handshake</span>
-            </div>
-            <h3>Fair Trade to Farmers</h3>
-            <p>We believe in ethical agriculture. By stripping out exploitatory middlemen, over 85% of each sale goes directly back to supporting Cambodian smallholders.</p>
+            <div class="value-icon bg-yellow"><span class="material-symbols-outlined">handshake</span></div>
+            <h3>{{ t('about.missions.fairPricing.title') }}</h3>
+            <p>{{ t('about.missions.fairPricing.description') }}</p>
           </div>
-
           <div class="value-card">
-            <div class="value-icon bg-orange">
-              <span class="material-symbols-outlined">verified_user</span>
-            </div>
-            <h3>100% Certified Clean</h3>
-            <p>Our crops are cultivated in mineral-rich, organic soil without chemical fertilizers or synthetic pesticides. Truly pure food you can trust completely.</p>
+            <div class="value-icon bg-orange"><span class="material-symbols-outlined">verified_user</span></div>
+            <h3>{{ t('about.missions.transparency.title') }}</h3>
+            <p>{{ t('about.missions.transparency.description') }}</p>
           </div>
         </div>
       </section>
 
+      <!-- DYNAMIC JOURNAL STORIES SECTION -->
       <section class="section blog-section">
         <div class="section-head">
           <div>
-            <span class="subtitle">Journal Entry</span>
-            <h2>Latest Stories</h2>
+            <span class="subtitle">{{ t('common.about') }}</span>
+            <h2>{{ t('home.latestStories') }}</h2>
           </div>
           <NuxtLink to="/about" class="view-all">
-            <span>Read journal</span>
+            <span>{{ t('home.readJournal') }}</span>
             <span class="material-symbols-outlined">book</span>
           </NuxtLink>
         </div>
 
         <div class="blog-grid">
-          <article
-            class="blog-card"
-            v-for="post in blogPosts"
-            :key="post.title"
-          >
+          <article v-for="post in blogPosts" :key="post.keyPrefix" class="blog-card">
             <div class="blog-img-wrap">
-              <img :src="post.image" :alt="post.title" loading="lazy" />
+              <img :src="post.image" :alt="t(post.keyPrefix + '.title')" loading="lazy" />
               <span class="read-time-badge">
                 <span class="material-symbols-outlined icon-small">schedule</span>
                 {{ post.readTime }}
               </span>
             </div>
             <div class="blog-body">
-              <span class="tag" :class="'tag-' + post.tag.toLowerCase().replace(' ', '-')">{{ post.tag }}</span>
-              <h3>{{ post.title }}</h3>
-              <p class="muted-text">{{ post.excerpt }}</p>
+              <span class="tag">{{ t(post.keyPrefix + '.tag') }}</span>
+              <h3>{{ t(post.keyPrefix + '.title') }}</h3>
+              <p class="muted-text">{{ t(post.keyPrefix + '.excerpt') }}</p>
               <div class="blog-footer">
                 <span class="blog-date">{{ post.date }}</span>
                 <NuxtLink to="/about" class="read-more-link">
-                  <span>Read Story</span>
+                  <span>{{ t('success.readStory') }}</span>
                   <span class="material-symbols-outlined">arrow_right_alt</span>
                 </NuxtLink>
               </div>
@@ -329,37 +261,33 @@
         </div>
       </section>
 
+      <!-- DYNAMIC COMMUNITY REVIEWS SECTION -->
       <section class="section reviews-section">
         <div class="section-head">
           <div>
-            <span class="subtitle">Community Voices</span>
-            <h2>Community Reviews</h2>
+            <span class="subtitle">{{ t('common.popular') }}</span>
+            <h2>{{ t('home.communityReviews') }}</h2>
           </div>
           <div class="score-badge">
             <span class="material-symbols-outlined star-icon-main">star</span>
-            <span>4.9 / 5 Overall</span>
+            <span>{{ t('home.score') }}</span>
           </div>
         </div>
 
         <div class="reviews-grid">
-          <article
-            class="review-card"
-            v-for="r in reviews"
-            :key="r.name"
-          >
+          <article v-for="r in reviews" :key="r.name" class="review-card">
             <div class="review-top">
               <img :src="r.avatar" :alt="r.name" loading="lazy" />
               <div>
                 <strong>{{ r.name }}</strong>
-                <p class="muted-text">{{ r.role }}</p>
+                <p class="muted-text">{{ t(r.keyPrefix + '.role') }}</p>
               </div>
             </div>
             <div class="stars">★★★★★</div>
-            <div class="quote">"{{ r.quote }}"</div>
+            <div class="quote">"${{ t(r.keyPrefix + '.quote') }}"</div>
           </article>
         </div>
       </section>
-
     </main>
 
     <CommonAppFooter />
@@ -367,33 +295,30 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const products = [
   {
     id: '1',
-    name: 'Morning Greens Box',
-    excerpt: 'Fresh organic vegetables harvested today.',
+    keyPrefix: 'productsData.p1',
     price: '$6.50',
     image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80'
   },
   {
     id: '2',
-    name: 'Sweet Mangoes',
-    excerpt: 'Naturally ripened Cambodian mangoes.',
+    keyPrefix: 'productsData.p2',
     price: '$4.20',
     image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80'
   },
   {
     id: '3',
-    name: 'Organic Tomatoes',
-    excerpt: 'Farm fresh tomatoes full of flavor.',
+    keyPrefix: 'productsData.p3',
     price: '$3.20',
     image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
   },
-
   {
     id: '4',
-    name: 'Kampot Spiced Box',
-    excerpt: 'Curated organic spices and selection premium peppers.',
+    keyPrefix: 'productsData.p4',
     price: '$8.90',
     image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80'
   }
@@ -401,47 +326,20 @@ const products = [
 
 const provinceFarms = [
   {
-    name: 'Takeo Organic Farm',
-    province: 'Takeo',
-    description: 'Fresh organic vegetables harvested every morning.',
-    products: 'Vegetables & Herbs',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
-  },
-
-  {
-    id: '3',
-    name: 'Organic Tomatoes',
-    excerpt: 'Farm fresh tomatoes full of flavor.',
-    price: '$3.20',
-    image:
-      'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
-  }
-]
-
-const provinceFarms = [
-  {
-    name: 'Battambang Fruit Garden',
+    keyPrefix: 'farmsData.f1',
     province: 'Battambang',
-    description: 'Premium tropical fruits from local orchards.',
-    products: 'Mangoes & Dragon Fruit',
     rating: '4.8',
     image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'
   },
-
   {
-    name: 'Kampot Pepper Farm',
+    keyPrefix: 'farmsData.f2',
     province: 'Kampot',
-    description: 'World famous Kampot pepper directly from farmers.',
-    products: 'Pepper & Spices',
     rating: '5.0',
     image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=1200&q=80'
   },
   {
-    name: 'Siem Reap Green House',
+    keyPrefix: 'farmsData.f3',
     province: 'Siem Reap',
-    description: 'Hydroponic lettuce and premium greens.',
-    products: 'Hydroponic Greens',
     rating: '4.9',
     image: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80'
   }
@@ -449,33 +347,25 @@ const provinceFarms = [
 
 const blogPosts = [
   {
-    title: 'Morning harvest in Takeo',
-    tag: 'Harvest diary',
-    excerpt: 'Experience the beauty of early farm harvesting.',
+    keyPrefix: 'blogsData.b1',
     image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80',
     readTime: '3 min read',
     date: 'May 22, 2026'
   },
   {
-    title: 'Healthy cooking ideas',
-    tag: 'Chef notes',
-    excerpt: 'Simple seasonal recipes from local ingredients.',
+    keyPrefix: 'blogsData.b2',
     image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
     readTime: '5 min read',
     date: 'May 20, 2026'
   },
   {
-    title: 'Sustainably grown Pepper',
-    tag: 'Spice route',
-    excerpt: 'Discover the heritage of organic pepper in Kampot.',
+    keyPrefix: 'blogsData.b3',
     image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80',
     readTime: '4 min read',
     date: 'May 18, 2026'
   },
   {
-    title: 'Battambang Fruit Orchards',
-    tag: 'Farmer voice',
-    excerpt: 'How community co-ops are boosting local growers.',
+    keyPrefix: 'blogsData.b4',
     image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80',
     readTime: '6 min read',
     date: 'May 15, 2026'
@@ -485,43 +375,16 @@ const blogPosts = [
 const reviews = [
   {
     name: 'Sopheap N.',
-    role: 'Cafe Owner',
-    quote: 'Fresh delivery every single morning.',
+    keyPrefix: 'reviewsData.r1',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
   },
-
   {
-    name: 'Siem Reap Green House',
-    province: 'Siem Reap',
-    description: 'Hydroponic lettuce and premium greens.',
-    products: 'Hydroponic Greens',
-    rating: '4.9',
-    image:
-      'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80'
-  }
-]
-
-const blogPosts = [
-  {
-    name: 'Vannak R.',
-    role: 'Restaurant Chef',
-    quote: 'The product quality is consistently amazing.',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
-  },
-
-  {
-    name: 'Bona K.',
-    role: 'Healthy Eater',
-    quote: 'I love knowing exactly which Takeo farm my greens came from!',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
-  },
-  {
-    name: 'Dara S.',
-    role: 'Family Parent',
-    quote: 'The organic mangoes are sweet, fresh, and kid-approved.',
+    name: 'Borey V.',
+    keyPrefix: 'reviewsData.r2',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
   }
 ]
+
 </script>
 
 <style scoped>
@@ -569,6 +432,71 @@ const blogPosts = [
   flex-direction: column;
   gap: clamp(16px, 4vw, 40px);
 }
+
+.btn.secondary {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  padding: 18px 22px;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 24px;
+}
+
+.hero-floating-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 28px;
+  backdrop-filter: blur(20px);
+  padding: 28px;
+  color: white;
+  animation: floatCard 5s ease-in-out infinite;
+}
+
+.hero-floating-card h3 {
+  margin-bottom: 18px;
+}
+
+.floating-product {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+}
+
+.floating-product img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+@keyframes floatCard {
+  0%,100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* SECTION */
 
 .section-head {
   display: flex;

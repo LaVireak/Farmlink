@@ -103,32 +103,6 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const clearSession = () => {
-        if (typeof window !== 'undefined' && user.value?.id) {
-            const avatarKey = getAvatarStorageKey(user.value.id);
-            if (avatarKey) {
-                localStorage.removeItem(avatarKey);
-            }
-
-			const pendingAvatarKey = getPendingAvatarStorageKey(user.value.id);
-			if (pendingAvatarKey) {
-				localStorage.removeItem(pendingAvatarKey);
-			}
-        }
-
-        accessToken.value = null;
-        refreshToken.value = null;
-        user.value = null;
-        persist();
-    };
-
-    const applySupabaseSession = (session: Session) => {
-        accessToken.value = session.access_token;
-        refreshToken.value = session.refresh_token;
-        user.value = mapSupabaseUser(session.user);
-        persist();
-    };
-
-    const clearSession = () => {
         accessToken.value = null;
         refreshToken.value = null;
         user.value = null;
