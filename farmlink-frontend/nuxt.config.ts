@@ -1,12 +1,19 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: true },
+  devtools: { enabled: false }, // disable in production
   devServer: {
     port: 3001,
   },
   pages: true,
   ssr: false,
+  nitro: {
+    preset: 'vercel'
+  },
+  vite: {
+    build: {
+      sourcemap: false
+    }
+  },
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3001/api",
@@ -23,7 +30,6 @@ export default defineNuxtConfig({
     ],
     defaultLocale: "en",
     lazy: true,
-    // locale files are stored under i18n/locales/
     langDir: "locales",
     strategy: "no_prefix",
     detectBrowserLanguage: {
@@ -35,7 +41,6 @@ export default defineNuxtConfig({
   tailwindcss: {
     configPath: "~/tailwind.config.ts",
   },
-
   postcss: {
     plugins: {
       tailwindcss: {},
