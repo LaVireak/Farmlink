@@ -121,20 +121,6 @@ export const useAuthStore = defineStore('auth', () => {
         persist();
     };
 
-    const applySupabaseSession = (session: Session) => {
-        accessToken.value = session.access_token;
-        refreshToken.value = session.refresh_token;
-        user.value = mapSupabaseUser(session.user);
-        persist();
-    };
-
-    const clearSession = () => {
-        accessToken.value = null;
-        refreshToken.value = null;
-        user.value = null;
-        persist();
-    };
-
     const getPostSignInRoute = (role: AuthUser['role']) => {
         if (role === 'farmer') return '/farmer/dashboard';
         if (role === 'admin') return '/admin/dashboard';
@@ -209,10 +195,9 @@ export const useAuthStore = defineStore('auth', () => {
         return result;
     };
 
-    const signInWithGoogle = async (idToken: string) => {
-        const result = await authService.googleSignIn(idToken);
-        applySession(result);
-        return result;
+    const signInWithGoogle = async () => {
+        // Triggers a browser redirect — no session returned here.
+        await authService.googleSignIn();
     };
 
     const signInWithFacebook = async () => {

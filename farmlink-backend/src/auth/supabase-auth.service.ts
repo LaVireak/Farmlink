@@ -35,6 +35,10 @@ type ParsedImage = {
   ext: string;
 };
 
+type UpdateUserByIdAttributes = Parameters<
+  SupabaseClient['auth']['admin']['updateUserById']
+>[1];
+
 @Injectable()
 export class SupabaseAuthService {
   private readonly client: ReturnType<typeof createClient>;
@@ -79,14 +83,17 @@ export class SupabaseAuthService {
       throw new Error('Missing userId');
     }
 
-    const update: AdminUserAttributes = {};
+    const update: UpdateUserByIdAttributes = {};
     if (payload.password) update.password = payload.password;
     if (payload.metadata) update.user_metadata = payload.metadata;
 
     // Use admin API to update the user using the service role key.
     // This avoids the client-side update which triggers password-change emails.
     // supabase-js exposes admin methods under auth.admin
-    const { data, error } = await this.client.auth.admin.updateUserById(userId, update as any);
+    const { data, error } = await this.client.auth.admin.updateUserById(
+      userId,
+      update,
+    );
     if (error) {
       throw new Error(error.message || 'Unable to finalize signup');
     }
@@ -147,7 +154,7 @@ export class SupabaseAuthService {
 
     const currentMetadata = (data.user?.user_metadata ??
       {}) as SupabaseMetadata;
-    const update: AdminUserAttributes = {
+    const update: UpdateUserByIdAttributes = {
       user_metadata: {
         ...currentMetadata,
         avatarUrl,

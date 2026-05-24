@@ -9,7 +9,7 @@ export const useAuth = () => {
   const ensureHydrated = () => auth.hydrate();
 
   const signIn = (payload: SignInPayload) => auth.signIn(payload);
-  const signInWithGoogle = (idToken: string) => auth.signInWithGoogle(idToken);
+  const signInWithGoogle = () => auth.signInWithGoogle();
   const signInWithFacebook = () => auth.signInWithFacebook();
   const requestSignupOtp = (payload: SignUpPayload) => auth.requestSignupOtp(payload);
   const verifySignupOtp = (email: string, code: string) => auth.verifySignupOtp(email, code);

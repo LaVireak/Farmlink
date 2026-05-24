@@ -174,7 +174,7 @@
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
               </svg>
-              {{ googleSubmitting ? '…' : 'Google' }}
+							{{ googleSubmitting ? 'Redirecting…' : 'Google' }}
             </button>
 
             <!-- FACEBOOK -->
@@ -192,7 +192,7 @@
           </div>
 
           <p v-if="googleError" class="feedback feedback-error">{{ googleError }}</p>
-          <p v-if="googleSubmitting" class="feedback">Google</p>
+		  <p v-if="googleSubmitting" class="feedback">Redirecting to Google...</p>
           <p v-if="facebookError" class="feedback feedback-error">{{ facebookError }}</p>
         </form>
 
@@ -210,7 +210,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { isValidEmail } from '../../utils/validation'
@@ -235,9 +235,6 @@ const googleError = ref('')
 const facebookSubmitting = ref(false)
 const facebookError = ref('')
 
-
-const googleClientId =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const form = reactive({
   email: '',
@@ -279,66 +276,19 @@ const onSubmit = async () => {
   }
 }
 
-const handleGoogleCredential = async (
-  credential?: string
-) => {
-  if (!credential) {
-    googleError.value =
-      'Google sign-in failed.'
-    return
-  }
-
+const handleGoogleClick = async () => {
   googleSubmitting.value = true
   googleError.value = ''
 
   try {
-    const result = await signInWithGoogle(
-      credential
-    )
-
-    await router.push(
-      getPostSignInRoute(result.user.role)
-    )
+    await signInWithGoogle()
   } catch (error) {
     googleError.value =
       error instanceof Error
         ? error.message
         : 'Unable to sign in with Google.'
-  } finally {
     googleSubmitting.value = false
   }
-}
-
-const googleReady = ref(false)
-
-const initializeGoogle = () => {
-  const google = (window as any).google
-
-  if (!google?.accounts?.id) {
-    return false
-  }
-
-  google.accounts.id.initialize({
-    client_id: googleClientId,
-    callback: (response: {
-      credential?: string
-    }) =>
-      handleGoogleCredential(
-        response.credential
-      ),
-  })
-
-  googleReady.value = true
-  return true
-}
-
-const handleGoogleClick = () => {
-  const google = (window as any).google
-  if (!google?.accounts?.id) {
-    googleError.value = 'Google sign-in is not ready yet.'
-    return
-  }
-  google.accounts.id.prompt()
 }
 
 const handleFacebook = async () => {
@@ -361,33 +311,6 @@ const handleFacebook = async () => {
   }
 }
 
-onMounted(() => {
-  if (!googleClientId) {
-    googleError.value =
-      'Google sign-in is not configured.'
-    return
-  }
-
-  let attempts = 0
-
-  const tryInit = () => {
-    attempts++
-
-    if (initializeGoogle()) {
-      return
-    }
-
-    if (attempts >= 20) {
-      googleError.value =
-        'Google sign-in failed to load.'
-      return
-    }
-
-    setTimeout(tryInit, 300)
-  }
-
-  tryInit()
-})
 </script>
 
 <style scoped>
