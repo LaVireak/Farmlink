@@ -4,10 +4,8 @@
     <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-3xl font-bold text-green-800">Your Cart</h1>
-        <p class="text-sm text-gray-500">
-          {{ totalItems }} ITEMS READY FOR HARVEST
-        </p>
+        <h1 class="text-3xl font-bold text-green-800">{{ t('cart.title') }}</h1>
+        <p class="text-sm text-gray-500">{{ t('cart.subtitle', { count: totalItems }) }}</p>
       </div>
 
       <!-- Progress Steps -->
@@ -79,22 +77,16 @@
           </div>
 
           <!-- Continue Shopping -->
-           <button class="mt-6 bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
-              Continue Shopping
-            </NuxtLink>
+          <button class="mt-6 bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition">
+            <NuxtLink to="/user/checkout/address" class="text-white no-underline">{{ t('cart.continueShopping') }}</NuxtLink>
           </button>
           
 
           <!-- Recommendations -->
           <div class="mt-10">
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-semibold text-green-800">
-                Goes well with your cart
-              </h2>
-              <a href="#" class="text-sm text-green-700">
-                VIEW ALL STAPLES
-              </a>
+              <h2 class="text-xl font-semibold text-green-800">{{ t('cart.recommendations') }}</h2>
+              <a href="#" class="text-sm text-green-700">{{ t('cart.viewAll') }}</a>
             </div>
 
             <div class="flex gap-4 overflow-x-auto pb-2">
@@ -109,11 +101,7 @@
                 <p class="text-green-700 font-semibold">
                   ${{ rec.price.toFixed(2) }}
                 </p>
-                <button
-                  class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition"
-                >
-                  Add to Cart
-                </button>
+                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">{{ t('cart.addToCart') }}</button>
               </div>
             </div>
           </div>
@@ -121,15 +109,15 @@
 
         <!-- Order Summary -->
         <div class="bg-white p-6 rounded-xl shadow-md h-fit">
-          <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+          <h2 class="text-lg font-semibold mb-4">{{ t('cart.title') }}</h2>
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
-              <span>Subtotal</span>
+              <span>{{ t('cart.subtotal') }}</span>
               <span>${{ subtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between">
-              <span>Delivery Fee</span>
+              <span>{{ t('cart.deliveryFee') }}</span>
               <span>${{ deliveryFee.toFixed(2) }}</span>
             </div>
           </div>
@@ -140,19 +128,12 @@
           </div>
 
           <button class="w-full mt-6 bg-green-700 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/address" class="text-white no-underline">
-              Proceed to Checkout
-            </NuxtLink>
+            <NuxtLink to="/user/checkout/address" class="text-white no-underline">{{ t('cart.proceedToCheckout') }}</NuxtLink>
           </button>
 
-          <p class="text-xs text-gray-500 mt-4">
-            Harvesting and delivery typically takes 24–48 hours.
-            By proceeding, you agree to our terms.
-          </p>
+          <p class="text-xs text-gray-500 mt-4">{{ t('cart.harvestNotice') }}</p>
 
-          <div class="flex items-center gap-2 mt-4 text-sm text-green-700">
-            🌱 Carbon Neutral Delivery
-          </div>
+          <div class="flex items-center gap-2 mt-4 text-sm text-green-700">{{ t('cart.carbon') }}</div>
         </div>
       </div>
     </div>
@@ -163,12 +144,8 @@
 
 <script setup lang="ts">
 import { useCart } from '@/composables/useCart';
-
-definePageMeta({
-  middleware: 'user',
-  layout: 'user',
-});
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const{  
   cart,
   recommendations,
