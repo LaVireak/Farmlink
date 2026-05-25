@@ -1,5 +1,4 @@
 <template>
-  <CommonAppHeader />
 
   <div class="favorites-page">
 
@@ -7,9 +6,9 @@
     <section class="fav-banner">
       <div class="banner-overlay"></div>
       <div class="banner-content">
-        <span class="banner-pill">❤️ MY WISHLIST</span>
-        <h1>Your Saved Harvest</h1>
-        <p>Products you've loved — ready to add to your cart whenever you are.</p>
+        <span class="banner-pill">{{ t('favorites.banner.pill') }}</span>
+        <h1>{{ t('favorites.title') }}</h1>
+        <p>{{ t('favorites.subtitle') }}</p>
       </div>
     </section>
 
@@ -17,17 +16,17 @@
     <section class="py-8 px-6">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 class="text-3xl font-bold text-[#154212]">My Favorites</h2>
-          <p class="text-gray-500 mt-1">{{ favorites.length }} item{{ favorites.length !== 1 ? 's' : '' }} saved</p>
+          <h2 class="text-3xl font-bold text-[#154212]">{{ t('favorites.title') }}</h2>
+          <p class="text-gray-500 mt-1">{{ favorites.length }} {{ t('favorites.saved') }}</p>
         </div>
 
         <!-- Sort + Clear -->
         <div class="flex items-center gap-3">
           <select v-model="sortBy" class="sort-select">
-            <option value="default">Sort: Default</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="name">Name A-Z</option>
+            <option value="default">{{ t('favorites.sort.default') }}</option>
+            <option value="price-low">{{ t('favorites.sort.priceLow') }}</option>
+            <option value="price-high">{{ t('favorites.sort.priceHigh') }}</option>
+            <option value="name">{{ t('favorites.sort.name') }}</option>
           </select>
           <button
             v-if="favorites.length > 0"
@@ -37,7 +36,7 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
             </svg>
-            Clear All
+            {{ t('favorites.clearAll') }}
           </button>
         </div>
       </div>
@@ -53,10 +52,10 @@
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
         </div>
-        <h3>No favorites yet</h3>
-        <p>Browse our fresh produce and tap the heart icon to save items here.</p>
+        <h3>{{ t('favorites.empty.title') }}</h3>
+        <p>{{ t('favorites.empty.subtitle') }}</p>
         <NuxtLink to="/user/products" class="browse-btn">
-          Browse Products
+          {{ t('favorites.browse') }}
         </NuxtLink>
       </div>
 
@@ -125,7 +124,7 @@
       <div v-if="favorites.length > 0" class="keep-shopping">
         <NuxtLink to="/user/products" class="keep-shopping-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
-          Continue browsing products
+          {{ t('favorites.continue') }}
         </NuxtLink>
       </div>
 
@@ -142,17 +141,15 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'user',
-  layout: 'user',
-});
-
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n'
 
 useHead({
   title: 'My Favorites | FarmLink Cambodia',
   meta: [{ name: 'description', content: 'Your saved favorite products from local Cambodian farms.' }],
 });
+
+const { t } = useI18n()
 
 const sortBy = ref('default');
 const toastVisible = ref(false);
@@ -266,18 +263,18 @@ const sortedFavorites = computed(() => {
 // --- Actions ---
 function removeFavorite(id: number) {
   favorites.value = favorites.value.filter(f => f.id !== id);
-  showToast('Removed from favorites');
+  showToast(t('favorites.removed'));
 }
 
 function clearAll() {
   favorites.value = [];
-  showToast('All favorites cleared');
+  showToast(t('favorites.cleared'));
 }
 
 function addToCart(item: any) {
   // TODO: connect to cart store
   favorites.value = favorites.value.filter(f => f.id !== item.id);
-  showToast(`${item.name} added to cart!`);
+  showToast(t('favorites.addedToCart', { name: item.name }));
 }
 
 function showToast(msg: string) {
