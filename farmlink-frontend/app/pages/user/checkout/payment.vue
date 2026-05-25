@@ -263,7 +263,7 @@ async function processPayment() {
   } else {
     // Send the paymentMethod.id to our NestJS backend to actually charge the card!
     try {
-      const response = await fetch('http://localhost:3001/stripe/charge', {
+      const response = await fetch('http://localhost:3001/api/stripe/charge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
