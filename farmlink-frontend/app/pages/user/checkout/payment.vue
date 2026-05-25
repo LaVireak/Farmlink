@@ -167,11 +167,6 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
 
-definePageMeta({
-  middleware: 'user',
-  layout: 'user',
-});
-
 const config = useRuntimeConfig();
 
 const form = reactive({
@@ -263,7 +258,7 @@ async function processPayment() {
   } else {
     // Send the paymentMethod.id to our NestJS backend to actually charge the card!
     try {
-      const response = await fetch('http://localhost:3001/api/stripe/charge', {
+      const response = await fetch('http://localhost:3001/stripe/charge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

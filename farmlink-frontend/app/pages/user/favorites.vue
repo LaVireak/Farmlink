@@ -1,5 +1,5 @@
 <template>
-
+  <CommonAppHeader />
   <div class="favorites-page">
 
     <!-- Hero Banner -->

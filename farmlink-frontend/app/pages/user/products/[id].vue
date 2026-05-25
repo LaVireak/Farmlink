@@ -6,18 +6,18 @@
 
       <!-- Breadcrumb -->
       <nav class="breadcrumbs">
-        <NuxtLink to="/">{{ t('common.home') }}</NuxtLink>
+        <NuxtLink to="/">Home</NuxtLink>
 
         <span class="separator">/</span>
 
         <NuxtLink to="/user/products">
-          {{ t('common.products') }}
+          Products
         </NuxtLink>
 
         <span class="separator">/</span>
 
         <span class="current">
-          {{ product?.name || t('common.loading') }}
+          {{ product?.name || 'Loading...' }}
         </span>
       </nav>
 
@@ -128,7 +128,7 @@
               @click="addToCart"
               class="add-to-cart-btn"
             >
-              {{ t('products.addToCart') }}
+              Add to Cart
             </button>
           </div>
 
@@ -177,7 +177,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import CommonAppHeader from '~/components/common/AppHeader.vue'
@@ -185,8 +184,6 @@ import CommonAppFooter from '~/components/common/AppFooter.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-
-const { t } = useI18n()
 
 const product = ref(null)
 
