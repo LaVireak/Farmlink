@@ -167,11 +167,6 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
 
-definePageMeta({
-  middleware: 'user',
-  layout: 'user',
-});
-
 const config = useRuntimeConfig();
 
 const form = reactive({

@@ -3,7 +3,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { OrdersService } from './orders.service';
 import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, UpdateOrderStatusDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
 
-@Controller('api/orders')
+@Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

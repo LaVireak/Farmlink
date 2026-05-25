@@ -11,6 +11,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
+  app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new LoggingInterceptor());
   await app.listen(process.env.PORT ?? 3000);
 }
