@@ -144,6 +144,11 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n'
 
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 useHead({
   title: 'My Favorites | FarmLink Cambodia',
   meta: [{ name: 'description', content: 'Your saved favorite products from local Cambodian farms.' }],

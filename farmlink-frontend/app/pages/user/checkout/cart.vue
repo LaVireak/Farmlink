@@ -146,6 +146,12 @@
 import { useCart } from '@/composables/useCart';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
+
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 const{  
   cart,
   recommendations,

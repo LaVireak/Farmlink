@@ -346,16 +346,66 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
     Users, X, ShieldCheck, ShieldOff, CheckCheck,
     AlertCircle, TrendingUp, ArrowLeftRight, ShoppingBag,
     UserPlus,
 } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth.store'
 
 definePageMeta({ middleware: 'admin', layout: 'admin' })
 
+const config = useRuntimeConfig()
+const baseURL = config.public.apiUrl
+const auth = useAuthStore()
+
 const allUsers = ref([])
+
+const normalizeRole = (role) => {
+    const normalized = String(role || '').toLowerCase()
+    if (normalized === 'admin') return 'Admin'
+    if (normalized === 'farmer') return 'Farmer'
+    if (normalized === 'buyer' || normalized === 'consumer') return 'Buyer'
+    return 'Buyer'
+}
+
+const normalizeStatus = (status) => ({
+    active: 'Active',
+    pending: 'Pending',
+    suspended: 'Suspended',
+    inactive: 'Banned',
+}[String(status || '').toLowerCase()] ?? 'Pending')
+
+const mapUser = (user) => {
+    const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Unknown'
+    return {
+        id: user?.id,
+        name,
+        email: user?.email ?? '—',
+        phone: user?.phoneNumber ?? '—',
+        role: normalizeRole(user?.role),
+        status: normalizeStatus(user?.status),
+        province: '—',
+        trustScore: 0,
+        orders: 0,
+        rating: 0,
+        disputes: 0,
+        joinedAt: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—',
+        createdAt: user?.createdAt,
+    }
+}
+
+const safeLower = (value) => String(value ?? '').toLowerCase()
+
+async function fetchUsers() {
+    const res = await $fetch(`${baseURL}/admin/users`, {
+        params: { take: 1000, skip: 0 },
+        headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
+    })
+    const raw = Array.isArray(res) ? res : res?.data ?? []
+    allUsers.value = raw.map(mapUser)
+}
 
 const users = computed(() => allUsers.value.filter(u => u.role === 'Buyer'))
 
@@ -380,8 +430,8 @@ const sortBy       = ref('name')
 
 const filteredUsers = computed(() => {
     let result = users.value.filter(u => {
-        const q  = searchQuery.value.toLowerCase()
-        const ms = u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        const q  = safeLower(searchQuery.value)
+        const ms = safeLower(u.name).includes(q) || safeLower(u.email).includes(q)
         const mr = !filterRole.value   || u.role   === filterRole.value
         const mv = !filterStatus.value || u.status === filterStatus.value
         const mt = !filterTrust.value  ||
@@ -401,6 +451,17 @@ const filteredUsers = computed(() => {
         }
     })
     return result
+})
+
+onMounted(async () => {
+    await auth.hydrate()
+
+    if (!auth.accessToken) {
+        await navigateTo('/auth/signin')
+        return
+    }
+
+    await fetchUsers()
 })
 
 function resetFilters() {

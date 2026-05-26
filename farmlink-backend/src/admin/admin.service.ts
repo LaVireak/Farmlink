@@ -9,6 +9,7 @@ import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { ProductStatus } from '../common/enums/product.enum';
+import { SupabaseAuthService } from '../auth/supabase-auth.service';
 
 @Injectable()
 export class AdminService {
@@ -21,6 +22,7 @@ export class AdminService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly supabaseAuth: SupabaseAuthService,
   ) { }
 
   async getDashboardStats() {
@@ -155,6 +157,8 @@ export class AdminService {
     skip?: number;
     take?: number;
   }) {
+    await this.supabaseAuth.syncUsersFromAuth();
+
     const skip = filters?.skip || 0;
     const take = filters?.take || 10;
 
@@ -302,31 +306,45 @@ export class AdminService {
     const skip = filters?.skip || 0;
     const take = filters?.take || 10;
 
-    const query = this.productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.farmer', 'farmer')
-      .leftJoinAndSelect('farmer.user', 'user');
+    const products = await this.productRepository.find({
+      relations: {
+        farmer: {
+          user: true,
+        },
+        category: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
 
-    if (filters?.status) {
-      query.andWhere('product.status = :status', { status: filters.status });
-    }
-    if (filters?.category) {
-      query.andWhere('product.category = :category', {
-        category: filters.category,
-      });
-    }
-    if (filters?.search) {
-      query.andWhere(
-        '(product.name LIKE :search OR user.firstName LIKE :search)',
-        { search: `%${filters.search}%` },
-      );
-    }
+    const filtered = products.filter((product) => {
+      if (filters?.status && product.status !== filters.status) {
+        return false;
+      }
 
-    const [data, total] = await query
-      .orderBy('product.createdAt', 'DESC')
-      .skip(skip)
-      .take(take)
-      .getManyAndCount();
+      if (filters?.category) {
+        const categoryName = product.category?.nameEn ?? product.category?.nameKm ?? '';
+        const categoryId = product.categoryId ?? '';
+        if (categoryName !== filters.category && categoryId !== filters.category) {
+          return false;
+        }
+      }
+
+      if (filters?.search) {
+        const search = filters.search.toLowerCase();
+        const productName = (product.nameEn ?? '').toLowerCase();
+        const farmerName = `${product.farmer?.user?.firstName ?? ''} ${product.farmer?.user?.lastName ?? ''}`.toLowerCase();
+        if (!productName.includes(search) && !farmerName.includes(search)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const total = filtered.length;
+    const data = filtered.slice(skip, skip + take);
 
     return { data, total, skip, take };
   }
