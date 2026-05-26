@@ -109,17 +109,52 @@ definePageMeta({
   layout: 'admin'
 })
 
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '~/stores/auth.store'
+
+const config = useRuntimeConfig()
+const baseURL = config.public.apiUrl
+const auth = useAuthStore()
+
+type TeamMember = {
+  id: string | number
+  name: string
+  email: string
+  role: string
+  joined: string
+  active: boolean
+  avatar: string
+}
 
 const showInvite = ref(false)
 
-const members = ref([
-  { id: 1, name: 'Channary Sok', email: 'channary.sok@farmlink.com', role: 'Super Admin', joined: 'Jan 12, 2024', active: true, avatar: '/images/farmer.jpg' },
-  { id: 2, name: 'dara.kim@farmlink.com', email: 'dara.kim@farmlink.com', role: 'Admin', joined: 'Feb 5, 2024', active: true, avatar: '/images/farmer.jpg' },
-  { id: 3, name: 'sothy.heng@farmlink.com', email: 'sothy.heng@farmlink.com', role: 'Moderator', joined: 'Mar 20, 2024', active: false, avatar: '/images/farmer.jpg' },
-])
+const members = ref<TeamMember[]>([])
 
 const inviteForm = ref({ name: '', email: '', role: 'Super Admin', allPermissions: false })
+
+const mapAdminUser = (user: any): TeamMember => {
+  const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Unknown'
+  return {
+    id: user?.id,
+    name,
+    email: user?.email ?? '—',
+    role: 'Admin',
+    joined: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—',
+    active: String(user?.status ?? '').toLowerCase() === 'active',
+    avatar: user?.avatarUrl ?? '/images/farmer.jpg',
+  }
+}
+
+async function fetchAdmins() {
+  const res = await $fetch(`${baseURL}/admin/users`, {
+    params: { role: 'admin', take: 1000, skip: 0 },
+    headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
+  })
+  const payload = Array.isArray(res)
+    ? res
+    : ((res as { data?: unknown[] })?.data ?? [])
+  members.value = (payload as any[]).map(mapAdminUser)
+}
 
 function openInvite() {
   showInvite.value = true
@@ -143,19 +178,30 @@ function sendInvite() {
   alert('Invite sent')
 }
 
-function editMember(id: number) {
+function editMember(id: string | number) {
   alert('Edit member ' + id)
 }
 
-function removeMember(id: number) {
+function removeMember(id: string | number) {
   members.value = members.value.filter(m => m.id !== id)
 }
 
 function roleClass(role: string) {
-  if (role === 'Super Admin') return 'bg-red-100 text-red-600'
   if (role === 'Admin') return 'bg-blue-100 text-blue-600'
+  if (role === 'Super Admin') return 'bg-red-100 text-red-600'
   if (role === 'Moderator') return 'bg-yellow-100 text-yellow-700'
   return 'bg-gray-100 text-gray-700'
 }
+
+onMounted(async () => {
+  await auth.hydrate()
+
+  if (!auth.accessToken) {
+    await navigateTo('/auth/signin')
+    return
+  }
+
+  await fetchAdmins()
+})
 
 </script>

@@ -1,23 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createClient, type SupabaseClient, type User as SupabaseUser } from '@supabase/supabase-js';
+import {
+  createClient,
+  type SupabaseClient,
+  type User as SupabaseUser,
+} from '@supabase/supabase-js';
 import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import ws from 'ws';
+import WebSocket from 'ws';
 import { User } from '../users/user.entity';
 import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
-
-let wsTransport: any = undefined;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  wsTransport = require('ws');
-} catch (err) {
-  // ws may not be installed in some environments; we'll handle at runtime
-  wsTransport = undefined as any;
-}
 
 type SupabaseMetadata = {
   role?: string;
@@ -63,15 +58,18 @@ export class SupabaseAuthService {
     this.avatarBucket =
       this.config.get<string>('SUPABASE_AVATAR_BUCKET') || 'avatars';
 
+    const realtimeTransport =
+      WebSocket as unknown as typeof globalThis.WebSocket;
+
     this.client = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
         detectSessionInUrl: false,
       },
-      // If a ws transport is available, pass it to the realtime client to avoid
-      // runtime errors on Node.js versions without native WebSocket support.
-      ...(wsTransport ? { realtime: { transport: wsTransport } } : {}),
+      realtime: {
+        transport: realtimeTransport,
+      },
     });
   }
 
@@ -112,6 +110,42 @@ export class SupabaseAuthService {
     }
 
     return this.getOrCreateLocalUser(data.user);
+  }
+
+  async syncUsersFromAuth(): Promise<number> {
+    const perPage = 1000;
+    let page = 1;
+    let total = 0;
+
+    while (true) {
+      const { data, error } = await this.client.auth.admin.listUsers({
+        page,
+        perPage,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Unable to list Supabase users');
+      }
+
+      const users = data?.users ?? [];
+      if (users.length === 0) {
+        break;
+      }
+
+      for (const user of users) {
+        await this.getOrCreateLocalUser(user);
+      }
+
+      total += users.length;
+
+      if (users.length < perPage) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return total;
   }
 
   async uploadAvatarImage(userId: string, dataUrl: string): Promise<string> {
@@ -177,15 +211,18 @@ export class SupabaseAuthService {
     supabaseUser: SupabaseUser,
   ): Promise<User> {
     const metadata = (supabaseUser.user_metadata ?? {}) as SupabaseMetadata;
-    const email = (supabaseUser.email ?? '').toLowerCase();
-
-    if (!email) {
-      throw new UnauthorizedException('Supabase user missing email');
-    }
+    const email = (supabaseUser.email ?? '').toLowerCase().trim();
+    const syntheticEmail = `no-email-${supabaseUser.id}@supabase.local`;
 
     let user = await this.users.findOne({
-      where: { email },
+      where: { id: supabaseUser.id },
     });
+
+    if (!user && email) {
+      user = await this.users.findOne({
+        where: { email },
+      });
+    }
 
     if (!user) {
       const passwordHash = await bcrypt.hash(
@@ -194,7 +231,7 @@ export class SupabaseAuthService {
       );
       user = new User();
       user.id = supabaseUser.id;
-      user.email = email;
+      user.email = email || syntheticEmail;
       user.passwordHash = passwordHash;
       user.role = this.normalizeRole(metadata.role);
       user.status = UserStatus.ACTIVE;
@@ -207,6 +244,17 @@ export class SupabaseAuthService {
     }
 
     let shouldSave = false;
+
+    if (email && user.email !== email) {
+      user.email = email;
+      shouldSave = true;
+    }
+
+    const nextRole = this.normalizeRole(metadata.role);
+    if (user.role !== nextRole) {
+      user.role = nextRole;
+      shouldSave = true;
+    }
 
     if (!user.firstName && metadata.firstName) {
       user.firstName = metadata.firstName;
