@@ -48,13 +48,12 @@ import {
 const isOpen = ref(false)
 
 const navItems = [
-  { label: 'Settings', to: '/farmer/profile', icon: Settings },
   { label: 'Dashboard', to: '/farmer/dashboard', icon: LayoutGrid },
   { label: 'Orders', to: '/farmer/orders', icon: ShoppingCart },
   { label: 'Products', to: '/farmer/products', icon: Box },
-  { label: 'Guild Book', to: '/farmer/guildbook', icon: Book },
   { label: 'Chat', to: '/farmer/chat', icon: MessageSquare },
-  //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
+  { label: 'Guild Book', to: '/farmer/guildbook', icon: Book },
+  { label: 'Settings', to: '/farmer/profile', icon: Settings },
 ]
 </script>
 

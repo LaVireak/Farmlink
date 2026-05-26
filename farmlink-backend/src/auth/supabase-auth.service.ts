@@ -9,6 +9,7 @@ import ws from 'ws';
 import { User } from '../users/user.entity';
 import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
+import type { AdminUserAttributes } from '@supabase/supabase-js'
 
 let wsTransport: any = undefined;
 try {
