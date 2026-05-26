@@ -3,7 +3,7 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import { useChat } from '~/composables/useChat';
 import { useAuth } from '~/composables/useAuth';
 
-definePageMeta({ layout: 'user' });
+definePageMeta({ layout: 'user', middleware: 'user' });
 useHead({ title: 'Chat with Farmers | FarmLink Cambodia' });
 
 const chat = useChat();

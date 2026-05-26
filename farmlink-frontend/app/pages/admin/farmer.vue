@@ -493,7 +493,7 @@ import {
 } from 'lucide-vue-next'
 import AdminFarmerTable from '~/components/admin/AdminFarmerTable.vue'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: 'admin', middleware: 'admin',})
 
 const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl

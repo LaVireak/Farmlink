@@ -1,11 +1,232 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { useAuthStore } from '../../../stores/auth.store';
+import { getAccessToken } from '../../../services/auth.service';
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 definePageMeta({
+	middleware: 'user',
 	layout: 'user',
 });
 
 useHead({
 	title: 'Profile Overview | FarmLink Cambodia',
+});
+
+const config = useRuntimeConfig();
+const auth = useAuthStore();
+const profile = ref<{
+	id: string;
+	email: string;
+	firstName?: string | null;
+	lastName?: string | null;
+	role?: string;
+	avatarUrl?: string | null;
+	createdAt?: string | null;
+} | null>(null);
+
+const statsLoading = ref(true);
+const totalOrders = ref<number | null>(null);
+const savedProducts = ref<number | null>(null);
+const activeShipments = ref<number | null>(null);
+
+const notificationPreferenceKey = 'farmlink.user.settings.notifications';
+
+type NotificationKey = 'orderUpdates' | 'priceAlerts' | 'marketNews';
+
+const notificationItems: Array<{
+	key: NotificationKey;
+	title: string;
+	description: string;
+}> = [
+	{ key: 'orderUpdates', title: 'Order Updates', description: 'Fresh deliveries tracking' },
+	{ key: 'priceAlerts', title: 'Price Alerts', description: 'Seasonal drops alerts' },
+	{ key: 'marketNews', title: 'Market News', description: 'Weekly farmer insights' },
+];
+
+const notificationPreferences = ref<Record<NotificationKey, boolean>>({
+	orderUpdates: true,
+	priceAlerts: true,
+	marketNews: false,
+});
+
+onMounted(() => {
+	void initializeProfileOverview();
+});
+
+const currentUser = computed(() => {
+	if (profile.value) {
+		return {
+			...profile.value,
+			...auth.user,
+		};
+	}
+
+	return auth.user;
+});
+
+const profileStorageKey = computed(() => `${notificationPreferenceKey}.${currentUser.value?.id ?? 'guest'}`);
+
+const user = computed(() => currentUser.value);
+
+const loadStoredNotificationPreferences = () => {
+	if (typeof window === 'undefined') return;
+	const raw = localStorage.getItem(profileStorageKey.value);
+	if (!raw) return;
+
+	try {
+		const parsed = JSON.parse(raw) as Partial<Record<NotificationKey, boolean>>;
+		notificationPreferences.value = {
+			orderUpdates: parsed.orderUpdates ?? true,
+			priceAlerts: parsed.priceAlerts ?? true,
+			marketNews: parsed.marketNews ?? false,
+		};
+	} catch {
+		localStorage.removeItem(profileStorageKey.value);
+	}
+};
+
+const persistNotificationPreferences = () => {
+	if (typeof window === 'undefined') return;
+	localStorage.setItem(profileStorageKey.value, JSON.stringify(notificationPreferences.value));
+};
+
+const toggleNotificationPreference = (key: NotificationKey) => {
+	notificationPreferences.value = {
+		...notificationPreferences.value,
+		[key]: !notificationPreferences.value[key],
+	};
+	persistNotificationPreferences();
+};
+
+const formatCount = (value: number | null) => new Intl.NumberFormat('en-US').format(value ?? 0);
+
+const getAuthHeaders = async () => {
+	const accessToken = await getAccessToken();
+	return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+};
+
+const loadProfileData = async () => {
+	try {
+		const headers = await getAuthHeaders();
+		const response = await fetch(`${config.public.apiUrl}/users/profile`, { headers });
+		if (!response.ok) return;
+
+		const data = await response.json().catch(() => null);
+		if (data?.id && data?.email) {
+			profile.value = data;
+		}
+	} catch {
+		return;
+	}
+};
+
+const loadQuickStatistics = async () => {
+	const currentId = currentUser.value?.id;
+	if (!currentId) {
+		totalOrders.value = 0;
+		savedProducts.value = 0;
+		activeShipments.value = 0;
+		statsLoading.value = false;
+		return;
+	}
+
+	statsLoading.value = true;
+
+	try {
+		const headers = await getAuthHeaders();
+
+		const [ordersResponse, savedProductsResponse] = await Promise.all([
+			fetch(`/api/orders/consumer/${currentId}?page=1&limit=1000`, { headers }),
+			fetch(`/api/users/${currentId}/favorites/products`, { headers }),
+		]);
+
+		if (ordersResponse.ok) {
+			const ordersData = await ordersResponse.json().catch(() => null);
+			const orders = Array.isArray(ordersData?.data) ? ordersData.data : [];
+			totalOrders.value = typeof ordersData?.total === 'number' ? ordersData.total : orders.length;
+			activeShipments.value = orders.filter((order: { status?: string }) => {
+				const status = String(order.status ?? '').toLowerCase();
+				return ['pending', 'confirmed', 'preparing', 'in_delivery'].includes(status);
+			}).length;
+		} else {
+			totalOrders.value = 0;
+			activeShipments.value = 0;
+		}
+
+		if (savedProductsResponse.ok) {
+			const savedProductsData = await savedProductsResponse.json().catch(() => null);
+			savedProducts.value = Array.isArray(savedProductsData) ? savedProductsData.length : Array.isArray(savedProductsData?.data) ? savedProductsData.data.length : 0;
+		} else {
+			savedProducts.value = 0;
+		}
+	} catch {
+		totalOrders.value = 0;
+		savedProducts.value = 0;
+		activeShipments.value = 0;
+	} finally {
+		statsLoading.value = false;
+	}
+};
+
+const initializeProfileOverview = async () => {
+	await auth.hydrate();
+	await loadProfileData();
+	loadStoredNotificationPreferences();
+	await loadQuickStatistics();
+};
+
+const displayName = computed(() => {
+	if (!auth.hydrated) return 'Loading profile...';
+
+	if (!user.value) return 'No profile found';
+
+	const firstName = user.value.firstName?.trim() ?? '';
+	const lastName = user.value.lastName?.trim() ?? user.value.lastname?.trim() ?? '';
+	return [firstName, lastName].filter(Boolean).join(' ') || user.value.email;
+});
+
+const displayEmail = computed(() => {
+	if (!auth.hydrated) return 'Loading email...';
+	return user.value?.email ?? 'No email on file';
+});
+
+const displayRole = computed(() => {
+	if (!auth.hydrated) return 'Loading account type...';
+
+	switch (user.value?.role) {
+		case 'admin':
+			return 'Admin Account';
+		case 'farmer':
+			return 'Farmer Account';
+		case 'consumer':
+			return 'Customer Account';
+		default:
+			return 'Account';
+	}
+});
+
+const avatarInitials = computed(() => {
+	if (!user.value) return 'FM';
+	const firstName = user.value.firstName?.trim() ?? '';
+	const lastName = user.value.lastName?.trim() ?? user.value.lastname?.trim() ?? '';
+	const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.trim();
+	if (initials) return initials.toUpperCase();
+	return user.value.email.slice(0, 2).toUpperCase() || 'FM';
+});
+
+const avatarUrl = computed(() => user.value?.avatarUrl ?? '');
+
+const memberSince = computed(() => {
+	if (!auth.hydrated) return 'Loading date...';
+	if (!user.value?.createdAt) return 'Not available';
+
+	const createdAt = new Date(user.value.createdAt);
+	if (Number.isNaN(createdAt.getTime())) return 'Not available';
+
+	return new Intl.DateTimeFormat('en-US', {
+		month: 'long',
+		year: 'numeric',
+	}).format(createdAt);
 });
 </script>
 
@@ -27,32 +248,29 @@ useHead({
 						<section class="xl:col-span-8 space-y-8">
 							<div class="bg-white p-5 sm:p-8 rounded-2xl border border-zinc-100 shadow-sm flex flex-col md:flex-row gap-8 items-center md:items-start">
 								<div class="relative shrink-0">
-									<div class="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-4 border-[#fbf9f6] shadow-lg">
-										<img
-											src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfJPIP46m2uRjQOOpIBiadImhVQdU9Dbb-4izWzGm6WuwKu1lpUvd5QSJO1aA1CkPRf263rAyyc34Abx0mBy9XwXscHVFeJy13CGLy2GgJ9V64Khs93UXU0flXRlbqe1FUR5GyNaxVjgUwhrsSqHMnZyxbqGYEa9KWhBQATBWJi1I1ELik_TaeYp4H3rs5YpW7YJNuCGUXxeQ7qOIyceTpk1MzAKlv4kY9TM8SsCAHJAta-uEkMC7Y67kv2S1kxMiaXudOuWMHfsI"
-											alt="Profile portrait"
-											class="w-full h-full object-cover"
-										/>
+									<div class="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-4 border-[#fbf9f6] shadow-lg bg-gradient-to-br from-[#154212] via-[#1f7a2e] to-[#006e1c] flex items-center justify-center text-white">
+										<img v-if="avatarUrl" :src="avatarUrl" alt="Profile avatar" class="w-full h-full object-cover" />
+										<span v-else class="text-3xl sm:text-4xl font-black font-[Manrope,sans-serif] tracking-tight">{{ avatarInitials }}</span>
 									</div>
-									<span class="absolute -bottom-2 -right-2 bg-[#006e1c] text-white text-[10px] font-black px-3 py-1 rounded-full">PREMIUM</span>
+									<span class="absolute -bottom-2 -right-2 bg-[#006e1c] text-white text-[10px] font-black px-3 py-1 rounded-full">{{ displayRole }}</span>
 								</div>
 
 								<div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-y-7">
 									<div>
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest mb-1">Full Name</p>
-										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">Sophal Saman</p>
+										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">{{ displayName }}</p>
 									</div>
 									<div>
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest mb-1">Email Address</p>
-										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif] break-all">soman.sophal@farm.kh</p>
+										<p class="truncate text-xl font-bold text-[#154212] font-[Manrope,sans-serif] whitespace-nowrap">{{ displayEmail }}</p>
 									</div>
 									<div>
-										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest mb-1">Phone Number</p>
-										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">+855 12 345 678</p>
+										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest mb-1">Account Type</p>
+										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">{{ displayRole }}</p>
 									</div>
 									<div>
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest mb-1">Member Since</p>
-										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">October 2023</p>
+										<p class="text-xl font-bold text-[#154212] font-[Manrope,sans-serif]">{{ memberSince }}</p>
 									</div>
 								</div>
 							</div>
@@ -63,7 +281,7 @@ useHead({
 									<article class="bg-white p-5 rounded-2xl border border-zinc-100">
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest">Total Orders</p>
 										<div class="flex items-end gap-2 mt-2">
-											<p class="text-3xl font-black text-[#154212] font-[Manrope,sans-serif]">580</p>
+											<p class="text-3xl font-black text-[#154212] font-[Manrope,sans-serif]">{{ statsLoading ? '...' : formatCount(totalOrders) }}</p>
 											<span class="material-symbols-outlined text-[#006e1c] mb-1">shopping_bag</span>
 										</div>
 									</article>
@@ -71,7 +289,7 @@ useHead({
 									<article class="bg-white p-5 rounded-2xl border border-zinc-100">
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest">Saved Products</p>
 										<div class="flex items-end gap-2 mt-2">
-											<p class="text-3xl font-black text-[#154212] font-[Manrope,sans-serif]">40</p>
+											<p class="text-3xl font-black text-[#154212] font-[Manrope,sans-serif]">{{ statsLoading ? '...' : formatCount(savedProducts) }}</p>
 											<span class="material-symbols-outlined text-[#006e1c] mb-1">bookmark</span>
 										</div>
 									</article>
@@ -79,7 +297,7 @@ useHead({
 									<article class="bg-white p-5 rounded-2xl border border-zinc-100">
 										<p class="text-[10px] font-extrabold text-zinc-500 uppercase tracking-widest">Active Shipments</p>
 										<div class="flex items-end gap-2 mt-2">
-											<p class="text-3xl font-black text-zinc-400 font-[Manrope,sans-serif]">0</p>
+											<p class="text-3xl font-black text-zinc-400 font-[Manrope,sans-serif]">{{ statsLoading ? '...' : formatCount(activeShipments) }}</p>
 											<span class="material-symbols-outlined text-zinc-400 mb-1">local_shipping</span>
 										</div>
 									</article>
@@ -91,34 +309,24 @@ useHead({
 							<div class="bg-white p-6 rounded-2xl border border-zinc-100 shadow-sm">
 								<h3 class="text-xl font-extrabold font-[Manrope,sans-serif] text-[#154212] mb-6">Notifications</h3>
 								<div class="space-y-6">
-									<div class="flex items-center justify-between">
+									<div v-for="item in notificationItems" :key="item.key" class="flex items-center justify-between gap-4">
 										<div>
-											<p class="text-sm font-bold text-[#154212]">Order Updates</p>
-											<p class="text-[11px] text-zinc-500">Fresh deliveries tracking</p>
+											<p class="text-sm font-bold text-[#154212]">{{ item.title }}</p>
+											<p class="text-[11px] text-zinc-500">{{ item.description }}</p>
 										</div>
-										<div class="w-12 h-6 rounded-full bg-[#006e1c] relative">
-											<div class="w-4 h-4 rounded-full bg-white absolute right-1 top-1" />
-										</div>
-									</div>
-
-									<div class="flex items-center justify-between">
-										<div>
-											<p class="text-sm font-bold text-[#154212]">Price Alerts</p>
-											<p class="text-[11px] text-zinc-500">Seasonal drops alerts</p>
-										</div>
-										<div class="w-12 h-6 rounded-full bg-[#006e1c] relative">
-											<div class="w-4 h-4 rounded-full bg-white absolute right-1 top-1" />
-										</div>
-									</div>
-
-									<div class="flex items-center justify-between opacity-60">
-										<div>
-											<p class="text-sm font-bold text-[#154212]">Market News</p>
-											<p class="text-[11px] text-zinc-500">Weekly farmer insights</p>
-										</div>
-										<div class="w-12 h-6 rounded-full bg-zinc-200 relative">
-											<div class="w-4 h-4 rounded-full bg-white absolute left-1 top-1" />
-										</div>
+										<button
+											type="button"
+											role="switch"
+											:aria-checked="notificationPreferences[item.key]"
+											@click="toggleNotificationPreference(item.key)"
+											class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors duration-200"
+											:class="notificationPreferences[item.key] ? 'bg-[#006e1c]' : 'bg-zinc-200'"
+										>
+											<span
+												class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200"
+												:class="notificationPreferences[item.key] ? 'translate-x-7' : 'translate-x-1'"
+											/>
+										</button>
 									</div>
 								</div>
 							</div>

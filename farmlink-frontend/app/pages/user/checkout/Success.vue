@@ -8,22 +8,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-4xl font-extrabold text-[#0a4d1e] mb-3 tracking-tight">
-          Harvest Success!
-        </h1>
-        <p class="text-gray-600 text-lg">
-          Thank you, <span class="font-semibold">{{ customerName }}</span>! Your order 
-          <span class="bg-[#e8f5e9] px-2 py-0.5 rounded text-[#2e7d32] font-mono">#FL-8821</span> 
-          is being prepared by our local farmers.
-        </p>
+        <h1 class="text-4xl font-extrabold text-[#0a4d1e] mb-3 tracking-tight">{{ t('success.title') }}</h1>
+        <p class="text-gray-600 text-lg">{{ t('success.thanks', { name: customerName, orderId: '#FL-8821' }) }}</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         
         <div class="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold text-[#0a4d1e]">Your Harvest</h2>
-            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ items.length }} Items</span>
+            <h2 class="text-xl font-bold text-[#0a4d1e]">{{ t('success.yourHarvest') }}</h2>
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ items.length }} {{ t('success.items') }}</span>
           </div>
 
           <div class="space-y-6">
@@ -43,15 +37,15 @@
 
           <div class="space-y-3 text-sm">
             <div class="flex justify-between text-gray-500">
-              <span>Subtotal</span>
+              <span>{{ t('success.subtotal') }}</span>
               <span>$7.75</span>
             </div>
             <div class="flex justify-between text-gray-500">
-              <span>Delivery Fee</span>
+              <span>{{ t('success.deliveryFee') }}</span>
               <span>$2.00</span>
             </div>
             <div class="flex justify-between text-xl font-extrabold text-[#0a4d1e] pt-2">
-              <span>Total Paid</span>
+              <span>{{ t('success.totalPaid') }}</span>
               <span>$9.75</span>
             </div>
           </div>
@@ -93,13 +87,8 @@
           </div>
 
           <div class="flex flex-col items-center gap-4">
-            <button class="w-full bg-[#0a4d1e] text-white py-4 rounded-full font-bold hover:bg-[#083d18] transition-colors flex items-center justify-center gap-2 group">
-              Track Your Harvest
-              <span class="group-hover:translate-x-1 transition-transform">→</span>
-            </button>
-            <NuxtLink to="/" class="text-[#0a4d1e] font-bold text-sm hover:underline decoration-2">
-              Return to Market
-            </NuxtLink>
+            <button class="w-full bg-[#0a4d1e] text-white py-4 rounded-full font-bold hover:bg-[#083d18] transition-colors flex items-center justify-center gap-2 group">{{ t('success.track') }} <span class="group-hover:translate-x-1 transition-transform">→</span></button>
+            <NuxtLink to="/" class="text-[#0a4d1e] font-bold text-sm hover:underline decoration-2">{{ t('success.return') }}</NuxtLink>
           </div>
         </div>
       </div>
@@ -122,6 +111,15 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 const customerName = ref('Johnathan')
 
 const items = ref([

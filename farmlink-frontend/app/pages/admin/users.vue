@@ -353,7 +353,7 @@ import {
     UserPlus,
 } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 
 const allUsers = ref([])
 

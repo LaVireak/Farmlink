@@ -237,7 +237,7 @@ ChartJS.register(
     CategoryScale, LinearScale,
 )
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 

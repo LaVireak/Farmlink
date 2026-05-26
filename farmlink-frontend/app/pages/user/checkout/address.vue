@@ -176,6 +176,11 @@
 import { ref, computed, h, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
+
 useHead({
   title: 'Select Address | FarmLink Checkout'
 });

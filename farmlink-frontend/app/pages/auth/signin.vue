@@ -94,23 +94,35 @@
 
           <!-- PASSWORD -->
           <div class="field">
-            <div class="password-row">
-              <label>Password</label>
+            <label>Password</label>
 
-              <NuxtLink
-                to="/auth/forgot-password"
-                class="forgot-link"
+            <div class="input-wrap">
+              <input
+                v-model="form.password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                class="eye-btn"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                @click="showPassword = !showPassword"
               >
+                <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="forgot-row">
+              <NuxtLink to="/auth/forgot-password" class="forgot-link">
                 Forgot password?
               </NuxtLink>
             </div>
-
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="Enter your password"
-              required
-            />
           </div>
 
           <!-- REMEMBER -->
@@ -147,27 +159,41 @@
             <span></span>
           </div>
 
-          <!-- GOOGLE -->
-          <div class="social-stack">
-            <div
-              ref="googleButton"
-              class="google-slot"
-            ></div>
-
-            <p
-              v-if="googleSubmitting"
-              class="feedback"
+          <!-- SOCIAL BUTTONS -->
+          <div class="social-row">
+            <!-- GOOGLE -->
+            <button
+              type="button"
+              class="social-btn"
+              :disabled="googleSubmitting"
+              @click="handleGoogleClick"
             >
-              Signing in with Google...
-            </p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+							{{ googleSubmitting ? 'Redirecting…' : 'Google' }}
+            </button>
 
-            <p
-              v-if="googleError"
-              class="feedback feedback-error"
+            <!-- FACEBOOK -->
+            <button
+              type="button"
+              class="social-btn facebook-btn"
+              :disabled="facebookSubmitting"
+              @click="handleFacebook"
             >
-              {{ googleError }}
-            </p>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#1877F2" aria-hidden="true">
+                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+              </svg>
+              {{ facebookSubmitting ? 'Redirecting…' : 'Facebook' }}
+            </button>
           </div>
+
+          <p v-if="googleError" class="feedback feedback-error">{{ googleError }}</p>
+		  <p v-if="googleSubmitting" class="feedback">Redirecting to Google...</p>
+          <p v-if="facebookError" class="feedback feedback-error">{{ facebookError }}</p>
         </form>
 
         <!-- FOOTER -->
@@ -184,16 +210,19 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import { isValidEmail } from '../../utils/validation'
+
+const showPassword = ref(false)
 
 const router = useRouter()
 
 const {
   signIn,
   signInWithGoogle,
+  signInWithFacebook,
   getPostSignInRoute,
 } = useAuth()
 
@@ -203,10 +232,9 @@ const errorMessage = ref('')
 const googleSubmitting = ref(false)
 const googleError = ref('')
 
-const googleButton = ref<HTMLDivElement | null>(null)
+const facebookSubmitting = ref(false)
+const facebookError = ref('')
 
-const googleClientId =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const form = reactive({
   email: '',
@@ -248,98 +276,41 @@ const onSubmit = async () => {
   }
 }
 
-const handleGoogleCredential = async (
-  credential?: string
-) => {
-  if (!credential) {
-    googleError.value =
-      'Google sign-in failed.'
-    return
-  }
-
+const handleGoogleClick = async () => {
   googleSubmitting.value = true
   googleError.value = ''
 
   try {
-    const result = await signInWithGoogle(
-      credential
-    )
-
-    await router.push(
-      getPostSignInRoute(result.user.role)
-    )
+    await signInWithGoogle()
   } catch (error) {
     googleError.value =
       error instanceof Error
         ? error.message
         : 'Unable to sign in with Google.'
-  } finally {
     googleSubmitting.value = false
   }
 }
 
-const initializeGoogle = () => {
-  if (!googleButton.value) return false
+const handleFacebook = async () => {
+  console.log('[Facebook Login] Button clicked — starting Facebook OAuth flow')
+  facebookSubmitting.value = true
+  facebookError.value = ''
 
-  const google = (window as any).google
-
-  if (!google?.accounts?.id) {
-    return false
+  try {
+    console.log('[Facebook Login] Calling signInWithFacebook()...')
+    await signInWithFacebook()
+    // If we reach here without an error, Supabase is redirecting the browser.
+    console.log('[Facebook Login] signInWithFacebook() resolved — browser should be redirecting now')
+  } catch (error) {
+    console.error('[Facebook Login] Error caught in handleFacebook:', error)
+    facebookError.value =
+      error instanceof Error
+        ? error.message
+        : 'Unable to sign in with Facebook.'
+    facebookSubmitting.value = false
   }
-
-  google.accounts.id.initialize({
-    client_id: googleClientId,
-    callback: (response: {
-      credential?: string
-    }) =>
-      handleGoogleCredential(
-        response.credential
-      ),
-  })
-
-  googleButton.value.innerHTML = ''
-
-  google.accounts.id.renderButton(
-    googleButton.value,
-    {
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      width: 320,
-      text: 'signin_with',
-    }
-  )
-
-  return true
 }
 
-onMounted(() => {
-  if (!googleClientId) {
-    googleError.value =
-      'Google sign-in is not configured.'
-    return
-  }
-
-  let attempts = 0
-
-  const tryInit = () => {
-    attempts++
-
-    if (initializeGoogle()) {
-      return
-    }
-
-    if (attempts >= 20) {
-      googleError.value =
-        'Google sign-in failed to load.'
-      return
-    }
-
-    setTimeout(tryInit, 300)
-  }
-
-  tryInit()
-})
 </script>
 
 <style scoped>
@@ -540,12 +511,6 @@ onMounted(() => {
 	gap: 8px;
 }
 
-.password-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
 .field label {
 	font-size: 12px;
 	font-weight: 700;
@@ -567,8 +532,56 @@ onMounted(() => {
 
 .field input:focus {
 	border-color: rgba(22,101,52,0.4);
-	box-shadow:
-		0 0 0 4px rgba(22,101,52,0.08);
+	box-shadow: 0 0 0 4px rgba(22,101,52,0.08);
+}
+
+.input-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.input-wrap input {
+	width: 100%;
+	height: 52px;
+	padding: 0 50px 0 16px;
+	border-radius: 16px;
+	border: 1px solid rgba(15,23,42,0.08);
+	background: rgba(255,255,255,0.8);
+	outline: none;
+	transition: all 0.2s ease;
+}
+
+.input-wrap input:focus {
+	border-color: rgba(22,101,52,0.4);
+	box-shadow: 0 0 0 4px rgba(22,101,52,0.08);
+}
+
+.eye-btn {
+	position: absolute;
+	right: 14px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border: none;
+	background: transparent;
+	color: #94a3b8;
+	cursor: pointer;
+	border-radius: 8px;
+	transition: color 0.15s ease;
+	padding: 0;
+}
+
+.eye-btn:hover {
+	color: #475569;
+}
+
+.forgot-row {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 2px;
 }
 
 .policy-check {
@@ -672,15 +685,41 @@ onMounted(() => {
 	white-space: nowrap;
 }
 
-.social-stack {
+.social-row {
 	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: 10px;
 }
 
-.google-slot {
+.social-btn {
 	display: flex;
+	align-items: center;
 	justify-content: center;
-	min-height: 44px;
+	gap: 8px;
+	height: 48px;
+	padding: 0 14px;
+	border-radius: 999px;
+	border: 1px solid rgba(15, 23, 42, 0.12);
+	background: rgba(255, 255, 255, 0.9);
+	color: #3c4043;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.social-btn:hover:not(:disabled) {
+	background: #f8fafc;
+	box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+	transform: translateY(-1px);
+}
+
+.social-btn:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
 }
 
 .footer-copy {

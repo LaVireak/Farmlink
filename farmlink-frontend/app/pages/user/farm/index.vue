@@ -4,30 +4,30 @@
     <section class="promo-banner">
       <div class="banner-overlay"></div>
       <div class="banner-content">
-        <span class="banner-pill">🌿 FRESH PICKS</span>
-        <h1>Farm Fresh Produce</h1>
-        <p>Harvested daily from local Cambodian farms — delivered straight to your table.</p>
+        <span class="banner-pill">{{ t('farm.banner.pill') }}</span>
+        <h1>{{ t('farm.banner.title') }}</h1>
+        <p>{{ t('farm.banner.subtitle') }}</p>
       </div>
     </section>
     <section class="py-8 px-4">
     <div class="text-center">
-        <h1 class="text-3xl font-bold">Browse Our Farms</h1>
-        <p class="text-gray-600 mt-2">Fresh items directly from local farms</p>
+        <h1 class="text-3xl font-bold">{{ t('farm.intro.title') }}</h1>
+        <p class="text-gray-600 mt-2">{{ t('farm.intro.subtitle') }}</p>
       </div>
       </section>
 <div class="products-layout">
     <aside class="filter-sidebar">
 
         <div class="filter-section">
-          <h3 class="filter-title">Province</h3>
+          <h3 class="filter-title">{{ t('farm.filter.province') }}</h3>
           <select v-model="province" class="filter-select">
-            <option value="All">All Provinces</option>
+            <option value="All">{{ t('farm.filter.allProvinces') }}</option>
             <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
 
         <div class="filter-section">
-          <h3 class="filter-title">Rating</h3>
+          <h3 class="filter-title">{{ t('farm.filter.rating') }}</h3>
           <div class="rating-filters">
             <button
               v-for="r in [5, 4, 3, 2, 1]"
@@ -38,7 +38,7 @@
               <span class="rating-stars">
                 <span v-for="i in 5" :key="i" :class="i <= r ? 'star-on' : 'star-off'">★</span>
               </span>
-              <span class="rating-label">& up</span>
+              <span class="rating-label">{{ t('farm.filter.up') }}</span>
             </button>
           </div>
         </div>
@@ -49,7 +49,7 @@
             <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
           </svg>
-          Clear All Filters
+          {{ t('farm.filter.clear') }}
         </button>
 
       </aside>
@@ -57,9 +57,9 @@
   <main class="max-canvas bg-[#f7fdf4] px-6 py-8">
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">Farms</h1>
+        <h1 class="text-2xl font-bold">{{ t('farm.title') }}</h1>
         <div class="flex items-center gap-3">
-          <input v-model="search" placeholder="Search farms..." class="border rounded-full px-4 py-2" />
+          <input v-model="search" :placeholder="t('farm.searchPlaceholder')" class="border rounded-full px-4 py-2" />
           <div class="flex items-center gap-2">
             <button @click="setSort('asc')" :class="sortOrder === 'asc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">A→Z</button>
             <button @click="setSort('desc')" :class="sortOrder === 'desc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">Z→A</button>
@@ -68,7 +68,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div v-if="filtered.length === 0" class="text-gray-600">No farms match your filters.</div>
+        <div v-if="filtered.length === 0" class="text-gray-600">{{ t('farm.empty') }}</div>
         <div v-for="farm in filtered" :key="farm.id" class="bg-white rounded-md p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <img :src="farm.image" alt="" class="w-full h-40 object-cover rounded-md mb-3" />
           <div class="flex items-start justify-between">
@@ -88,7 +88,7 @@
           <p class="text-gray-600 mt-3">{{ farm.description }}</p>
 
           <div class="mt-4 text-right">
-            <NuxtLink :to="`/user/farm/${farm.id}`" class="inline-block px-3 py-2 bg-[#1f7a2e] text-white rounded uppercase text-xs">View</NuxtLink>
+            <NuxtLink :to="`/user/farm/${farm.id}`" class="inline-block px-3 py-2 bg-[#1f7a2e] text-white rounded uppercase text-xs">{{ t('farm.view') }}</NuxtLink>
           </div>
         </div>
       </div>
@@ -100,6 +100,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppHeader from '~/components/common/AppHeader.vue'
 import AppFooter from '~/components/common/AppFooter.vue'
@@ -109,6 +110,8 @@ const sortOrder = ref('asc')
 const province = ref('All')
 const allCategories = ['Kampong Cham', 'Kandal', 'Ta Keo']
 const minRating = ref(0)
+
+const { t } = useI18n()
 
 const activeSortClass = 'bg-[#1f7a2e] text-white'
 const inactiveSortClass = 'bg-white text-gray-700 border'

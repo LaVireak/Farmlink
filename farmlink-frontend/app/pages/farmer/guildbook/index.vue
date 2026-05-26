@@ -28,7 +28,7 @@
                 <p class="text-gray-600 mb-4">{{ entry.description }}</p>
                 <div class="flex items-center gap-4">
                   <span class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</span>
-                  <NuxtLink :to="`/farmer/guild/${entry.id}`" class="ml-auto bg-[#1f7a2e] text-white px-3 py-1 rounded uppercase text-xs inline-flex items-center justify-center">View Details</NuxtLink>
+                  <NuxtLink :to="`/farmer/guildbook/${entry.id}`" class="ml-auto bg-[#1f7a2e] text-white px-3 py-1 rounded uppercase text-xs inline-flex items-center justify-center">View Details</NuxtLink>
                 </div>
               </div>
               
@@ -44,6 +44,11 @@
 </template>
 
 <script setup>
+
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import { ref, computed } from 'vue'
 
 const search = ref('')

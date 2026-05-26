@@ -16,7 +16,7 @@
       <!-- Navigation Section -->
       <nav class="hidden lg:flex items-center space-x-8">
         <NuxtLink to="/" class="nav-link uppercase text-xs">
-          Home
+          {{ t('common.home') }}
         </NuxtLink>
 
         <!-- PRODUCT MEGA MENU (Hover Triggered) -->
@@ -26,12 +26,12 @@
           @mouseenter="handleProductHover(true)"
           @mouseleave="handleProductHover(false)"
         >
-          <div class="flex items-center space-x-1 py-6 cursor-pointer">
-            <NuxtLink to="/user/products" class="nav-link uppercase text-xs">Product</NuxtLink>
+            <div class="flex items-center space-x-1 py-6 cursor-pointer">
+            <NuxtLink to="/user/products" class="nav-link uppercase text-xs">{{ t('common.products') }}</NuxtLink>
             <button class="flex items-center focus:outline-none" aria-label="Toggle Products">
               <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-              </svg> -->
+              </svg>
             </button>
           </div>
 
@@ -41,45 +41,45 @@
           >
             <div class="flex flex-col justify-between h-full">
               <div>
-                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pb-1 mb-3">Vegetables</div>
-                <ul class="space-y-2 text-sm text-on-surface-variant">
-                  <li><NuxtLink to="/user/products?category=leafy" class="hover:text-secondary transition-colors">Leafy Greens</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=root" class="hover:text-secondary transition-colors">Root Crops</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=cruciferous" class="hover:text-secondary transition-colors">Cruciferous</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=all-organic" class="hover:text-secondary transition-colors">Organic Fresh</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=tubers" class="hover:text-secondary transition-colors">Tubers & Bulbs</NuxtLink></li>
+                <div class="text-xs font-bold text-gray-800 uppercase tracking-wider pb-1 mb-3">{{ t('common.vegetables') }}</div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li><NuxtLink to="/user/products?category=leafy" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.leafyGreens') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=root" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.rootCrops') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=cruciferous" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.cruciferous') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=all-organic" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.organicFresh') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=tubers" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.tubersBulbs') }}</NuxtLink></li>
                 </ul>
-                <NuxtLink to="/user/products?category=vegetables" class="text-xs font-bold text-secondary underline pt-3 mt-auto block">
-                  All Vegetables 
+                <NuxtLink to="/user/products?category=vegetables" class="text-xs font-bold text-[#1f7a2e] underline pt-3 mt-auto block">
+                  {{ t('common.allVegetables') }}
                 </NuxtLink>
               </div>
             </div>
 
             <div class="flex flex-col justify-between h-full">
               <div>
-                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pb-1 mb-3">Fruits</div>
-                <ul class="space-y-2 text-sm text-on-surface-variant">
-                  <li><NuxtLink to="/user/products?category=citrus" class="hover:text-secondary transition-colors">Citrus Fruits</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=berries" class="hover:text-secondary transition-colors">Berries & Melons</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=tropical" class="hover:text-secondary transition-colors">Tropical Fruits</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=orchard" class="hover:text-secondary transition-colors">Orchard Picks</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=seasonal-fruit" class="hover:text-secondary transition-colors">Seasonal Specials</NuxtLink></li>
+                <div class="text-xs font-bold text-gray-800 uppercase tracking-wider pb-1 mb-3">{{ t('common.fruits') }}</div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li><NuxtLink to="/user/products?category=citrus" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.citrusFruits') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=berries" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.berriesMelons') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=tropical" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.tropicalFruits') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=orchard" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.orchardPicks') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=seasonal-fruit" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.seasonalSpecials') }}</NuxtLink></li>
                 </ul>
-                <NuxtLink to="/user/products?category=fruits" class="text-xs font-bold text-secondary underline pt-3 mt-auto block">
-                  All Fruits 
+                <NuxtLink to="/user/products?category=fruits" class="text-xs font-bold text-[#1f7a2e] underline pt-3 mt-auto block">
+                  {{ t('common.allFruits') }} 
                 </NuxtLink>
               </div>
             </div>
 
             <div class="flex flex-col justify-between h-full">
               <div>
-                <div class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pb-1 mb-3">Supplies & Tools</div>
-                <ul class="space-y-2 text-sm text-on-surface-variant">
-                  <li><NuxtLink to="/user/products?category=seeds" class="hover:text-secondary transition-colors">Heirloom Seeds</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=seedlings" class="hover:text-secondary transition-colors">Starter Plantlets</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=tools" class="hover:text-secondary transition-colors">Hand Tools</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=fertilizer" class="hover:text-secondary transition-colors">Organic Soils</NuxtLink></li>
-                  <li><NuxtLink to="/user/products?category=equipment" class="hover:text-secondary transition-colors">Irrigation Gear</NuxtLink></li>
+                <div class="text-xs font-bold text-gray-800 uppercase tracking-wider pb-1 mb-3">{{ t('common.toolsEquipment') }}</div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li><NuxtLink to="/user/products?category=seeds" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.heirloomSeeds') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=seedlings" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.starterPlantlets') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=tools" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.handTools') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=fertilizer" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.organicSoils') }}</NuxtLink></li>
+                  <li><NuxtLink to="/user/products?category=equipment" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.irrigationGear') }}</NuxtLink></li>
                 </ul>
                 <NuxtLink to="/user/products?category=supplies" class="text-xs font-bold text-secondary underline pt-3 mt-auto block">
                   All Supplies 
@@ -94,11 +94,11 @@
                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover/banner:scale-105" 
               />
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"></div>
-              <div class="absolute left-0 right-0 bottom-0 p-3 text-white dark:text-on-surface flex flex-col justify-end">
-                <div class="font-bold text-xs uppercase tracking-wider">Complete Collection</div>
-                <div class="text-[10px] text-on-surface-variant mt-0.5 mb-1.5 leading-tight">View all products across all available farm categories.</div>
-                <span class="text-[11px] font-bold text-white dark:text-on-surface underline group-hover/banner:text-on-surface-variant transition-colors">
-                  Shop All Categories 
+              <div class="absolute left-0 right-0 bottom-0 p-3 text-white flex flex-col justify-end">
+                <div class="font-bold text-xs uppercase tracking-wider">{{ t('home.browseAll') }}</div>
+                <div class="text-[10px] text-gray-200 mt-0.5 mb-1.5 leading-tight">{{ t('home.heroLead') }}</div>
+                <span class="text-[11px] font-bold text-white underline group-hover/banner:text-gray-200 transition-colors">
+                  {{ t('common.shopAllCategories') }}
                 </span>
               </div>
             </NuxtLink>
@@ -106,48 +106,48 @@
         </div>
 
         <div class="relative" id="farm-menu">
-          <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none py-6">
-            <span class="nav-link uppercase text-xs">Farm</span>
+            <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none py-6">
+            <span class="nav-link uppercase text-xs">{{ t('common.farm') }}</span>
             <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
           </button>
 
-          <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-surface-container-lowest border border-outline-variant rounded-md shadow-lg z-50 p-6">
-            <div class="text-xs font-bold text-on-surface-variant mb-2">Featured Farms</div>
+          <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
+                <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
             <div class="flex gap-4">
               <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
                 <img src="/assets/images/farm1.png" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                <div class="absolute left-0 right-0 bottom-0 p-3 text-white dark:text-on-surface">
-                  <div class="font-semibold">Farm 1</div>
-                  <div class="text-xs">Organic vegetables & seasonal produce.</div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm1Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm1Desc') }}</div>
                 </div>
               </NuxtLink>
 
               <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
                 <img src="/assets/images/farm2.png" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                <div class="absolute left-0 right-0 bottom-0 p-3 text-white dark:text-on-surface">
-                  <div class="font-semibold">Farm 2</div>
-                  <div class="text-xs">Family-run orchard and beekeeping.</div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm2Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm2Desc') }}</div>
                 </div>
               </NuxtLink>
 
               <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
                 <img src="/assets/images/farm3.png" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                <div class="absolute left-0 right-0 bottom-0 p-3 text-white dark:text-on-surface">
-                  <div class="font-semibold">Farm 3</div>
-                  <div class="text-xs">Hydroponics and greenhouse-grown greens.</div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm3Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm3Desc') }}</div>
                 </div>
               </NuxtLink>
             </div>
           </div>
         </div>
 
-        <NuxtLink to="/about" class="nav-link uppercase text-xs py-6">About</NuxtLink>
-        <NuxtLink to="/contacts" class="nav-link uppercase text-xs py-6">Contacts</NuxtLink>
+        <NuxtLink to="/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
+        <NuxtLink to="/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
       </nav>
 
       <!-- Right Utility Bar -->
@@ -161,8 +161,8 @@
             @input="handleSearch"
             @focus="handleFocus"
             @keydown.enter="triggerSearch"
-            class="w-full bg-transparent border-[1px] border-on-surface rounded-full py-1 px-4 focus:outline-none focus:ring-0 search-input" 
-            placeholder="Search..." 
+            class="w-full bg-transparent border-[1px] border-black rounded-full py-1 px-4 focus:outline-none focus:ring-0 search-input" 
+            :placeholder="t('common.search')"
           />
           <button @click="triggerSearch" class="absolute right-4 top-1/2 -translate-y-1/2" aria-label="Search Submit">
             <svg class="w-5 h-5 text-on-surface" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,8 +175,8 @@
             v-if="showDropdown && searchQuery.trim().length >= 2"
             class="absolute top-full mt-2 w-full bg-surface-container-lowest border border-on-surface rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 overflow-hidden"
           >
-            <div v-if="searchLoading" class="px-4 py-3 text-sm text-on-surface-variant text-center">
-              Searching...
+            <div v-if="searchLoading" class="px-4 py-3 text-sm text-gray-500 text-center">
+              {{ t('common.searching') }}
             </div>
 
             <template v-else>
@@ -207,8 +207,8 @@
                 </div>
               </div>
 
-              <div v-if="searchResults.length === 0" class="px-4 py-3 text-sm text-on-surface-variant text-center">
-                No results found for "{{ searchQuery }}"
+              <div v-if="searchResults.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">
+                {{ t('common.noResults', { query: searchQuery }) }}
               </div>
             </template>
           </div>
@@ -261,36 +261,96 @@
 
         <!-- User Profile Dropdown -->
         <div class="relative" id="user-menu">
-          <button @click.stop="toggleUserMenu" class="bg-secondary text-white dark:text-on-surface px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-on-surface nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
-            <svg class="w-7 h-7 text-white dark:text-on-surface" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Avatar button: photo → initials → person icon -->
+          <button
+            @click.stop="toggleUserMenu"
+            class="bg-[#1f7a2e] text-white px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+          >
+            <!-- Social login: real profile photo -->
+            <img
+              v-if="userAvatar"
+              :src="userAvatar"
+              alt="Profile"
+              class="w-7 h-7 rounded-full object-cover"
+              referrerpolicy="no-referrer"
+            />
+            <!-- Email/password login: initials -->
+            <span
+              v-else-if="isAuthenticated && userInitials"
+              class="w-7 h-7 flex items-center justify-center text-sm font-bold rounded-full"
+            >
+              {{ userInitials }}
+            </span>
+            <!-- Not logged in: default person icon -->
+            <svg
+              v-else
+              class="w-7 h-7 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" />
             </svg>
           </button>
-          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-36 bg-surface-container-lowest border border-outline-variant rounded-md shadow-lg z-50">
-            <div class="p-2 border-b">
+
+          <div v-show="userMenuOpen" class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <!-- User info strip when logged in -->
+            <div v-if="isAuthenticated" class="px-3 py-2 border-b bg-gray-50">
+              <p class="text-xs font-semibold text-gray-800 truncate">
+                {{ user?.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : user?.email }}
+              </p>
+              <p class="text-[10px] text-gray-400 truncate">{{ user?.role }}</p>
+            </div>
+
+            <div class="p-2">
               <ul>
                 <li>
-                  <NuxtLink to="/user/settings/profile" class="flex items-center gap-2 px-2 py-1 hover:bg-surface-container">
-                    <Settings class="w-4 h-4 text-on-surface-variant" />
-                    <span>Settings</span>
+                  <NuxtLink to="/user/settings/profile" class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded">
+                    <Settings class="w-4 h-4 text-gray-600" />
+                    <span class="text-sm">Settings</span>
                   </NuxtLink>
                 </li>
                 <li>
-                    <button class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-surface-container">
-                      <Globe class="w-4 h-4 text-on-surface-variant" />
-                    <span>Language</span>
-                  </button>
+                  <div class="px-2 py-1">
+                    <div class="text-xs font-semibold text-gray-700 mb-1">Language</div>
+                    <div class="relative">
+                      <button @click="langOpen = !langOpen" class="w-full text-left px-2 py-1 rounded border flex justify-between items-center">
+                        <span class="text-sm">{{ locale === 'km' ? 'Khmer' : 'English' }}</span>
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                      </button>
+                      <div v-show="langOpen" class="absolute right-0 mt-1 bg-white border rounded shadow p-1 w-32">
+                        <button @click="setLanguage('en'); langOpen = false" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded">English</button>
+                        <button @click="setLanguage('km'); langOpen = false" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded">Khmer</button>
+                      </div>
+                    </div>
+                  </div>
                 </li>
                 <li>
-                  <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-surface-container">
-                    <Moon class="w-4 h-4 text-on-surface-variant" />
-                    <span>Dark Mode</span>
+                  <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100 rounded">
+                    <Moon class="w-4 h-4 text-gray-600" />
+                    <span class="text-sm">Dark Mode</span>
                   </button>
                 </li>
-                <li>
-                  <NuxtLink to="/auth/signin" class="flex items-center gap-2 px-2 py-1 hover:bg-surface-container">
-                    <Users class="w-4 h-4 text-on-surface-variant" />
-                    <span>Sign In</span>
+                <li class="border-t mt-1 pt-1">
+                  <!-- Logged in → Log Out -->
+                  <button
+                    v-if="isAuthenticated"
+                    @click="handleSignOut"
+                    class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-red-50 text-red-600 rounded"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                    </svg>
+                    <span class="text-sm font-medium">Log Out</span>
+                  </button>
+                  <!-- Not logged in → Sign In -->
+                  <NuxtLink
+                    v-else
+                    to="/auth/signin"
+                    class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded"
+                  >
+                    <Users class="w-4 h-4 text-gray-600" />
+                    <span class="text-sm">Sign In</span>
                   </NuxtLink>
                 </li>
               </ul>
@@ -315,6 +375,7 @@ import {
 } from 'lucide-vue-next'
 
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from '#imports'
 import { useAuthStore } from '../../stores/auth.store'
 import { useRouter } from 'vue-router'
 
@@ -351,7 +412,7 @@ const handleSearch = async () => {
   showDropdown.value = true
 
   try {
-    const data = await $fetch(`http://localhost:3001/api/search?q=${encodeURIComponent(q)}`)
+    const data = await $fetch(`${config.public.apiUrl}/products`)
     searchResults.value = data
   } catch (e) {
     searchResults.value = []
@@ -424,6 +485,22 @@ const toggleNotifications = () => {
   }
 }
 
+// i18n: language switching
+const { t, locale, setLocale } = useI18n()
+const langOpen = ref(false)
+// const LOCALE_KEY = 'farmlink.locale'
+
+const setLanguage = async (lang) => {
+  try {
+    // This function handles the switch for the entire Nuxt app properly
+    await setLocale(lang) 
+    langOpen.value = false
+  } catch (e) {
+    console.error("Failed to set language:", e)
+  }
+}
+
+
 function showNotification(note) {
   selectedNotification.value = note
   note.read = true
@@ -474,8 +551,9 @@ const userInitials = computed(() => {
 })
 
 const userAvatar = computed(() => {
-  // If you store avatar URLs in user metadata, return it here. Fallback to null.
-  return null
+  // avatarUrl is populated by mapSupabaseUser from OAuth user_metadata (Google, Facebook).
+  // Returns undefined for email/password logins → header falls back to initials.
+  return auth.user?.avatarUrl ?? null
 })
 
 const avatarClass = computed(() => {

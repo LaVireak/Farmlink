@@ -182,6 +182,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'farmer'
+})
+
 import FarmerSidebar from '~/components/farmer/FarmerSideBar.vue'
 import { ref, computed } from 'vue'
 
