@@ -1,30 +1,25 @@
 <template>
-  <main class="max-canvas bg-[#f7fdf4] px-4 py-8">
-    <div class="flex gap-6">
-      <FarmerSideBar />
+  <main class="max-canvas bg-[#f7fdf4] px-8 py-8 flex-1">
+    <FarmerHeader title="Guild Book" />
 
-      <aside class="flex-1">
-        <FarmerHeader title="Guild Book" />
-
-        <h2 class="text-3xl italic font-semibold mb-2">{{ entry.name }}</h2>
-        <div v-if="entry" class="mt-6 bg-white p-6 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          
-          <p class="text-gray-700 mb-4">{{ entry.description }}</p>
-          <p class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</p>
-          <div class="mt-4">
-            <NuxtLink to="/farmer/guildbook" class="inline-block px-3 py-1 bg-gray-100 rounded">Back to Guild</NuxtLink>
-          </div>
-        </div>
-
-        <div v-else class="mt-6 text-gray-600">Entry not found.</div>
-      </aside>
+    <h2 class="text-3xl italic font-semibold mb-2" v-if="entry">{{ entry.name }}</h2>
+    <div v-if="entry" class="mt-6 bg-white p-6 rounded-md border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      
+      <p class="text-gray-700 mb-4">{{ entry.description }}</p>
+      <p class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</p>
+      <div class="mt-4">
+        <NuxtLink to="/farmer/guildbook" class="inline-block px-3 py-1 bg-gray-100 rounded">Back to Guild</NuxtLink>
+      </div>
     </div>
+
+    <div v-else class="mt-6 text-gray-600">Entry not found.</div>
   </main>
 </template>
 
 <script setup>
 definePageMeta({
-  middleware: 'farmer'
+  middleware: 'farmer',
+  layout: 'farmer'
 })
 
 import { useRoute } from 'vue-router'

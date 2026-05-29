@@ -52,6 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
     const user = ref<AuthUser | null>(null);
     const pendingAvatarUrl = ref<string | null>(null);
     const hydrated = ref(false);
+    const lastSyncError = ref<string | null>(null);
 
     const isAuthenticated = computed(() => Boolean(accessToken.value && user.value));
 
@@ -116,33 +117,33 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const persist = () => {
-        if ( typeof window === 'undefined') return;
+        if (typeof window === 'undefined') return;
 
         if (!accessToken.value || !refreshToken.value || !user.value) {
             localStorage.removeItem(SESSION_KEY);
             return;
-        } 
+        }
 
         const avatarKey = getAvatarStorageKey(user.value.id);
         if (avatarKey && user.value.avatarUrl) {
             localStorage.setItem(avatarKey, user.value.avatarUrl);
         }
 
-		const pendingAvatarKey = getPendingAvatarStorageKey(user.value.id);
-		if (pendingAvatarKey) {
-			if (pendingAvatarUrl.value) {
-				localStorage.setItem(pendingAvatarKey, pendingAvatarUrl.value);
-			} else {
-				localStorage.removeItem(pendingAvatarKey);
-			}
-		}
+        const pendingAvatarKey = getPendingAvatarStorageKey(user.value.id);
+        if (pendingAvatarKey) {
+            if (pendingAvatarUrl.value) {
+                localStorage.setItem(pendingAvatarKey, pendingAvatarUrl.value);
+            } else {
+                localStorage.removeItem(pendingAvatarKey);
+            }
+        }
 
         localStorage.setItem(SESSION_KEY, JSON.stringify({
             accessToken: accessToken.value,
             refreshToken: refreshToken.value,
             user: user.value,
         }),
-     );
+        );
     };
 
     const hydrate = async () => {
@@ -152,6 +153,17 @@ export const useAuthStore = defineStore('auth', () => {
         if (data.session) {
             applySupabaseSession(data.session);
             hydrated.value = true;
+
+            // Sync database profile role asynchronously
+            try {
+                const dbProfile = await authService.fetchProfile();
+                if (dbProfile?.role && user.value) {
+                    user.value = { ...user.value, ...dbProfile, role: dbProfile.role as AuthUser['role'] };
+                    persist();
+                }
+            } catch (e) {
+                console.error('[HYDRATE] DB role sync failed:', e);
+            }
             return;
         }
 
@@ -168,6 +180,16 @@ export const useAuthStore = defineStore('auth', () => {
                 refreshToken.value = parsed.refreshToken;
                 user.value = mergeStoredAvatar(parsed.user);
                 pendingAvatarUrl.value = getStoredPendingAvatarUrl(parsed.user.id);
+
+                // Sync database profile role asynchronously
+                authService.fetchProfile().then(dbProfile => {
+                    if (dbProfile?.role && user.value) {
+                        user.value = { ...user.value, ...dbProfile, role: dbProfile.role as AuthUser['role'] };
+                        persist();
+                    }
+                }).catch(e => {
+                    console.error('[HYDRATE] DB role sync failed:', e);
+                });
             }
         } catch {
             localStorage.removeItem(SESSION_KEY);
@@ -176,9 +198,22 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
-    const signIn = async (payload : SignInPayload) => {
+    const signIn = async (payload: SignInPayload) => {
         const result = await authService.signin(payload);
         applySession(result);
+
+        // Sync real role from NestJS PostgreSQL (Supabase metadata may be stale/missing)
+        try {
+            lastSyncError.value = null;
+            const dbProfile = await authService.fetchProfile();
+            if (dbProfile?.role && user.value) {
+                user.value = { ...user.value, ...dbProfile, role: dbProfile.role as AuthUser['role'] };
+                persist();
+            }
+        } catch (e: any) {
+            console.error('[AUTH] fetchProfile FAILED:', e);
+            lastSyncError.value = e.message || String(e);
+        }
 
         return result;
     };
@@ -225,6 +260,7 @@ export const useAuthStore = defineStore('auth', () => {
         getPostSignInRoute,
         hydrate,
         hydrated,
+        lastSyncError,
         signIn,
         signInWithGoogle,
         signInWithFacebook,

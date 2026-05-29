@@ -27,11 +27,12 @@ export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
 export const getAccessToken = async (): Promise<string | null> => {
   if (typeof window === 'undefined') return null;
 
-  const sessionStr = localStorage.getItem('farmlink.auth.session');
-  if (!sessionStr) {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.access_token ?? null;
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.access_token) {
+    return data.session.access_token;
   }
+  const sessionStr = localStorage.getItem('farmlink.auth.session');
+  if (!sessionStr) return null;
 
   try {
     const session = JSON.parse(sessionStr);
@@ -181,11 +182,25 @@ export const authService = {
 
     async verifySignupOtp(payload: VerifyOtpPayload): Promise<SignInResult> {
         try {
-            const { data, error } = await supabase.auth.verifyOtp({
+            let res = await supabase.auth.verifyOtp({
                 email: payload.email,
                 token: payload.code,
                 type: 'email',
             });
+
+            // Fallback to 'signup' confirmation type in case the Supabase project uses standard signup validation
+            if (res.error) {
+                const signupRes = await supabase.auth.verifyOtp({
+                    email: payload.email,
+                    token: payload.code,
+                    type: 'signup',
+                });
+                if (!signupRes.error) {
+                    res = signupRes;
+                }
+            }
+
+            const { data, error } = res;
 
             if (error || !data.session) {
                 throw new Error(error?.message || 'Verification failed.');
@@ -193,7 +208,6 @@ export const authService = {
 
             const pending = getPendingSignup(payload.email);
             if (pending?.password) {
-      
                 await apiFetch('/auth/finalize-signup', {
                     method: 'POST',
                     body: JSON.stringify({
@@ -262,7 +276,6 @@ export const authService = {
         }
 
         console.log('[Facebook Login] [auth.service] No error — Supabase should be redirecting the browser to:', data?.url);
-        // Supabase will redirect the browser — no return value needed.
     },
 
     async requestPasswordResetOtp(email: string): Promise<{ message: string }> {
@@ -323,10 +336,33 @@ export const authService = {
     },
 
     async submitFarmerOnboarding(payload: FarmerOnboardingPayload): Promise<{ message: string }> {
-        return apiFetch('/farmers/onboarding', {
+        return apiFetch('/farmer/onboarding', {
             method: 'POST',
             body: JSON.stringify(payload),
         });
+    },
+
+    async fetchProfile(): Promise<{ role: string; firstName?: string; lastName?: string; email?: string }> {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token ?? null;
+
+        if (!token) throw new Error('No active session for fetchProfile');
+
+        const res = await fetch(`${API_BASE}/users/profile`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const result = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(result?.message || 'Failed to fetch profile');
+
+        console.log('[fetchProfile] DB profile returned:', result); // Remove after debugging
+
+        return result;
     },
 
     async signOut(): Promise<void> {

@@ -30,7 +30,7 @@
             <NuxtLink to="/user/products" class="btn-elegant primary">
               <span>{{ t('home.exploreProducts') }}</span>
             </NuxtLink>
-            <NuxtLink to="/about" class="btn-elegant secondary">
+            <NuxtLink to="/user/about" class="btn-elegant secondary">
               <span>{{ t('home.learnMore') }}</span>
               <span class="material-symbols-outlined">arrow_forward</span>
             </NuxtLink>
@@ -168,7 +168,7 @@
             <span class="subtitle">{{ t('common.farm') }}</span>
             <h2>{{ t('home.farmsAcrossCambodia') }}</h2>
           </div>
-          <NuxtLink to="/about" class="view-all">
+          <NuxtLink to="/user/about" class="view-all">
             <span>{{ t('home.exploreProvinces') }}</span>
             <span class="material-symbols-outlined">map</span>
           </NuxtLink>
@@ -230,7 +230,7 @@
             <span class="subtitle">{{ t('common.about') }}</span>
             <h2>{{ t('home.latestStories') }}</h2>
           </div>
-          <NuxtLink to="/about" class="view-all">
+          <NuxtLink to="/user/about" class="view-all">
             <span>{{ t('home.readJournal') }}</span>
             <span class="material-symbols-outlined">book</span>
           </NuxtLink>
@@ -251,7 +251,7 @@
               <p class="muted-text">{{ t(post.keyPrefix + '.excerpt') }}</p>
               <div class="blog-footer">
                 <span class="blog-date">{{ post.date }}</span>
-                <NuxtLink to="/about" class="read-more-link">
+                <NuxtLink to="/user/about" class="read-more-link">
                   <span>{{ t('success.readStory') }}</span>
                   <span class="material-symbols-outlined">arrow_right_alt</span>
                 </NuxtLink>
@@ -295,8 +295,26 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth.store'
 import { useI18n } from 'vue-i18n'
+
+const authStore = useAuthStore()
+const router = useRouter()
 const { t } = useI18n()
+
+onMounted(async () => {
+  await authStore.hydrate()
+  if (authStore.isAuthenticated) {
+    if (authStore.user?.role === 'farmer') {
+      router.replace('/farmer/dashboard')
+    } else if (authStore.user?.role === 'admin') {
+      router.replace('/admin/dashboard')
+    }
+  }
+})
+
 const products = [
   {
     id: '1',

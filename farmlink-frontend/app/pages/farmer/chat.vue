@@ -1,151 +1,137 @@
 <template>
-  <div class="dashboard-layout">
-    <FarmerSideBar />
+  <main class="chat-main">
+    <FarmerHeader title="Customer Chat" />
 
-    <main class="chat-main">
-      <FarmerHeader title="Customer Chat" />
+    <div class="chat-container">
+      <!-- Conversations List -->
+      <aside class="conversations-panel">
+        <div class="conv-header">
+          <h2>Conversations</h2>
+          <span class="unread-total">{{ chat.totalUnread.value }}</span>
+        </div>
 
-      <div class="chat-container">
-        <!-- Conversations List -->
-        <aside class="conversations-panel">
-          <div class="conv-header">
-            <h2>Conversations</h2>
-            <span class="unread-total">{{ chat.totalUnread.value }}</span>
-          </div>
+        <div class="conv-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input v-model="search" type="text" placeholder="Search customers..." />
+        </div>
 
-          <div class="conv-search">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input v-model="search" type="text" placeholder="Search customers..." />
-          </div>
-
-          <div class="conv-list">
-            <button
-              v-for="conv in filteredConversations"
-              :key="conv.id"
-              class="conv-item"
-              :class="{ active: chat.activeConversationId.value === conv.id }"
-              @click="selectConversation(conv)"
-            >
-              <div class="conv-avatar">
-                {{ getParticipantInitial(conv) }}
+        <div class="conv-list">
+          <button
+            v-for="conv in filteredConversations"
+            :key="conv.id"
+            class="conv-item"
+            :class="{ active: chat.activeConversationId.value === conv.id }"
+            @click="selectConversation(conv)"
+          >
+            <div class="conv-avatar">
+              {{ getParticipantInitial(conv) }}
+            </div>
+            <div class="conv-info">
+              <div class="conv-top">
+                <span class="conv-name">{{ getParticipantName(conv) }}</span>
+                <span class="conv-time">{{ conv.lastMessageTime ? formatLastTime(conv.lastMessageTime) : 'N/A' }}</span>
               </div>
-              <div class="conv-info">
-                <div class="conv-top">
-                  <span class="conv-name">{{ getParticipantName(conv) }}</span>
-                  <span class="conv-time">{{ conv.lastMessageTime ? formatLastTime(conv.lastMessageTime) : 'N/A' }}</span>
-                </div>
-                <div class="conv-bottom">
-                  <span class="conv-preview">{{ conv.lastMessage || 'No messages yet' }}</span>
-                  <span v-if="conv.unreadCount > 0" class="conv-badge">{{ conv.unreadCount }}</span>
-                </div>
+              <div class="conv-bottom">
+                <span class="conv-preview">{{ conv.lastMessage || 'No messages yet' }}</span>
+                <span v-if="conv.unreadCount > 0" class="conv-badge">{{ conv.unreadCount }}</span>
               </div>
-            </button>
-
-            <div v-if="filteredConversations.length === 0" class="conv-empty">
-              No conversations found
             </div>
+          </button>
+
+          <div v-if="filteredConversations.length === 0" class="conv-empty">
+            No conversations found
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        <!-- Chat Thread -->
-        <section class="chat-thread" v-if="activeConv">
-          <!-- Thread Header -->
-          <div class="thread-header">
-            <div class="thread-avatar">
-              {{ getParticipantInitial(activeConv) }}
-            </div>
-            <div>
-              <p class="thread-name">{{ getParticipantName(activeConv) }}</p>
-              <p class="thread-status">
-                <span class="status-dot online"></span>
-                Active Now
-              </p>
-            </div>
-            <div class="thread-actions">
-              <button title="View Order" class="thread-action-btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              </button>
-            </div>
+      <!-- Chat Thread -->
+      <section class="chat-thread" v-if="activeConv">
+        <!-- Thread Header -->
+        <div class="thread-header">
+          <div class="thread-avatar">
+            {{ getParticipantInitial(activeConv) }}
           </div>
-
-          <!-- Messages -->
-          <div class="messages-area" ref="messagesArea">
-            <MessageBubble
-              v-for="msg in chat.activeMessages.value"
-              :key="msg.id"
-              :text="msg.content"
-              :time="formatTime(msg.createdAt)"
-              :is-sender="msg.sender.id === currentUserId"
-              :avatar="msg.sender.avatarUrl"
-              :sender-name="`${msg.sender.firstName || ''} ${msg.sender.lastName || ''}`.trim()"
-            />
+          <div>
+            <p class="thread-name">{{ getParticipantName(activeConv) }}</p>
+            <p class="thread-status">
+              <span class="status-dot online"></span>
+              Active Now
+            </p>
           </div>
-
-          <!-- Input Bar -->
-          <div class="input-bar">
-            <button class="attach-btn" title="Attach file" disabled>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            </button>
-            <input
-              v-model="newMessage"
-              type="text"
-              placeholder="Type a message..."
-              @keydown.enter="sendMessage"
-              class="msg-input"
-              :disabled="chat.loading.value"
-            />
-            <button
-              @click="sendMessage"
-              class="send-btn"
-              :disabled="!newMessage.trim() || chat.loading.value"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <div class="thread-actions">
+            <button title="View Order" class="thread-action-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </button>
           </div>
-        </section>
+        </div>
 
-        <!-- Empty Thread Placeholder -->
-        <section class="chat-empty" v-else>
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c2c9bb" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <p>Select a conversation to start chatting</p>
-        </section>
-      </div>
-    </main>
-  </div>
+        <!-- Messages -->
+        <div class="messages-area" ref="messagesArea">
+          <MessageBubble
+            v-for="msg in chat.activeMessages.value"
+            :key="msg.id"
+            :text="msg.content"
+            :time="formatTime(msg.createdAt)"
+            :is-sender="msg.sender.id === currentUserId"
+            :avatar="msg.sender.avatarUrl"
+            :sender-name="`${msg.sender.firstName || ''} ${msg.sender.lastName || ''}`.trim()"
+          />
+        </div>
+
+        <!-- Input Bar -->
+        <div class="input-bar">
+          <button class="attach-btn" title="Attach file" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input
+            v-model="newMessage"
+            type="text"
+            placeholder="Type a message..."
+            @keydown.enter="sendMessage"
+            class="msg-input"
+            :disabled="chat.loading.value"
+          />
+          <button
+            @click="sendMessage"
+            class="send-btn"
+            :disabled="!newMessage.trim() || chat.loading.value"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Empty Thread Placeholder -->
+      <section class="chat-empty" v-else>
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c2c9bb" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <p>Select a conversation to start chatting</p>
+      </section>
+    </div>
+  </main>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'farmer'
+  middleware: 'farmer',
+  layout: 'farmer'
 })
 
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useChat } from '~/composables/useChat'
-import { useAuth } from '~/composables/useAuth'
 import MessageBubble from '~/components/common/MessageBubble.vue'
+import { useAuthStore } from '~/stores/auth.store'
 
 useHead({ title: 'Chat | FarmLink Farmer' })
 
 const chat = useChat()
-const { user } = useAuth()
+const authStore = useAuthStore()
 
 const search = ref('')
 const newMessage = ref('')
 const messagesArea = ref<HTMLElement | null>(null)
 
-const currentUserId = computed(() => {
-  if (user?.id) return user.id
-  const sessionStr = localStorage.getItem('farmlink.auth.session')
-  if (!sessionStr) return null
-  try {
-    const session = JSON.parse(sessionStr)
-    return session?.user?.id
-  } catch {
-    return null
-  }
-})
+const currentUserId = computed(() => authStore.user?.id ?? null)
 
-// ── Computed ──────────────────────────────────────────────────────
 const filteredConversations = computed(() =>
   chat.conversations.value.filter(c =>
     (c.participant.firstName || c.participant.lastName || 'User')
@@ -184,7 +170,6 @@ const formatLastTime = (dateStr: string) => {
   return date.toLocaleDateString()
 }
 
-// ── Actions ───────────────────────────────────────────────────────
 async function selectConversation(conv: any) {
   chat.setActiveConversation(conv.id)
   await chat.fetchMessages(conv.id, 1, 20)
@@ -219,13 +204,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  background: #f5f7f3;
-  font-family: 'DM Sans', 'Inter', sans-serif;
-}
-
 .chat-main {
   flex: 1;
   display: flex;

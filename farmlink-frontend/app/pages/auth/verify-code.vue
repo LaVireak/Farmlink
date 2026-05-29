@@ -42,8 +42,8 @@
           </button>
 
           <p class="resend-copy">Didn't receive code?</p>
-          <button type="button" class="resend-btn" :disabled="loading" @click="resendCode">
-            Resend code
+          <button type="button" class="resend-btn" :disabled="loading || resending" @click="resendCode">
+            {{ resending ? 'Resending...' : 'Resend code' }}
           </button>
 
           <div class="status-pill">● SECURE RECOVERY ACTIVE</div>
@@ -71,9 +71,55 @@ const {
 } = useAuth();
 const FARMER_ONBOARDING_KEY = 'farmlink.farmer.onboarding';
 
+const dbName = 'farmlink_onboarding_db_v2';
+const storeName = 'onboarding_store';
+
+function getFromIndexedDB(key: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(storeName);
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const getReq = store.get(key);
+      getReq.onsuccess = () => {
+        db.close();
+        resolve(getReq.result);
+      };
+      getReq.onerror = () => reject(getReq.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function removeFromIndexedDB(key: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(storeName);
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      store.delete(key);
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
 const codeDigits = ref<string[]>(['', '', '', '', '', '']);
 const inputRefs = ref<Array<HTMLInputElement | null>>([]);
 const loading = ref(false);
+const resending = ref(false);
 const errorMessage = ref('');
 
 const emailText = computed(() => {
@@ -132,6 +178,7 @@ const resendCode = async () => {
     return;
   }
 
+  resending.value = true;
   try {
     if (isResetMode.value) {
       await resendPasswordResetOtp(email);
@@ -140,6 +187,8 @@ const resendCode = async () => {
     }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to resend code.';
+  } finally {
+    resending.value = false;
   }
 };
 
@@ -169,9 +218,21 @@ const verifyCode = async () => {
       if (result.user.role === 'farmer') {
         const raw = sessionStorage.getItem(FARMER_ONBOARDING_KEY);
         if (raw) {
-          const payload = JSON.parse(raw) as FarmerOnboardingPayload;
-          await submitFarmerOnboarding(payload);
+          let payload: FarmerOnboardingPayload | null = null;
+          if (raw === 'true') {
+            payload = await getFromIndexedDB(FARMER_ONBOARDING_KEY).catch(() => null);
+          } else {
+            try {
+              payload = JSON.parse(raw) as FarmerOnboardingPayload;
+            } catch (err) {
+              console.error('Failed to parse fallback payload:', err);
+            }
+          }
+          if (payload) {
+            await submitFarmerOnboarding(payload);
+          }
           sessionStorage.removeItem(FARMER_ONBOARDING_KEY);
+          await removeFromIndexedDB(FARMER_ONBOARDING_KEY).catch(() => null);
         }
       }
 

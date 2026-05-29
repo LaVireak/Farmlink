@@ -146,8 +146,8 @@
           </div>
         </div>
 
-        <NuxtLink to="/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
-        <NuxtLink to="/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
+        <NuxtLink to="/user/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
+        <NuxtLink to="/user/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
       </nav>
 
       <!-- Right Utility Bar -->

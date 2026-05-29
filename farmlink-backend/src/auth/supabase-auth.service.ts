@@ -221,7 +221,11 @@ export class SupabaseAuthService {
       user.avatarUrl = metadata.avatarUrl;
       shouldSave = true;
     }
-
+    const incomingRole = this.normalizeRole(metadata.role);
+    if (incomingRole && user.role !== incomingRole) {
+      user.role = incomingRole;
+      shouldSave = true;
+    }
     if (user.status !== UserStatus.ACTIVE) {
       user.status = UserStatus.ACTIVE;
       shouldSave = true;
