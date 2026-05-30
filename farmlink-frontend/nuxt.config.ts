@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3001/api",
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3000",
       stripePublishableKey:
         process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
     },
@@ -55,6 +55,12 @@ export default defineNuxtConfig({
           async: true,
           defer: true,
         },
+        {
+          src: 'https://connect.facebook.net/en_US/sdk.js',
+          async: true,
+          defer: true,
+          crossorigin: 'anonymous'
+        }
       ],
       link: [
         {

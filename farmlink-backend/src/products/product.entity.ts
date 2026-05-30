@@ -68,7 +68,7 @@ export class Product {
   @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.PENDING_REVIEW })
   status!: ProductStatus;
 
-  @Column({ name: 'thumbnail_url', length: 500, nullable: true })
+  @Column({ name: 'thumbnail_url', type: 'text', nullable: true })
   thumbnailUrl?: string;
 
   @Column({ name: 'total_sold', default: 0 })

@@ -13,6 +13,7 @@ import WebSocket from 'ws';
 import { User } from '../users/user.entity';
 import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
+import type { AdminUserAttributes } from '@supabase/supabase-js'
 
 type SupabaseMetadata = {
   role?: string;
@@ -275,7 +276,11 @@ export class SupabaseAuthService {
       user.avatarUrl = metadata.avatarUrl;
       shouldSave = true;
     }
-
+    const incomingRole = this.normalizeRole(metadata.role);
+    if (incomingRole && user.role !== incomingRole) {
+      user.role = incomingRole;
+      shouldSave = true;
+    }
     if (user.status !== UserStatus.ACTIVE) {
       user.status = UserStatus.ACTIVE;
       shouldSave = true;

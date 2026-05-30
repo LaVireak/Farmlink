@@ -204,21 +204,24 @@ definePageMeta({
 
 import { ref } from 'vue'
 
+const farmPicInputRef = ref<HTMLInputElement | null>(null)
+const selectedFarmPicture = ref<number | null>(null)
+let originalDescription = ''
+
+const editingAccount = ref(false)
+const editingFarm = ref(false)
+const editingDescription = ref(false)
+
 // Sample reactive data (replace with real API data)
 const account = ref({
   firstName: 'John',
   lastName: 'Doe',
   email: 'john@example.com',
   phone: '+1 555 1234',
-  joined: '2024-02-12'
+  joined: '2024-02-12',
+  picturePreview: '',
+  pictureFile: null as any
 })
-
-// local preview and file holder
-account.value.picturePreview = ''
-account.value.pictureFile = null
-
-const editingAccount = ref(false)
-const editingFarm = ref(false)
 
 const farm = ref({
   description: 'Small family-run farm focusing on organic vegetables and seasonal fruits. We practice crop rotation and regenerative techniques to maintain soil health.',
@@ -239,9 +242,6 @@ const products = ref([
   { id: 3, name: 'Honey 250g', category: 'Pantry', unit: 'jar', price: 6.75 }
 ])
 
-const editingDescription = ref(false)
-let originalDescription = ''
-const selectedFarmPicture = ref<number | null>(null)
 
 function formatPrice(v: number) {
   return `$${v.toFixed(2)}`
@@ -265,18 +265,16 @@ function saveAccount() {
   editingAccount.value = false
 }
 
+// Inactive helper changes synced correctly in rollback
 function changeEmail() {
-  // Replace with modal or flow to change email
   console.log('Change email requested')
 }
 
 function changePhone() {
-  // Replace with modal or flow to change phone number
   console.log('Change phone requested')
 }
 
 function changePassword() {
-  // Replace with modal or flow to change password
   console.log('Change password requested')
 }
 
@@ -293,15 +291,14 @@ function cancelDescription() {
 }
 
 function saveDescription() {
-  // TODO: persist description to API
   console.log('Saving description', farm.value.description)
   editingDescription.value = false
 }
 
 function onProfilePicChange(e: Event) {
   const input = e.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  const file = input.files[0]
+  const file = input.files?.[0]
+  if (!file) return
   account.value.pictureFile = file
 
   const reader = new FileReader()
@@ -315,21 +312,17 @@ function triggerFarmFileInput() {
   farmPicInputRef.value?.click()
 }
 
-const farmPicInputRef = ref<HTMLInputElement | null>(null)
 
 function onFarmPicChange(e: Event) {
   const input = e.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
-  const file = input.files[0]
+  const file = input.files?.[0]
+  if (!file) return
   const reader = new FileReader()
   reader.onload = () => {
-    // add to farm pictures array; newest will appear on the right due to flex-row-reverse
     farm.value.pictures.push(reader.result as string)
-    // set selected to the newest (last pushed)
     selectedFarmPicture.value = farm.value.pictures.length - 1
   }
   reader.readAsDataURL(file)
-  // reset file input so same file can be re-selected later
   input.value = ''
 }
 
@@ -338,17 +331,13 @@ function selectFarmPicture(idx: number) {
 }
 
 function removeFarmPicture(idx: number) {
-  // remove the picture from the array
   farm.value.pictures.splice(idx, 1)
 
-  // adjust selected index
   if (selectedFarmPicture.value === null) return
   if (selectedFarmPicture.value === idx) {
-    // if removed the selected, clear selection or move to previous
     const newIndex = Math.min(idx - 1, farm.value.pictures.length - 1)
     selectedFarmPicture.value = newIndex >= 0 ? newIndex : null
   } else if (selectedFarmPicture.value! > idx) {
-    // shift selected index left by one
     selectedFarmPicture.value!--
   }
 }
@@ -358,7 +347,6 @@ function toggleEditFarm() {
 }
 
 function cancelEditFarm() {
-  // In a real app, re-fetch original farm address. For now just disable editing.
   editingFarm.value = false
 }
 

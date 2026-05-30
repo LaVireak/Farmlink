@@ -145,11 +145,7 @@
             :disabled="submitting"
             class="primary-btn"
           >
-            {{
-              submitting
-                ? 'Signing in...'
-                : 'Sign In'
-            }}
+            {{ submitting ? 'Signing in...' : 'Sign In' }}
           </button>
 
           <!-- DIVIDER -->
@@ -198,7 +194,7 @@
 
         <!-- FOOTER -->
         <p class="footer-copy">
-          Don’t have an account?
+          Don't have an account?
 
           <NuxtLink to="/auth/signup">
             Create account
@@ -216,19 +212,12 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../../composables/useAuth'
+import { useAuthStore } from '../../stores/auth.store'
 import { isValidEmail } from '../../utils/validation'
 
 const showPassword = ref(false)
-
 const router = useRouter()
-
-const {
-  signIn,
-  signInWithGoogle,
-  signInWithFacebook,
-  getPostSignInRoute,
-} = useAuth()
+const authStore = useAuthStore()
 
 const submitting = ref(false)
 const errorMessage = ref('')
@@ -239,6 +228,7 @@ const googleError = ref('')
 const facebookSubmitting = ref(false)
 const facebookError = ref('')
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const form = reactive({
   email: '',
@@ -249,8 +239,7 @@ const onSubmit = async () => {
   errorMessage.value = ''
 
   if (!form.email || !form.password) {
-    errorMessage.value =
-      'Email and password are required.'
+    errorMessage.value = 'Email and password are required.'
     return
   }
 
@@ -262,14 +251,33 @@ const onSubmit = async () => {
   submitting.value = true
 
   try {
-    const result = await signIn({
+    // signIn() in the store already:
+    // 1. calls authService.signin()
+    // 2. calls applySession() → sets user from Supabase
+    // 3. calls authService.fetchProfile() → overwrites role from your PostgreSQL DB
+    await authStore.signIn({
       email: form.email,
       password: form.password,
     })
 
-    await router.push(
-      getPostSignInRoute(result.user.role)
-    )
+    // ✅ Read role AFTER signIn() fully resolves
+    // At this point authStore.user.role is the real DB role
+    const role = authStore.user?.role
+
+    console.log('[SignIn] Role after full signIn:', role) // Remove after debugging
+
+    if (authStore.lastSyncError) {
+      // fetchProfile failed — role may be wrong, warn but still try to redirect
+      console.warn('[SignIn] Role sync warning:', authStore.lastSyncError)
+    }
+
+    // ✅ Use role directly from store, not from getPostSignInRoute via useAuth
+    const route = authStore.getPostSignInRoute(role ?? 'consumer')
+
+    console.log('[SignIn] Redirecting to:', route) // Remove after debugging
+
+    await router.push(route)
+
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -280,12 +288,22 @@ const onSubmit = async () => {
   }
 }
 
-const handleGoogleClick = async () => {
+// ---- Google ----
+
+const handleGoogleCredential = async (credential?: string) => {
+  if (!credential) {
+    googleError.value = 'Google sign-in failed.'
+    return
+  }
+
   googleSubmitting.value = true
   googleError.value = ''
 
   try {
-    await signInWithGoogle()
+    await authStore.signInWithGoogle(credential)
+
+    const role = authStore.user?.role
+    await router.push(authStore.getPostSignInRoute(role ?? 'consumer'))
   } catch (error) {
     googleError.value =
       error instanceof Error
@@ -295,18 +313,42 @@ const handleGoogleClick = async () => {
   }
 }
 
+const googleReady = ref(false)
+
+const initializeGoogle = () => {
+  const google = (window as any).google
+
+  if (!google?.accounts?.id) return false
+
+  google.accounts.id.initialize({
+    client_id: googleClientId,
+    callback: (response: { credential?: string }) =>
+      handleGoogleCredential(response.credential),
+  })
+
+  googleReady.value = true
+  return true
+}
+
+const handleGoogleClick = () => {
+  const google = (window as any).google
+  if (!google?.accounts?.id) {
+    googleError.value = 'Google sign-in is not ready yet.'
+    return
+  }
+  google.accounts.id.prompt()
+}
+
+// ---- Facebook ----
+
 const handleFacebook = async () => {
-  console.log('[Facebook Login] Button clicked — starting Facebook OAuth flow')
   facebookSubmitting.value = true
   facebookError.value = ''
 
   try {
-    console.log('[Facebook Login] Calling signInWithFacebook()...')
-    await signInWithFacebook()
-    // If we reach here without an error, Supabase is redirecting the browser.
-    console.log('[Facebook Login] signInWithFacebook() resolved — browser should be redirecting now')
+    await authStore.signInWithFacebook()
+    // Browser redirects here — nothing after this runs
   } catch (error) {
-    console.error('[Facebook Login] Error caught in handleFacebook:', error)
     facebookError.value =
       error instanceof Error
         ? error.message
@@ -315,6 +357,28 @@ const handleFacebook = async () => {
   }
 }
 
+// ---- Mount ----
+
+onMounted(() => {
+  if (!googleClientId) {
+    googleError.value = 'Google sign-in is not configured.'
+    return
+  }
+
+  let attempts = 0
+
+  const tryInit = () => {
+    attempts++
+    if (initializeGoogle()) return
+    if (attempts >= 20) {
+      googleError.value = 'Google sign-in failed to load.'
+      return
+    }
+    setTimeout(tryInit, 300)
+  }
+
+  tryInit()
+})
 </script>
 
 <style scoped>
@@ -613,7 +677,6 @@ const handleFacebook = async () => {
 	border: 1px solid rgba(180,35,24,0.1);
 }
 
-/* premium button */
 .primary-btn {
 	position: relative;
 	height: 56px;

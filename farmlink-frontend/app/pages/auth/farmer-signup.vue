@@ -255,6 +255,30 @@ const { requestSignupOtp } = useAuth();
 const PROFILE_STORAGE_KEY = 'farmlink.farmer.profilePreview';
 const ONBOARDING_STORAGE_KEY = 'farmlink.farmer.onboarding';
 
+const dbName = 'farmlink_onboarding_db_v2';
+const storeName = 'onboarding_store';
+
+function saveToIndexedDB(key: string, value: any): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(storeName);
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      store.put(value, key);
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -395,7 +419,21 @@ const persistOnboarding = async () => {
     profilePhoto: await serializeFile(files.profilePhoto),
   };
 
-  sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(payload));
+  // Convert the Vue proxy object payload to a plain vanilla JS object
+  // so the browser's structured clone algorithm can store it in IndexedDB
+  const plainPayload = JSON.parse(JSON.stringify(payload));
+
+  try {
+    await saveToIndexedDB(ONBOARDING_STORAGE_KEY, plainPayload);
+    sessionStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+  } catch (err) {
+    console.error('Failed to save onboarding to IndexedDB, falling back to sessionStorage:', err);
+    try {
+      sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(payload));
+    } catch (fallbackErr) {
+      console.error('Fallback sessionStorage persistence failed:', fallbackErr);
+    }
+  }
 };
 
 const setPreview = (key: 'idPhoto' | 'farmDeed' | 'profilePhoto', file: File) => {
