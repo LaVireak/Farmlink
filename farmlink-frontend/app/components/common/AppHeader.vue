@@ -31,7 +31,7 @@
             <button class="flex items-center focus:outline-none" aria-label="Toggle Products">
               <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-              </svg> 
+              </svg>
             </button>
           </div>
 

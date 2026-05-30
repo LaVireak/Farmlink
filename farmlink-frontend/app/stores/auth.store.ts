@@ -104,6 +104,18 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const clearSession = () => {
+        if (typeof window !== 'undefined' && user.value?.id) {
+            const avatarKey = getAvatarStorageKey(user.value.id);
+            if (avatarKey) {
+                localStorage.removeItem(avatarKey);
+            }
+
+			const pendingAvatarKey = getPendingAvatarStorageKey(user.value.id);
+			if (pendingAvatarKey) {
+				localStorage.removeItem(pendingAvatarKey);
+			}
+        }
+
         accessToken.value = null;
         refreshToken.value = null;
         user.value = null;
@@ -218,10 +230,9 @@ export const useAuthStore = defineStore('auth', () => {
         return result;
     };
 
-    const signInWithGoogle = async (idToken: string) => {
-        const result = await authService.googleSignIn(idToken);
-        applySession(result);
-        return result;
+    const signInWithGoogle = async () => {
+        // Triggers a browser redirect — no session returned here.
+        await authService.googleSignIn();
     };
 
     const signInWithFacebook = async () => {

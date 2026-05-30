@@ -1,174 +1,180 @@
 <template>
   <CommonAppHeader />
 
-  <div class="product-detail-page">
-    <div class="detail-container">
+  <div class="products-page">
+    <!-- Banner -->
+    <section class="promo-banner">
+      <div class="banner-overlay"></div>
 
-      <!-- Breadcrumb -->
-      <nav class="breadcrumbs">
-        <NuxtLink to="/">{{ t('common.home') }}</NuxtLink>
+      <div class="banner-content">
+        <span class="banner-pill">🌿 FRESH PICKS</span>
+        <h1>Farm Fresh Produce</h1>
+        <p>
+          Harvested daily from local Cambodian farms — delivered straight to
+          your table.
+        </p>
+      </div>
+    </section>
 
-        <span class="separator">/</span>
-
-        <NuxtLink to="/user/products">
-          {{ t('common.products') }}
-        </NuxtLink>
-
-        <span class="separator">/</span>
-
-        <span class="current">
-          {{ product?.name || t('common.loading') }}
-        </span>
-      </nav>
-
-      <!-- Product -->
-      <div v-if="product" class="main-content">
-
-        <!-- Image -->
-        <div class="gallery-section">
-          <div class="main-image-wrap">
-            <img
-              :src="activeImage"
-              :alt="product.name"
-              class="main-image"
+    <!-- Intro -->
+    <section class="py-8 px-4">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold">Browse Our Products</h1>
+        <p class="text-gray-600 mt-2">
+          Fresh items directly from local farms
+        </p>
+      </div>
+      </section>
+    <div class="products-layout ps-6 py-12">
+      <!-- Sidebar -->
+      <aside class="filter-sidebar">
+        <!-- Category -->
+        <div class="filter-section">
+          <h3 class="filter-title">Search</h3>
+          <div class="relative">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Search products..."
+              class="filter-input"
             />
-
-            <span
-              v-if="product.badge"
-              :class="['card-badge', badgeClass]"
+            <button 
+              v-if="searchQuery" 
+              @click="searchQuery = ''" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              type="button"
             >
-              {{ product.badge }}
-            </span>
+              ✕
+            </button>
           </div>
         </div>
 
-        <!-- Info -->
-        <div class="info-section">
+        <div class="filter-section">
+          <h3 class="filter-title">Category</h3>
 
-          <div class="product-category">
-            {{ product.category }}
-          </div>
+          <select v-model="selectedCategory" class="filter-select">
+            <option value="All">All Categories</option>
 
-          <h1 class="product-title">
-            {{ product.name }}
-          </h1>
-
-          <!-- Rating -->
-          <div class="product-rating">
-            <span class="stars">
-              <span
-                v-for="i in 5"
-                :key="i"
-                :class="
-                  i <= Math.round(product.rating || 5)
-                    ? 'star-filled'
-                    : 'star-empty'
-                "
-              >
-                ★
-              </span>
-            </span>
-
-            <span class="rating-text">
-              {{ (product.rating || 5).toFixed(1) }}
-            </span>
-          </div>
-
-          <!-- Price -->
-          <div class="product-price-block">
-
-            <span class="price">
-              ${{ discountedPrice }}
-            </span>
-
-            <span
-              v-if="product.discount"
-              class="original-price"
+            <option
+              v-for="cat in allCategories"
+              :key="cat"
+              :value="cat"
             >
-              ${{ product.price.toFixed(2) }}
-            </span>
+              {{ cat }}
+            </option>
+          </select>
+        </div>
 
-            <span
-              v-if="product.discount"
-              class="discount-tag"
+        <!-- Rating -->
+        <div class="filter-section">
+          <h3 class="filter-title">Rating</h3>
+
+          <div class="rating-filters">
+            <button
+              v-for="r in [5,4,3,2,1]"
+              :key="r"
+              :class="[
+                'rating-option',
+                minRating === r ? 'rating-active' : ''
+              ]"
+              @click="minRating = minRating === r ? 0 : r"
             >
-              -{{ product.discount }}%
-            </span>
-          </div>
-
-          <!-- Description -->
-          <p class="short-desc">
-            {{ product.description }}
-          </p>
-
-          <!-- Quantity -->
-          <div class="action-block">
-
-            <div class="quantity-selector">
-              <button
-                @click="decrease"
-                class="qty-btn"
-              >
-                −
-              </button>
-
-              <span class="qty-val">
-                {{ quantity }}
+              <span class="rating-stars">
+                <span
+                  v-for="i in 5"
+                  :key="i"
+                  :class="i <= r ? 'star-on' : 'star-off'"
+                >
+                  ★
+                </span>
               </span>
 
-              <button
-                @click="increase"
-                class="qty-btn"
-              >
-                +
-              </button>
+              <span class="rating-label">& up</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Price -->
+        <div class="filter-section">
+          <h3 class="filter-title">Price Range</h3>
+
+          <div class="price-slider-wrap">
+            <div class="price-value">
+              <span class="price-current">
+                ${{ price }}
+              </span>
             </div>
 
-            <button
-              @click="addToCart"
-              class="add-to-cart-btn"
-            >
-              {{ t('products.addToCart') }}
-            </button>
-          </div>
+            <input
+              type="range"
+              min="0"
+              max="300"
+              v-model="price"
+              class="price-slider"
+              :style="{ '--val': (price / 300) * 100 }"
+            />
 
-          <!-- Gallery -->
-          <div
-            class="thumbnail-row mt-6"
-            v-if="product.gallery?.length > 1"
-          >
-            <button
-              v-for="(img, idx) in product.gallery"
-              :key="idx"
-              :class="[
-                'thumb-btn',
-                { active: activeImage === img }
-              ]"
-              @click="activeImage = img"
-            >
-              <img :src="img" />
-            </button>
+            <div class="price-labels">
+              <span>$0</span>
+              <span>$150</span>
+              <span>$300</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Loading -->
-      <div v-else-if="loading" class="loading-state">
-        <p>Loading product...</p>
-      </div>
+        <!-- Clear -->
+        <button class="clear-btn" @click="clearFilters">
+          Clear All Filters
+        </button>
+      </aside>
 
-      <!-- Not Found -->
-      <div v-else class="not-found">
-        <h2>Product not found</h2>
+      <!-- Products -->
+      <main class="products-main">
+        <div class="results-bar">
+          <p class="results-count">
+            Showing
+            <strong>{{ filteredProducts.length }}</strong>
+            products
+          </p>
 
-        <NuxtLink
-          to="/user/products"
-          class="back-link"
-        >
-          Return to Shop
-        </NuxtLink>
-      </div>
+          <select v-model="sortBy" class="sort-select">
+            <option value="default">Sort by: Default</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Top Rated</option>
+            <option value="name">Name A-Z</option>
+          </select>
+        </div>
 
+        <!-- Loading -->
+        <div v-if="loading" class="empty-state">
+          <p>Loading products...</p>
+        </div>
+
+        <!-- Product Grid -->
+        <div v-else class="product-grid">
+          <NuxtLink
+            v-for="product in sortedProducts"
+            :key="product.id"
+            :to="`/user/products/${product.id}`"
+            class="product-link"
+          >
+            <UserProductCard
+              :product="product"
+              @add-to-cart="handleAddToCart"
+            />
+          </NuxtLink>
+        </div>
+
+        <div v-if="!loading && filteredProducts.length === 0" class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+          <p class="text-lg font-semibold text-gray-700 mt-2">No products found matching your search</p>
+          <p class="text-sm text-gray-500">Try adjusting your filters or search keywords.</p>
+        </div>
+      </main>
     </div>
   </div>
 
@@ -176,587 +182,581 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
 
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
+import UserProductCard from '~/components/user/UserProductCard.vue'
+
+import { useAuthStore } from '~/stores/auth.store'
+
+const authStore = useAuthStore()
+import { ref, computed, onMounted, watch } from "vue"
+import { useRoute } from "vue-router"
 
 const route = useRoute()
 const config = useRuntimeConfig()
 
-const { t } = useI18n()
-
-const product = ref(null)
-
-const reviews = ref([
-  { name: 'Sokha Rith', comment: 'Extremely fresh and well packaged. Best organic produce in Cambodia!' },
-  { name: 'Dara Pich', comment: 'Very clean and high quality. Will definitely order again next week!' }
-])
-const relatedProducts = ref([])
-const activeImage = ref('')
-const quantity = ref(1)
-
+// ================= STATE =================
+const selectedCategory = ref('All')
+const price = ref(300)
+const minRating = ref(0)
+const sortBy = ref('default')
 const loading = ref(false)
-onMounted(async () => {
-  await fetchProduct()
-  await fetchRelatedProducts()
-})
+const searchQuery = ref(route.query.search || '')
 
-// ================= FETCH PRODUCT =================
-const fetchProduct = async () => {
+const products = ref([])
+const allCategories = ref([])
+
+// ================= FETCH PRODUCTS =================
+const fetchProducts = async () => {
   loading.value = true
 
   try {
-    const res = await $fetch(
-      `http://localhost:3001/products/${route.params.id}`
-    )
+    const res = await $fetch('http://localhost:3001/products', {
+      headers: {
+        Authorization: `Bearer ${authStore.accessToken}`
+      }
+    })
 
-    product.value = res
+    products.value = Array.isArray(res) ? res : []
 
-    activeImage.value =
-      res.gallery?.[0] ||
-      res.image ||
-      '/images/placeholder.jpg'
+    allCategories.value = [
+      ...new Set(products.value.map((p) => p.category))
+    ]
 
   } catch (err) {
-    console.error('Failed to fetch product:', err)
-    product.value = null
+    console.error('Failed to fetch products:', err)
+    products.value = []
   } finally {
     loading.value = false
   }
 }
 
-const fetchRelatedProducts = async () => {
+onMounted(fetchProducts)
+
+// ================= CLEAR FILTERS =================
+const fetchCategories = async () => {
   try {
-    const res = await $fetch(`${config.public.apiUrl}/products`)
-    if (res && Array.isArray(res)) {
-      relatedProducts.value = res.filter(p => String(p.id) !== String(route.params.id)).slice(0, 4)
+    if (products.value.length > 0) {
+      allCategories.value = [...new Set(products.value.map(p => p.category).filter(Boolean))]
     }
   } catch (err) {
-    console.error('Failed to fetch related products:', err)
+    console.error('Failed to fetch categories:', err)
   }
 }
 
-// ================= PRICE =================
-const discountedPrice = computed(() => {
-  if (product.value?.discount) {
-    return (
-      product.value.price *
-      (1 - product.value.discount / 100)
-    ).toFixed(2)
-  }
-
-  return product.value
-    ? product.value.price.toFixed(2)
-    : '0.00'
+// Watch for route search param changes (e.g. from header search)
+watch(() => route.query.search, (newVal) => {
+  searchQuery.value = newVal || ''
 })
 
-// ================= BADGE =================
-const badgeClass = computed(() => {
-  const badge = (
-    product.value?.badge || ''
-  ).toLowerCase()
-
-  if (badge === 'sale') return 'badge-sale'
-  if (badge === 'new') return 'badge-new'
-  if (badge === 'best seller') return 'badge-best'
-
-  return 'badge-default'
+// Sync search query changes to URL route
+watch(searchQuery, (newVal) => {
+  const query = { ...route.query }
+  if (newVal) {
+    query.search = newVal
+  } else {
+    delete query.search
+  }
+  navigateTo({ path: route.path, query })
 })
 
-// ================= QUANTITY =================
-const increase = () => {
-  quantity.value++
+const clearFilters = () => {
+  selectedCategory.value = 'All'
+  price.value = 300
+  minRating.value = 0
+  sortBy.value = 'default'
+  searchQuery.value = ''
+  navigateTo('/user/products')
 }
 
-const decrease = () => {
-  if (quantity.value > 1) {
-    quantity.value--
+// ================= FILTER =================
+const filteredProducts = computed(() => {
+  return products.value.filter((p) => {
+    const matchCategory =
+      selectedCategory.value === 'All' ||
+      p.category === selectedCategory.value
+
+    const effectivePrice = p.discount
+      ? p.price * (1 - p.discount / 100)
+      : p.price
+
+    const matchPrice = effectivePrice <= price.value
+    const matchRating = (p.rating || 0) >= minRating.value
+    
+    const query = searchQuery.value.trim().toLowerCase()
+    const matchSearch = !query || 
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.description && p.description.toLowerCase().includes(query))
+
+    return matchCategory && matchPrice && matchRating && matchSearch
+  })
+})
+
+// ================= SORT =================
+const sortedProducts = computed(() => {
+  const arr = [...filteredProducts.value]
+
+  switch (sortBy.value) {
+    case 'price-low':
+      return arr.sort((a, b) => {
+        const aPrice = a.discount
+          ? a.price * (1 - a.discount / 100)
+          : a.price
+
+        const bPrice = b.discount
+          ? b.price * (1 - b.discount / 100)
+          : b.price
+
+        return aPrice - bPrice
+      })
+
+    case 'price-high':
+      return arr.sort((a, b) => {
+        const aPrice = a.discount
+          ? a.price * (1 - a.discount / 100)
+          : a.price
+
+        const bPrice = b.discount
+          ? b.price * (1 - b.discount / 100)
+          : b.price
+
+        return bPrice - aPrice
+      })
+
+    case 'rating':
+      return arr.sort(
+        (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
+      )
+
+    case 'name':
+      return arr.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+
+    default:
+      return arr
   }
-}
+})
 
 // ================= CART =================
-const addToCart = () => {
-  console.log(
-    'Added to cart:',
-    product.value,
-    'Quantity:',
-    quantity.value
-  )
+const handleAddToCart = (product) => {
+  console.log('Added to cart:', product)
 }
 </script>
 
 <style scoped>
-.product-detail-page {
+.products-page {
   min-height: 100vh;
   background: #f4f4ee;
   font-family: 'Inter', sans-serif;
-  padding: 32px 20px 60px;
+  padding-top: 18px;
 }
 
-.detail-container {
-  width: 100%;
-  padding: 0 12px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.breadcrumbs {
+.promo-banner {
+  position: relative;
+  width: 94%;
+  height: 60vh;
+  min-height: 280px;
+  background-image: url('/images/farm-banner.jpg');
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.breadcrumbs a {
-  color: #42493e;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.breadcrumbs a:hover {
-  color: #2e7e3f;
-}
-
-.breadcrumbs .separator {
-  color: #9ca3af;
-}
-
-.breadcrumbs .current {
-  color: #1f6a35;
-  font-weight: 600;
-}
-
-.main-content {
-  display: grid;
-  grid-template-columns: 50% 1fr;
-  gap: 45px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-}
-
-.gallery-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-left: 68px;
-}
-
-.main-image-wrap {
-  position: relative;
-  width: 95%;
-  height: 70vh;
-  border-radius: 16px;
+  padding-bottom: 60px;
+  margin: auto;
+  border-radius: 25px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
-.main-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.main-image-wrap:hover .main-image {
-  transform: scale(1.05);
-}
-
-.card-badge {
+.banner-overlay {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 30, 16, 0.82) 0%,
+    rgba(10, 30, 16, 0.50) 50%,
+    rgba(10, 30, 16, 0.25) 100%
+  );
+}
+
+.banner-content {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  padding: 36px 48px;
+}
+
+.banner-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  z-index: 10;
+  letter-spacing: 0.08em;
+  color: #c8e6c9;
 }
-.badge-sale { background: #fee2e2; color: #dc2626; }
-.badge-new { background: #dbeafe; color: #1d4ed8; }
-.badge-best { background: #fef3c7; color: #b45309; }
-.badge-default { background: #dcfce7; color: #15803d; }
 
-.thumbnail-row {
+.banner-content h1 {
+  margin: 12px 0 0;
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: #f8faf5;
+}
+
+.banner-content p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #d4e4d6;
+  max-width: 420px;
+}
+
+.products-layout {
   display: flex;
-  gap: 25px;
-}
-
-.thumb-btn {
-  width: 120px;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  border: 2px solid transparent;
-  overflow: hidden;
-  cursor: pointer;
-  padding: 0;
-  background: #fff;
-  transition: all 0.2s;
-}
-
-.thumb-btn img {
+  gap: 24px;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* padding: 28px 32px 48px; */
 }
 
-.thumb-btn.active {
-  border-color: #2e7e3f;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(46, 126, 63, 0.2);
-}
-
-.info-section {
+.filter-sidebar {
+  width: 330px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(200, 210, 200, 0.4);
+  border-radius: 12px;
+  padding: 24px 22px;
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
-.product-category {
-  font-size: 12px;
+.filter-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1b1c1a;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2342493e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1b1c1a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+  border-color: #2e7e3f;
+}
+
+.filter-select:focus {
+  border-color: #2e7e3f;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-title {
+  margin: 0;
+  font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #2e7e3f;
-  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+  color: #42493e;
 }
 
-.product-title {
-  margin: 0 0 12px;
-  font-size: 32px;
-  font-weight: 800;
-  color: #1b1c1a;
-  line-height: 1.1;
-}
-
-.product-rating {
+.filter-chips {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.stars {
-  font-size: 16px;
-  display: flex;
-  gap: 2px;
-}
-
-.star-filled { color: #f59e0b; }
-.star-empty { color: #d1d5db; }
-
-.rating-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.product-price-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(200, 210, 200, 0.4);
-}
-
-.price {
-  font-size: 36px;
-  font-weight: 800;
-  color: #1f6a35;
-  line-height: 1;
-}
-
-.original-price {
-  font-size: 18px;
-  color: #9ca3af;
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-.discount-tag {
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.short-desc {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #4b5563;
-  margin: 0 0 32px;
-}
-
-/* ACTIONS */
-.action-block {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.quantity-selector {
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border: 1px solid #c2c9bb;
+.chip {
+  padding: 6px 14px;
   border-radius: 999px;
-  padding: 4px;
-}
-
-.qty-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
+  border: 1.5px solid #c2c9bb;
   background: transparent;
-  font-size: 20px;
+  font-size: 12px;
+  font-weight: 600;
   color: #42493e;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
-.qty-btn:hover {
-  background: #f3f4f6;
+.chip:hover {
+  border-color: #2e7e3f;
+  color: #2e7e3f;
 }
 
-.qty-val {
-  min-width: 32px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 16px;
-  color: #1b1c1a;
-}
-
-.add-to-cart-btn {
-  padding: 0 48px;
-  border: none;
-  border-radius: 999px;
+.chip-active {
   background: linear-gradient(135deg, #2e7e3f, #1f6130);
   color: #fff;
-  font-size: 15px;
-  font-weight: 700;
+  border-color: transparent;
+}
+
+.rating-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rating-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(46, 126, 63, 0.25);
+  transition: background 0.15s;
 }
 
-.add-to-cart-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(107, 161, 119, 0.35);
+.rating-option:hover {
+  background: rgba(46, 126, 63, 0.06);
 }
 
-.save-btn {
-  width: 48px;
-  height: 48px;
-  border: 1px solid #c2c9bb;
+.rating-active {
+  background: rgba(46, 126, 63, 0.10);
+}
+
+.rating-stars {
+  font-size: 16px;
+  display: flex;
+  gap: 1px;
+}
+
+.star-on {
+  color: #f59e0b;
+}
+
+.star-off {
+  color: #d1d5db;
+}
+
+.rating-label {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+
+.price-slider-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.price-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #2e7e3f 0%, #2e7e3f calc(var(--val, 100) * 1%), #e5e7eb calc(var(--val, 100) * 1%), #e5e7eb 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.price-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #fff;
-  color: #42493e;
+  border: 3px solid #2e7e3f;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.price-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 6px rgba(46, 126, 63, 0.12);
+}
+
+.price-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #2e7e3f;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.price-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.price-current {
+  font-weight: 700;
+  color: #1f6a35;
+}
+
+.clear-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: #42493e;
   cursor: pointer;
   transition: all 0.2s;
-  flex-shrink: 0;
 }
 
-.save-btn:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
-.save-btn.is-saved {
-  border-color: #ef4444;
-  color: #ef4444;
+.clear-btn:hover {
+  border-color: #b91c1c;
+  color: #b91c1c;
   background: #fef2f2;
 }
 
-/* DELIVERY INFO */
-.delivery-info {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.products-main {
+  flex: 1;
+  min-width: 0;
 }
-
-.info-item {
+.results-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #4b5563;
-  font-size: 14px;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
-.info-item svg {
-  color: #2e7e3f;
-  flex-shrink: 0;
-}
-
-.info-item strong {
-  color: #1b1c1a;
-}
-
-.tabs-section {
-  background: #fff;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-}
-
-.tabs-header {
-  display: flex;
-  gap: 32px;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 24px;
-}
-
-.tab-btn {
-  padding: 0 0 12px;
-  border: none;
-  background: transparent;
-  font-size: 16px;
-  font-weight: 600;
-  color: #6b7280;
-  cursor: pointer;
-  position: relative;
-  transition: color 0.2s;
-}
-
-.tab-btn:hover {
-  color: #1b1c1a;
-}
-
-.tab-btn.active {
-  color: #2e7e3f;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #2e7e3f;
-  border-radius: 3px 3px 0 0;
-}
-
-.tab-content {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #4b5563;
-}
-
-.tab-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1b1c1a;
-  margin: 0 0 12px;
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.review-card {
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.review-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.reviewer-name {
-  font-weight: 700;
-  color: #1b1c1a;
-}
-
-.review-comment {
+.results-count {
   margin: 0;
+  font-size: 13px;
+  color: #6b7280;
 }
 
-.related-products {
-  margin-top: 24px;
-}
-
-.section-title {
-  font-size: 24px;
-  font-weight: 800;
+.results-count strong {
   color: #1b1c1a;
-  margin: 0 0 24px;
+  font-weight: 700;
 }
 
+.sort-select {
+  padding: 7px 12px;
+  border: 1.5px solid #c2c9bb;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 500;
+  color: #42493e;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-right: 18px;
+}
+
+.sort-select:focus {
+  border-color: #2e7e3f;
+}
+
+/* PRODUCT GRID */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
 }
 
+/* EMPTY STATE */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+/* ──────────────── RESPONSIVE ──────────────── */
 @media (max-width: 900px) {
-  .main-content {
-    grid-template-columns: 1fr;
-    gap: 32px;
+  .products-layout {
+    flex-direction: column;
   }
-}
 
-@media (max-width: 600px) {
-  .product-detail-page {
-    padding: 16px 12px 40px;
+  .filter-sidebar {
+    width: 100%;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
   }
-  
-  .main-content, .tabs-section {
-    padding: 20px;
+
+  .filter-section {
+    flex: 1;
+    min-width: 180px;
   }
-  
-  .product-title {
-    font-size: 24px;
-  }
-  
-  .price {
-    font-size: 28px;
-  }
-  
-  .action-block {
+
+  .rating-filters {
+    flex-direction: row;
     flex-wrap: wrap;
   }
-  
-  .add-to-cart-btn {
-    width: 100%;
-    order: 3;
-    padding: 14px;
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
-  
+}
+
+@media (max-width: 560px) {
+  .products-layout {
+    padding: 16px 14px 36px;
+  }
+
+  .banner-content {
+    padding: 24px 20px;
+  }
+
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+
+  .filter-sidebar {
+    padding: 14px;
   }
 }
 </style>

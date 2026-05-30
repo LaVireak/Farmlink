@@ -1,5 +1,5 @@
 <template>
-
+  <CommonAppHeader />
   <div class="favorites-page">
 
     <!-- Hero Banner -->
@@ -143,6 +143,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n'
+
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
 
 useHead({
   title: 'My Favorites | FarmLink Cambodia',

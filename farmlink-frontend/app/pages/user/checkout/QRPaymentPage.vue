@@ -10,8 +10,8 @@
           <div class="flex items-center gap-2 mb-2">
             <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded">Secure Checkout</span>
           </div>
-          <h1 class="text-4xl font-extrabold text-[#064e3b] tracking-tight">{{ t('qr.finalize') }}</h1>
-          <p class="text-slate-500 mt-2 font-medium">Order #{{ tranId?.slice(-8) || '...' }} • {{ t('qr.secureQr') }}</p>
+          <h1 class="text-4xl font-extrabold text-[#064e3b] tracking-tight">Finalize Your Harvest</h1>
+          <p class="text-slate-500 mt-2 font-medium">Order #{{ tranId?.slice(-8) || '...' }} • Secure QR Payment</p>
         </div>
         
         <!-- Premium Progress Indicator -->
@@ -25,34 +25,6 @@
           </div>
         </div>
       </header>
-
-      <div class="flex items-center gap-2 text-gray-400">
-        <span class="w-6 h-6 flex items-center justify-center rounded-full border">2</span>
-        Shipping
-      </div>
-      <div class="flex-1 h-px bg-gray-300"></div>
-
-      <div class="flex items-center gap-2 text-green-700 font-semibold">
-        <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-700 text-white">3</span>
-        Payment
-      </div>
-    </div>
-
-    <div class="max-w-5xl mx-auto">
-
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        
-        <!-- Premium Progress Indicator -->
-        <div class="flex items-center gap-3">
-          <div class="flex flex-col items-end">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Step 3 of 3</span>
-            <span class="text-sm font-bold text-green-700">Payment & Confirmation</span>
-          </div>
-          <div class="w-12 h-12 rounded-full border-4 border-green-100 border-t-green-600 flex items-center justify-center">
-            <span class="text-sm font-black text-green-700">100%</span>
-          </div>
-        </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
@@ -89,7 +61,7 @@
                 </div>
               </div>
             </div>
-  </div>
+>
 
             <div class="p-10 flex flex-col items-center">
               
@@ -162,7 +134,7 @@
               <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               <div class="relative flex flex-col items-center">
                 <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span class="text-xs uppercase tracking-[0.2em] font-black">{{ t('qr.refresh') }}</span>
+                <span class="text-xs uppercase tracking-[0.2em] font-black">Refresh Payment Status</span>
               </div>
             </button>
           </div>
@@ -251,18 +223,15 @@
       <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
       </div>
-      <span class="font-bold text-sm">{{ t('qr.paymentSuccessToast') }}</span>
+      <span class="font-bold text-sm">Payment successfully processed!</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useQR } from '@/composables/useQR'
 import QrcodeVue from 'qrcode.vue'
-
-const { t } = useI18n()
 
 definePageMeta({
   middleware: 'user',

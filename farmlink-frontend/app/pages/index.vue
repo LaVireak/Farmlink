@@ -344,7 +344,15 @@ const products = [
 
 const provinceFarms = [
   {
-    keyPrefix: 'farmsData.f1',
+    name: 'Takeo Organic Farm',
+    province: 'Takeo',
+    description: 'Fresh organic vegetables harvested every morning.',
+    products: 'Vegetables & Herbs',
+    rating: '4.9',
+    image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
+  },
+  {
+    name: 'Battambang Fruit Garden',
     province: 'Battambang',
     rating: '4.8',
     image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'
@@ -397,8 +405,22 @@ const reviews = [
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
   },
   {
-    name: 'Borey V.',
-    keyPrefix: 'reviewsData.r2',
+    name: 'Vannak R.',
+    role: 'Restaurant Chef',
+    quote: 'The product quality is consistently amazing.',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
+  },
+
+  {
+    name: 'Bona K.',
+    role: 'Healthy Eater',
+    quote: 'I love knowing exactly which Takeo farm my greens came from!',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+  },
+  {
+    name: 'Dara S.',
+    role: 'Family Parent',
+    quote: 'The organic mangoes are sweet, fresh, and kid-approved.',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
   }
 ]
