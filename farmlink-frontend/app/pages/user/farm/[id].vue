@@ -94,72 +94,435 @@
 
   <CommonAppFooter />
 </template>
-
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import { Heart } from 'lucide-vue-next'
 
 const route = useRoute()
-const id = route.params.id || 'f1'
 
+const id = computed(() => String(route.params.id))
+
+/**
+ * FULL FARM DATA (6 FARMS)
+ * EACH FARM HAS 2 PRODUCTS
+ */
 const sampleFarms = ref([
   {
     id: 'f1',
-    name: 'Green Valley Farm',
-    address: '123 Riverside, Kampong Cham',
-    images: ['/assets/images/farm1.png','/assets/images/farm1-2.png', '/assets/images/farm1-3.png', '/assets/images/farm1-4.png'],
-    farmer: { name: 'Sophea', phone: '+85512345678', email: 'sophea@example.com', avatar: '/assets/images/farmer1.png', workingHours: 'Mon–Sat 07:00–17:00', social: { facebook: 'https://facebook.com/sophea', twitter: '' } },
+    name: 'Cham River Farm',
+    province: 'Kampong Cham',
+    rating: 4.8,
+    address: 'Cham River Area, Kampong Cham',
+    description: 'Organic vegetable plots near the river.',
+    images: [
+      '/assets/images/farm1.png',
+      '/assets/images/farm1-2.png',
+      '/assets/images/farm1-3.png'
+    ],
+    farmer: {
+      name: 'Sophal',
+      phone: '+85512345678',
+      email: 'sophal@example.com',
+      avatar: '/assets/images/farmer1.png',
+      workingHours: 'Mon–Sat 07:00–17:00',
+      social: { facebook: '', twitter: '' }
+    },
     products: [
-      { id: 'p1', name: 'Organic Lettuce', description: 'Fresh hydroponic lettuce.', price: 1.5, image: '/assets/images/product1.png', stock: 12 },
-      { id: 'p2', name: 'Cherry Tomatoes', description: 'Sweet cherry tomatoes.', price: 2.2, image: '/assets/images/product2.png', stock: 0 },
-      { id: 'p4', name: 'Basil Bundle', description: 'Aromatic basil for cooking.', price: 0.9, image: '/assets/images/product1.png', stock: 5 },
-      { id: 'p5', name: 'Spring Mix (250g)', description: 'Assorted salad leaves.', price: 1.8, image: '/assets/images/product2.png', stock: 3 }
+      {
+        id: 'p1',
+        name: 'Organic Lettuce',
+        description: 'Fresh hydroponic lettuce.',
+        price: 1.5,
+        image: '/assets/images/product1.png',
+        stock: 12
+      },
+      {
+        id: 'p2',
+        name: 'Cherry Tomatoes',
+        description: 'Sweet cherry tomatoes.',
+        price: 2.2,
+        image: '/assets/images/product2.png',
+        stock: 8
+      }
     ]
   },
+
   {
     id: 'f2',
-    name: 'Kandal Orchards',
-    address: 'Orchard Road, Kandal',
-    images: ['/assets/images/farm2.png'],
-    farmer: { name: 'Vanna', phone: '+85598765432', email: 'vanna@example.com', avatar: '/assets/images/farmer2.png', workingHours: 'Mon–Fri 08:00–16:00', social: { facebook: 'https://facebook.com/vanna', twitter: 'https://twitter.com/vanna' } },
+    name: 'Green Valley Farm',
+    province: 'Kampong Cham',
+    rating: 4.6,
+    address: 'Green Valley Road',
+    description: 'Family-run vegetable farm.',
+    images: ['/assets/images/farm2.png', '/assets/images/farm2-2.png', '/assets/images/farm2-3.png'],
+    farmer: {
+      name: 'Dara',
+      phone: '+85511122233',
+      email: 'dara@example.com',
+      avatar: '/assets/images/farmer1.png',
+      workingHours: 'Mon–Fri 08:00–17:00',
+      social: { facebook: '', twitter: '' }
+    },
     products: [
-      { id: 'p3', name: 'Mango (1kg)', description: 'Seasonal mangoes.', price: 3.0, image: '/assets/images/product3.png', stock: 8 }
+      {
+        id: 'p3',
+        name: 'Cabbage',
+        description: 'Fresh green cabbage.',
+        price: 1.2,
+        image: '/assets/images/product1.png',
+        stock: 10
+      },
+      {
+        id: 'p4',
+        name: 'Cucumber',
+        description: 'Organic cucumbers.',
+        price: 1.0,
+        image: '/assets/images/product2.png',
+        stock: 6
+      }
+    ]
+  },
+
+  {
+    id: 'f3',
+    name: 'Kandal Fresh',
+    province: 'Kandal',
+    rating: 3.5,
+    address: 'Kandal Market Area',
+    description: 'Mixed produce and local deliveries.',
+    images: ['/assets/images/farm3.png', '/assets/images/farm3-2.png', '/assets/images/farm3-3.png'],
+    farmer: {
+      name: 'Vanna',
+      phone: '+85598765432',
+      email: 'vanna@example.com',
+      avatar: '/assets/images/farmer2.png',
+      workingHours: 'Mon–Sat 08:00–16:00',
+      social: { facebook: '', twitter: '' }
+    },
+    products: [
+      {
+        id: 'p5',
+        name: 'Carrot',
+        description: 'Fresh carrots.',
+        price: 0.8,
+        image: '/assets/images/product1.png',
+        stock: 15
+      },
+      {
+        id: 'p6',
+        name: 'Spinach',
+        description: 'Organic spinach leaves.',
+        price: 1.3,
+        image: '/assets/images/product2.png',
+        stock: 9
+      }
+    ]
+  },
+
+  {
+    id: 'f4',
+    name: 'Kandal Orchards',
+    province: 'Kandal',
+    rating: 4.2,
+    address: 'Orchard Road, Kandal',
+    description: 'Fruit orchard specialising in mangoes.',
+    images: ['/assets/images/farm4.png', '/assets/images/farm4-2.png', '/assets/images/farm4-3.png'],
+    farmer: {
+      name: 'Sokha',
+      phone: '+85522233344',
+      email: 'sokha@example.com',
+      avatar: '/assets/images/farmer2.png',
+      workingHours: 'Mon–Fri 07:30–16:00',
+      social: { facebook: '', twitter: '' }
+    },
+    products: [
+      {
+        id: 'p7',
+        name: 'Mango',
+        description: 'Sweet tropical mangoes.',
+        price: 2.5,
+        image: '/assets/images/product1.png',
+        stock: 7
+      },
+      {
+        id: 'p8',
+        name: 'Banana',
+        description: 'Fresh bananas.',
+        price: 1.1,
+        image: '/assets/images/product2.png',
+        stock: 20
+      }
+    ]
+  },
+
+  {
+    id: 'f5',
+    name: 'Ta Keo Greens',
+    province: 'Ta Keo',
+    rating: 4.0,
+    address: 'Ta Keo Zone',
+    description: 'Salad greens and herbs.',
+    images: ['/assets/images/farm5.png', '/assets/images/farm5-2.png', '/assets/images/farm5-3.png'],
+    farmer: {
+      name: 'Rina',
+      phone: '+85533344455',
+      email: 'rina@example.com',
+      avatar: '/assets/images/farmer3.png',
+      workingHours: 'Mon–Sat 08:00–17:00',
+      social: { facebook: '', twitter: '' }
+    },
+    products: [
+      {
+        id: 'p9',
+        name: 'Lettuce Mix',
+        description: 'Fresh salad mix.',
+        price: 1.4,
+        image: '/assets/images/product1.png',
+        stock: 11
+      },
+      {
+        id: 'p10',
+        name: 'Basil',
+        description: 'Aromatic basil leaves.',
+        price: 0.9,
+        image: '/assets/images/product2.png',
+        stock: 13
+      }
+    ]
+  },
+
+  {
+    id: 'f6',
+    name: 'Ta Keo Hydroponics',
+    province: 'Ta Keo',
+    rating: 3.9,
+    address: 'Hydroponic Zone',
+    description: 'Modern greenhouse operations.',
+    images: ['/assets/images/farm6.png', '/assets/images/farm6-2.png', '/assets/images/farm6-3.png'],
+    farmer: {
+      name: 'Bora',
+      phone: '+85544455566',
+      email: 'bora@example.com',
+      avatar: '/assets/images/farmer3.png',
+      workingHours: 'Mon–Fri 08:00–16:00',
+      social: { facebook: '', twitter: '' }
+    },
+    products: [
+      {
+        id: 'p11',
+        name: 'Hydro Lettuce',
+        description: 'Hydroponic lettuce.',
+        price: 1.6,
+        image: '/assets/images/product1.png',
+        stock: 14
+      },
+      {
+        id: 'p12',
+        name: 'Hydro Spinach',
+        description: 'Clean hydro spinach.',
+        price: 1.7,
+        image: '/assets/images/product2.png',
+        stock: 10
+      }
     ]
   }
 ])
 
-const farm = computed(() => sampleFarms.value.find(f => f.id === id))
+/**
+ * FIND FARM BY ID
+ */
+const farm = computed(() =>
+  sampleFarms.value.find(f => f.id === id.value)
+)
 
+/**
+ * CART + FAVORITES
+ */
 const cart = ref([])
 const favorites = ref(new Set())
 
 function addToCart(prod) {
   if (!prod || prod.stock <= 0) return
-  // decrement stock
+
   prod.stock -= 1
-  // add to simple cart (merge by id)
+
   const existing = cart.value.find(i => i.id === prod.id)
-  if (existing) existing.qty += 1
-  else cart.value.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1 })
-  console.log('Added to cart:', prod.id, 'cart:', cart.value)
+
+  if (existing) {
+    existing.qty += 1
+  } else {
+    cart.value.push({
+      id: prod.id,
+      name: prod.name,
+      price: prod.price,
+      qty: 1
+    })
+  }
 }
 
 function toggleFavorite(prod) {
   if (!prod) return
-  if (favorites.value.has(prod.id)) favorites.value.delete(prod.id)
-  else favorites.value.add(prod.id)
+
+  if (favorites.value.has(prod.id)) {
+    favorites.value.delete(prod.id)
+  } else {
+    favorites.value.add(prod.id)
+  }
 }
 
 function prodFavorited(prod) {
   return prod && favorites.value.has(prod.id)
 }
 
-function formatPrice(p) { if (p == null) return '' ; return `$${p.toFixed(2)}` }
+function formatPrice(p) {
+  return p ? `$${p.toFixed(2)}` : ''
+}
 </script>
 
 <style scoped>
 .max-w-6xl { max-width: 1024px; }
+
+/* PAGE BACKGROUND */
+.page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #e8f5e9, #ffffff 60%);
+  padding-bottom: 40px;
+}
+
+/* MAIN CONTAINER */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* GRID LAYOUT SPACING */
+.grid {
+  gap: 24px;
+}
+
+/* LEFT SIDEBAR (FARMER INFO) */
+aside {
+  background: linear-gradient(180deg, #ffffff, #f7fff7);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(31, 122, 46, 0.1);
+}
+
+/* FARMER IMAGE */
+aside img {
+  width: 110px;        /* or any size you want */
+  height: 110px;      /* must match width for perfect circle */
+  border-radius: 50%; /* THIS makes it circle */
+  object-fit: cover;  /* prevents stretching */
+  border: 4px sold white; /* optional white border */
+  padding: 3px;
+  background: white;
+  display: block;
+  margin: 0 auto;     /* center it */
+}
+
+/* FARMER NAME */
+aside h2 {
+  color: #1f7a2e;
+  font-size: 20px;
+}
+
+/* RIGHT PANEL */
+section {
+  border-radius: 18px;
+}
+
+/* CARD BLOCKS */
+.bg-white {
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* FARM TITLE */
+h3 {
+  color: #1f7a2e;
+}
+
+/* IMAGE GALLERY */
+img {
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+img:hover {
+  transform: scale(1.03);
+}
+
+/* PRODUCT CARD ROW */
+.border.rounded.p-3 {
+  background: linear-gradient(135deg, #ffffff, #f6fff6);
+  border: 1px solid rgba(31, 122, 46, 0.15);
+  transition: 0.2s ease;
+}
+
+.border.rounded.p-3:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* PRICE TEXT */
+.text-green-700 {
+  color: #1f7a2e !important;
+}
+
+/* STOCK BADGE */
+.text-red-500 {
+  font-weight: 600;
+}
+
+/* BUTTON */
+button {
+  transition: 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* BACK BUTTON */
+a {
+  transition: 0.2s;
+}
+
+a:hover {
+  background: #166023 !important;
+}
+
+/* HEART ICON */
+svg {
+  transition: 0.2s ease;
+}
+
+svg:hover {
+  transform: scale(1.2);
+  color: #ff4d4d;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  main {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  aside {
+    margin-bottom: 20px;
+  }
+}
 </style>
