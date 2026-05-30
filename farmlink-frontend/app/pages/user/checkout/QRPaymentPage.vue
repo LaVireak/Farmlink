@@ -1,4 +1,5 @@
 <template>
+   <CommonAppHeader />
   <div class="min-h-screen bg-[#FDFCFB] py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-green-100 selection:text-green-900">
     <!-- Subtle Background Element -->
     <div class="fixed top-0 left-0 w-full h-64 bg-gradient-to-b from-[#f0f9eb] to-transparent pointer-events-none -z-10"></div>
@@ -25,7 +26,32 @@
           </div>
         </div>
       </header>
+      
+  <!-- Progress Steps -->
+      <div class="flex items-center gap-4 mb-8 text-sm">
+         <div class="flex items-center gap-2 text-gray-400">
+          <span class="w-6 h-6 flex items-center justify-center rounded-full border">1</span>
+          Cart
+        </div>
+        <div class="flex-1 h-px bg-gray-300"></div>
+        <div class="flex items-center gap-2 text-gray-400">
+          <span class="w-6 h-6 flex items-center justify-center rounded-full border">2</span>
+          Address
+        </div>
+        <div class="flex-1 h-px bg-gray-300"></div>
+       <div class="flex items-center gap-2 text-green-700 font-semibold">
+          <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-700 text-white">3</span>
+          Payment
+        </div>
+      </div>
+      <nuxt-link to="/user/checkout/address" class="text-sm text-green-700 font-bold hover:underline flex items-center gap-1 mb-6">
+            <div class=" bg-green-700 text-white rounded-full flex items-center justify-center px-3 py-3">
+              Change Method
+             </div>
+      </nuxt-link>
+   
 
+      
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         <!-- Left Column: Payment Area -->
@@ -210,10 +236,7 @@
             </div>
           </div>
           
-          <button class="w-full text-slate-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-green-700 transition-colors uppercase tracking-widest">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Change Payment Method
-          </button>
+         
         </div>
       </div>
     </div>
@@ -226,6 +249,7 @@
       <span class="font-bold text-sm">Payment successfully processed!</span>
     </div>
   </div>
+   <CommonAppFooter />
 </template>
 
 <script setup lang="ts">

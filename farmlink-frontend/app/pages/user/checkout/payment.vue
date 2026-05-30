@@ -119,44 +119,77 @@
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div class="space-y-6">
-        <!-- Summary -->
-        <div class="bg-green-800 text-white p-6 rounded-2xl shadow-lg">
-          <h3 class="font-semibold mb-4">Order Summary</h3>
+               <!-- RIGHT: Order Summary -->
+             <div class="space-y-6 lg:col-span-1 lg:sticky lg:top-8 self-start">
+          <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-gray-50">
+            <h2 class="text-2xl font-black text-[#0a4d1e] mb-8">Order Summary</h2>
+            
+            <div class="space-y-6 mb-8">
+              <div v-for="item in summaryItems" :key="item.name" class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-full object-cover bg-gray-50" />
+                  <div>
+                    <h3 class="font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
+                    <p class="text-xs text-gray-400 font-medium">{{ item.details }}</p>
+                  </div>
+                </div>
+                <span class="font-black text-[#0a4d1e]">${{ item.price.toFixed(2) }}</span>
+              </div>
+            </div>
 
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between">
-              <span>Organic Veggie Box (L)</span>
-              <span>$45.00</span>
+            <div class="space-y-3 pt-6 border-t border-gray-100 mb-8">
+              <div class="flex justify-between text-sm font-semibold text-gray-400">
+                <span>Subtotal</span>
+                <span>$17.00</span>
+              </div>
+              <div class="flex justify-between text-sm font-semibold text-gray-400">
+                <span>Delivery Fee</span>
+                <span>$5.00</span>
+              </div>
+              <div class="flex justify-between items-end pt-4">
+                <span class="text-lg font-bold text-[#0a4d1e]">Total Price</span>
+                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">$21.00</span>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span>Artisanal Honey Jar</span>
-              <span>$12.50</span>
+
+            <div class="space-y-4 mb-8">
+              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Payment Method</p>
+              
+              <div v-for="method in paymentMethods" :key="method.id" 
+                @click="selectedPayment = method.id"
+                class="flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all"
+                :class="selectedPayment === method.id ? 'border-[#0a4d1e] bg-[#f7fdf4]' : 'border-gray-100 hover:border-gray-200'">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" :class="method.bgColor">
+                    <component :is="method.icon" class="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p class="font-bold text-sm text-[#0a4d1e] leading-tight">{{ method.title }}</p>
+                    <p class="text-[10px] text-gray-400 font-medium">{{ method.subtitle }}</p>
+                  </div>
+                </div>
+                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                  :class="selectedPayment === method.id ? 'border-[#0a4d1e]' : 'border-gray-200'">
+                  <div v-if="selectedPayment === method.id" class="w-2.5 h-2.5 bg-[#0a4d1e] rounded-full"></div>
+                </div>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span>Delivery Fee</span>
-              <span>FREE</span>
+
+            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group no-underline">
+              
+                Continue
+              
+            </NuxtLink>
+            
+            <div class="flex items-start gap-3 mt-6 p-4 bg-green-50 rounded-xl text-[#0a4d1e]">
+              <span class="material-symbols-outlined text-lg shrink-0">eco</span>
+              <p class="text-xs font-bold leading-relaxed">
+                Your delivery route will be carbon-offset automatically. Thank you for supporting sustainable logistics!
+              </p>
             </div>
           </div>
-
-          <div class="mt-6 border-t border-green-600 pt-4">
-            <p class="text-xs text-green-200">TOTAL AMOUNT</p>
-            <p class="text-2xl font-bold">$57.50</p>
-          </div>
-
-          <button
-            @click="processPayment"
-            :disabled="isProcessing"
-            class="w-full mt-6 bg-[#facc15] text-[#154212] py-4 rounded-xl font-bold text-lg hover:bg-[#fde047] transition-all flex justify-center items-center gap-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
-          >
-            <span>{{ isProcessing ? 'Processing Securely...' : 'Confirm Payment' }}</span>
-            <span v-if="!isProcessing" class="material-symbols-outlined">arrow_forward</span>
-            <span v-else class="material-symbols-outlined animate-spin">progress_activity</span>
-          </button>
-
         </div>
-      </div>
+       
     </div>
   </div>
   </div>
@@ -167,6 +200,22 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
 
+import { computed } from 'vue';
+
+const summaryItems = computed(() => [
+  {
+    name: 'Tomatoes',
+    details: '2 kg',
+    price: 18.5,
+    image: '/images/tomatoes.jpg',
+  },
+  {
+    name: 'Lettuce',
+    details: '1 bunch',
+    price: 6.0,
+    image: '/images/lettuce.jpg',
+  },
+]);
 definePageMeta({
   middleware: 'user',
   layout: 'user',

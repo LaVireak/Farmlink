@@ -12,17 +12,17 @@
       <div class="flex items-center gap-4 mb-8 text-sm">
         <div class="flex items-center gap-2 text-green-700 font-semibold">
           <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-700 text-white">1</span>
-          Cart
+          ទំនិញក្នុងកន្ត្រក
         </div>
         <div class="flex-1 h-px bg-gray-300"></div>
         <div class="flex items-center gap-2 text-gray-400">
           <span class="w-6 h-6 flex items-center justify-center rounded-full border">2</span>
-          Shipping
+          អាសយដ្ឋាន
         </div>
         <div class="flex-1 h-px bg-gray-300"></div>
         <div class="flex items-center gap-2 text-gray-400">
           <span class="w-6 h-6 flex items-center justify-center rounded-full border">3</span>
-          Payment
+          ការទូទាត់
         </div>
       </div>
 
@@ -71,22 +71,25 @@
                 @click="removeItem(item.id)"
                 class="text-xs text-red-500 mt-1"
               >
-                Remove
+                លុបចេញ
               </button>
             </div>
           </div>
 
           <!-- Continue Shopping -->
-          <button class="mt-6 bg-green-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/address" class="text-white no-underline">{{ t('cart.continueShopping') }}</NuxtLink>
-          </button>
+          <NuxtLink
+            to="/user/checkout/address"
+            class="mt-6 inline-flex w-full items-center justify-center bg-green-700 px-6 py-3 font-semibold text-white no-underline transition hover:bg-green-800 rounded-xl"
+          >
+            បន្តទិញទំនិញ
+          </NuxtLink>
           
 
           <!-- Recommendations -->
           <div class="mt-10">
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-semibold text-green-800">{{ t('cart.recommendations') }}</h2>
-              <a href="#" class="text-sm text-green-700">{{ t('cart.viewAll') }}</a>
+              <h2 class="text-xl font-semibold text-green-800">មើលផងដែរ</h2>
+              <a href="#" class="text-sm text-green-700">មើលទាំងអស់</a>
             </div>
 
             <div class="flex gap-4 overflow-x-auto pb-2">
@@ -101,7 +104,7 @@
                 <p class="text-green-700 font-semibold">
                   ${{ rec.price.toFixed(2) }}
                 </p>
-                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">{{ t('cart.addToCart') }}</button>
+                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">បន្ថែមទៅកន្ត្រក</button>
               </div>
             </div>
           </div>
@@ -109,31 +112,34 @@
 
         <!-- Order Summary -->
         <div class="bg-white p-6 rounded-xl shadow-md h-fit">
-          <h2 class="text-lg font-semibold mb-4">{{ t('cart.title') }}</h2>
+          <h2 class="text-lg font-semibold mb-4">សរុបការកម្មង់</h2>
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
-              <span>{{ t('cart.subtotal') }}</span>
+              <span>សរុបមុនដឹកជញ្ជូន</span>
               <span>${{ subtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between">
-              <span>{{ t('cart.deliveryFee') }}</span>
+              <span>ថ្លៃដឹកជញ្ជូន</span>
               <span>${{ deliveryFee.toFixed(2) }}</span>
             </div>
           </div>
 
           <div class="flex justify-between font-semibold text-lg mt-4">
-            <span>Total</span>
+            <span>សរុប</span>
             <span class="text-green-700">${{ total.toFixed(2) }}</span>
           </div>
 
-          <button class="w-full mt-6 bg-green-700 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition">
-            <NuxtLink to="/user/checkout/address" class="text-white no-underline">{{ t('cart.proceedToCheckout') }}</NuxtLink>
-          </button>
+          <NuxtLink
+            to="/user/checkout/address"
+            class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-green-700 py-3 font-semibold text-white no-underline transition hover:bg-green-800"
+          >
+            បន្តទៅបង់ប្រាក់
+          </NuxtLink>
 
-          <p class="text-xs text-gray-500 mt-4">{{ t('cart.harvestNotice') }}</p>
+          <p class="text-xs text-gray-500 mt-4">ការបញ្ជាទិញនេះនឹងត្រូវដឹកជញ្ជូនដោយផ្លូវសុវត្ថិភាព និងរហ័ស</p>
 
-          <div class="flex items-center gap-2 mt-4 text-sm text-green-700">{{ t('cart.carbon') }}</div>
+          <div class="flex items-center gap-2 mt-4 text-sm text-green-700">ការដឹកជញ្ជូនកាត់បន្ថយកាបូន</div>
         </div>
       </div>
     </div>
