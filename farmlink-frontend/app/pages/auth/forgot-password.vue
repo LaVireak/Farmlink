@@ -83,12 +83,12 @@
 					</button>
 				</form>
 
-				<button
+				<!-- <button
 					class="back-btn"
 					@click="goBack"
 				>
 					← Back to Sign In
-				</button>
+				</button> -->
 			</div>
 		</div>
 	</div>
