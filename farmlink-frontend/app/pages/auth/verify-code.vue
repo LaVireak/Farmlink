@@ -1,7 +1,6 @@
 <template>
   <div class="verify-page">
     <div class="verify-card">
-      <button type="button" class="back-link" @click="goBack">← BACK TO LOGIN</button>
 
       <div class="verify-content">
         <div class="image-wrap">
@@ -14,6 +13,7 @@
         </div>
 
         <div class="form-wrap">
+		<button type="button" class="back-link" @click="goBack">← BACK TO LOGIN</button>
           <h1>Enter<br>Verification<br>Code</h1>
           <p class="copy">We have sent a 6-digit code to your email</p>
           <p class="email">{{ emailText }}</p>
@@ -45,8 +45,6 @@
           <button type="button" class="resend-btn" :disabled="loading || resending" @click="resendCode">
             {{ resending ? 'Resending...' : 'Resend code' }}
           </button>
-
-          <div class="status-pill">● SECURE RECOVERY ACTIVE</div>
         </div>
       </div>
     </div>
@@ -290,6 +288,7 @@ onMounted(() => {
 }
 
 .back-link {
+	align-self: flex-start;
 	border: none;
 	background: transparent;
 

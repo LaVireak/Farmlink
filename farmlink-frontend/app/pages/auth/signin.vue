@@ -200,6 +200,10 @@
             Create account
           </NuxtLink>
         </p>
+		<p class="footer-copy">
+					Want to be a farmer?
+					<NuxtLink to="/auth/farmer-signup">Sign up as a farmer</NuxtLink>
+		</p>
       </section>
     </div>
   </div>

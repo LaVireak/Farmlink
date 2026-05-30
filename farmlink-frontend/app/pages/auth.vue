@@ -2,9 +2,9 @@
   <div class="auth-layout">
 
     <!-- Back button -->
-    <button class="back-btn" @click="$router.back()">
+    <!-- <button class="back-btn" @click="$router.back()">
       ← Back
-    </button>
+    </button> -->
 
     <main class="auth-center">
       <div class="content-shell">
