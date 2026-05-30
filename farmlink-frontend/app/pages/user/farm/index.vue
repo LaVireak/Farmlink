@@ -1,100 +1,225 @@
 <template>
   <AppHeader />
 
-    <section class="promo-banner">
-      <div class="banner-overlay"></div>
-      <div class="banner-content">
-        <span class="banner-pill">{{ t('farm.banner.pill') }}</span>
-        <h1>{{ t('farm.banner.title') }}</h1>
-        <p>{{ t('farm.banner.subtitle') }}</p>
-      </div>
-    </section>
-    <section class="py-8 px-4">
+  <!-- Banner -->
+  <section class="promo-banner">
+    <div class="banner-overlay"></div>
+    <div class="banner-content">
+      <span class="banner-pill">{{ t('farm.banner.pill') }}</span>
+      <h1>{{ t('farm.banner.title') }}</h1>
+      <p>{{ t('farm.banner.subtitle') }}</p>
+    </div>
+  </section>
+
+  <!-- Intro -->
+  <section class="py-8 px-4">
     <div class="text-center">
-        <h1 class="text-3xl font-bold">{{ t('farm.intro.title') }}</h1>
-        <p class="text-gray-600 mt-2">{{ t('farm.intro.subtitle') }}</p>
-      </div>
-      </section>
-<div class="products-layout">
+      <h1 class="text-3xl font-bold">
+        {{ t('farm.intro.title') }}
+      </h1>
+      <p class="text-gray-600 mt-2">
+        {{ t('farm.intro.subtitle') }}
+      </p>
+    </div>
+  </section>
+
+  <div class="products-layout">
+
+    <!-- Sidebar -->
     <aside class="filter-sidebar">
 
-        <div class="filter-section">
-          <h3 class="filter-title">{{ t('farm.filter.province') }}</h3>
-          <select v-model="province" class="filter-select">
-            <option value="All">{{ t('farm.filter.allProvinces') }}</option>
-            <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-        </div>
+      <div class="filter-section">
+        <h3 class="filter-title">
+          {{ t('farm.filter.province') }}
+        </h3>
 
-        <div class="filter-section">
-          <h3 class="filter-title">{{ t('farm.filter.rating') }}</h3>
-          <div class="rating-filters">
-            <button
-              v-for="r in [5, 4, 3, 2, 1]"
-              :key="r"
-              :class="['rating-option', minRating === r ? 'rating-active' : '']"
-              @click="minRating = minRating === r ? 0 : r"
-            >
-              <span class="rating-stars">
-                <span v-for="i in 5" :key="i" :class="i <= r ? 'star-on' : 'star-off'">★</span>
+        <select v-model="province" class="filter-select">
+          <option value="All">
+            {{ t('farm.filter.allProvinces') }}
+          </option>
+
+          <option
+            v-for="cat in allCategories"
+            :key="cat"
+            :value="cat"
+          >
+            {{ cat }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <h3 class="filter-title">
+          {{ t('farm.filter.rating') }}
+        </h3>
+
+        <div class="rating-filters">
+
+          <button
+            v-for="r in [5,4,3,2,1]"
+            :key="r"
+            :class="[
+              'rating-option',
+              minRating === r ? 'rating-active' : ''
+            ]"
+            @click="minRating = minRating === r ? 0 : r"
+          >
+            <span class="rating-stars">
+              <span
+                v-for="i in 5"
+                :key="i"
+                :class="i <= r ? 'star-on' : 'star-off'"
+              >
+                ★
               </span>
-              <span class="rating-label">{{ t('farm.filter.up') }}</span>
-            </button>
-          </div>
-        </div>
+            </span>
 
-        <button class="clear-btn" @click="clearFilters">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/>
-            <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-          </svg>
-          {{ t('farm.filter.clear') }}
-        </button>
+            <span class="rating-label">
+              {{ t('farm.filter.up') }}
+            </span>
+          </button>
 
-      </aside>
-
-  <main class="max-canvas bg-[#f7fdf4] px-6 py-8">
-    <div class="max-w-7xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">{{ t('farm.title') }}</h1>
-        <div class="flex items-center gap-3">
-          <input v-model="search" :placeholder="t('farm.searchPlaceholder')" class="border rounded-full px-4 py-2" />
-          <div class="flex items-center gap-2">
-            <button @click="setSort('asc')" :class="sortOrder === 'asc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">A→Z</button>
-            <button @click="setSort('desc')" :class="sortOrder === 'desc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">Z→A</button>
-          </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div v-if="filtered.length === 0" class="text-gray-600">{{ t('farm.empty') }}</div>
-        <div v-for="farm in filtered" :key="farm.id" class="bg-white rounded-md p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <img :src="farm.image" alt="" class="w-full h-40 object-cover rounded-md mb-3" />
-          <div class="flex items-start justify-between">
-            <div>
-              <h3 class="text-lg font-bold">{{ farm.name }}</h3>
-              <div class="text-sm text-gray-500">{{ farm.province }}</div>
+      <button
+        class="clear-btn"
+        @click="clearFilters"
+      >
+        {{ t('farm.filter.clear') }}
+      </button>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 bg-[#f7fdf4] px-6 py-8">
+
+      <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div
+          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8"
+        >
+          <h1 class="text-3xl font-bold">
+            {{ t('farm.title') }}
+          </h1>
+
+          <div
+            class="flex flex-col sm:flex-row items-center gap-3"
+          >
+            <input
+              v-model="search"
+              :placeholder="t('farm.searchPlaceholder')"
+              class="w-full sm:w-72 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+            />
+
+            <div class="flex gap-2">
+              <button
+                @click="setSort('asc')"
+                :class="sortOrder === 'asc'
+                  ? activeSortClass
+                  : inactiveSortClass"
+                class="px-4 py-2 rounded-lg"
+              >
+                A→Z
+              </button>
+
+              <button
+                @click="setSort('desc')"
+                :class="sortOrder === 'desc'
+                  ? activeSortClass
+                  : inactiveSortClass"
+                class="px-4 py-2 rounded-lg"
+              >
+                Z→A
+              </button>
             </div>
-            <div class="text-sm text-gray-700">{{ farm.rating.toFixed(1) }}</div>
-          </div>
-          <div class="mt-2 flex items-center gap-1 text-yellow-500">
-            <template v-for="n in 5">
-              <svg v-if="n <= Math.round(farm.rating)" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.784.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.05 9.401c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.974z"/></svg>
-              <svg v-else class="w-4 h-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.176 0l-3.38 2.455c-.784.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.05 9.401c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.974z"/></svg>
-            </template>
-          </div>
-
-          <p class="text-gray-600 mt-3">{{ farm.description }}</p>
-
-          <div class="mt-4 text-right">
-            <NuxtLink :to="`/user/farm/${farm.id}`" class="inline-block px-3 py-2 bg-[#1f7a2e] text-white rounded uppercase text-xs">{{ t('farm.view') }}</NuxtLink>
           </div>
         </div>
+
+        <!-- Farm Cards -->
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+        >
+
+          <div
+            v-if="filtered.length === 0"
+            class="col-span-full text-center py-12 text-gray-500"
+          >
+            {{ t('farm.empty') }}
+          </div>
+
+          <div
+            v-for="farm in filtered"
+            :key="farm.id"
+            class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300"
+          >
+            <img
+              :src="farm.image"
+              :alt="farm.name"
+              class="w-full h-56 object-cover"
+            />
+
+            <div class="p-5">
+
+              <div class="flex justify-between items-start">
+
+                <div>
+                  <h3 class="text-xl font-bold text-gray-800">
+                    {{ farm.name }}
+                  </h3>
+
+                  <p class="text-sm text-gray-500">
+                    📍 {{ farm.province }}
+                  </p>
+                </div>
+
+                <span
+                  class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold"
+                >
+                  {{ farm.rating.toFixed(1) }}
+                </span>
+
+              </div>
+
+              <!-- Stars -->
+              <div class="flex gap-1 mt-3">
+                <span
+                  v-for="n in 5"
+                  :key="n"
+                  class="text-lg"
+                  :class="
+                    n <= Math.round(farm.rating)
+                      ? 'text-yellow-500'
+                      : 'text-gray-300'
+                  "
+                >
+                  ★
+                </span>
+              </div>
+
+              <p
+                class="mt-4 text-gray-600 min-h-[60px]"
+              >
+                {{ farm.description }}
+              </p>
+
+              <NuxtLink
+                :to="`/user/farm/${farm.id}`"
+                class="mt-5 block text-center bg-[#1f7a2e] hover:bg-green-800 text-white py-3 rounded-lg font-medium transition"
+              >
+                {{ t('farm.view') }}
+              </NuxtLink>
+
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+
   </div>
+
   <AppFooter />
 </template>
 
@@ -116,7 +241,9 @@ const { t } = useI18n()
 const activeSortClass = 'bg-[#1f7a2e] text-white'
 const inactiveSortClass = 'bg-white text-gray-700 border'
 
-function setSort(o) { sortOrder.value = o }
+function setSort(o) {
+  sortOrder.value = o
+}
 
 const clearFilters = () => {
   province.value = 'All'
@@ -125,25 +252,86 @@ const clearFilters = () => {
 }
 
 const farms = ref([
-  { id: 'f1', name: 'Green Valley Farm', rating: 4.6, province: 'Kampong Cham', description: 'Family-run vegetable farm.', image: '/assets/images/farm1.png' },
-  { id: 'f2', name: 'Kandal Orchards', rating: 4.2, province: 'Kandal', description: 'Fruit orchard specialising in mangoes.', image: '/assets/images/farm2.png' },
-  { id: 'f3', name: 'Ta Keo Hydroponics', rating: 3.9, province: 'Ta Keo', description: 'Modern greenhouse operations.', image: '/assets/images/farm3.png' },
-  { id: 'f4', name: 'Cham River Farm', rating: 4.8, province: 'Kampong Cham', description: 'Organic vegetable plots near the river.', image: '/assets/images/farm1.png' },
-  { id: 'f5', name: 'Kandal Fresh', rating: 3.5, province: 'Kandal', description: 'Mixed produce and local deliveries.', image: '/assets/images/farm2.png' },
-  { id: 'f6', name: 'Ta Keo Greens', rating: 4.0, province: 'Ta Keo', description: 'Specialises in salad greens and herbs.', image: '/assets/images/farm3.png' }
+  {
+    id: 'f1',
+    name: 'Cham River Farm',
+    rating: 4.8,
+    province: 'Kampong Cham',
+    description: 'Organic vegetable plots near the river.',
+    image: '/assets/images/farm1.png'
+  },
+  {
+    id: 'f2',
+    name: 'Green Valley Farm',
+    rating: 4.6,
+    province: 'Kampong Cham',
+    description: 'Family-run vegetable farm.',
+    image: '/assets/images/farm1.png'
+  },
+  {
+    id: 'f3',
+    name: 'Kandal Fresh',
+    rating: 3.5,
+    province: 'Kandal',
+    description: 'Mixed produce and local deliveries.',
+    image: '/assets/images/farm2.png'
+  },
+  {
+    id: 'f4',
+    name: 'Kandal Orchards',
+    rating: 4.2,
+    province: 'Kandal',
+    description: 'Fruit orchard specialising in mangoes.',
+    image: '/assets/images/farm2.png'
+  },
+  {
+    id: 'f5',
+    name: 'Ta Keo Greens',
+    rating: 4.0,
+    province: 'Ta Keo',
+    description: 'Specialises in salad greens and herbs.',
+    image: '/assets/images/farm3.png'
+  },
+  {
+    id: 'f6',
+    name: 'Ta Keo Hydroponics',
+    rating: 3.9,
+    province: 'Ta Keo',
+    description: 'Modern greenhouse operations.',
+    image: '/assets/images/farm3.png'
+  }
+  
 ])
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
+
   let list = farms.value.filter(f => {
-    if (province.value !== 'All' && f.province !== province.value) return false
-    if (f.rating < minRating.value) return false
-    if (!q) return true
-    return f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q)
+    if (
+      province.value !== 'All' &&
+      f.province !== province.value
+    ) {
+      return false
+    }
+
+    if (f.rating < minRating.value) {
+      return false
+    }
+
+    if (!q) {
+      return true
+    }
+
+    return (
+      f.name.toLowerCase().includes(q) ||
+      f.description.toLowerCase().includes(q)
+    )
   })
 
   list.sort((a, b) => {
-    return sortOrder.value === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    return sortOrder.value === 'asc'
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name)
   })
 
   return list
