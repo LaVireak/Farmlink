@@ -2,6 +2,13 @@
   <CommonAppHeader />
 
   <div class="bg-[#f7fdf4]">
+     <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
+        <!-- Header -->
+     <div class="mb-6">
+        <h1 class="text-3xl font-bold text-green-800">{{ t('cart.title') }}</h1>
+        <p class="text-sm text-gray-500">{{ t('cart.subtitle', { count: totalItems }) }}</p>
+      </div>
+      
     <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
       
       <!-- Progress -->
@@ -149,11 +156,10 @@
               </div>
             </div>
 
-            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-95 group no-underline">
-              Continue
-              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group no-underline">
+              
+                Continue
+              
             </NuxtLink>
             
             <div class="flex items-start gap-3 mt-6 p-4 bg-green-50 rounded-xl text-[#0a4d1e]">
@@ -168,14 +174,15 @@
       </div>
     </div>
   </div>
-
+</div>
   <CommonAppFooter />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 definePageMeta({
   middleware: 'user',
   layout: 'user',
@@ -184,6 +191,18 @@ definePageMeta({
 useHead({
   title: 'Select Address | FarmLink Checkout'
 });
+
+
+const{  
+  cart,
+  recommendations,
+  subtotal,
+  deliveryFee,
+  total,
+  totalItems,
+  increase,
+  decrease,
+  removeItem } = useCart();
 
 const route = useRoute();
 
