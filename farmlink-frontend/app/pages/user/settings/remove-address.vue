@@ -14,7 +14,7 @@ useHead({
   <div class="min-h-screen flex flex-col bg-[#fbf9f6] text-zinc-900">
     <CommonAppHeader />
 
-    <main class="max-w-7xl mx-auto w-full pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 flex-1">
+    <main class="max-w-[1550px] mx-auto w-full pt-16 sm:pt-16 pb-16 px-4 sm:px-16 lg:px-8 flex-1">
       <div class="flex flex-col md:flex-row gap-8 md:gap-10">
         <CommonAppSidebar active="address" />
 

@@ -85,7 +85,7 @@ function scrollToBottom() {
   <div class="min-h-screen flex flex-col bg-[#f5f7f3]">
     <CommonAppHeader />
 
-    <main class="max-w-7xl mx-auto w-full pt-28 sm:pt-32 px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pb-8">
+    <main class="max-w-[1550px] mx-auto w-full pt-16 sm:pt-16 px-4 sm:px-16 lg:px-8 flex-1 flex flex-col pb-8">
       <div class="flex flex-col md:flex-row gap-8 md:gap-10 flex-1">
         <CommonAppSidebar active="chat" />
 
