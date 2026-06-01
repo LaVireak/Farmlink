@@ -42,21 +42,21 @@ export class OrdersService {
     }
 
     if (filters?.paymentStatus) {
-      query.andWhere('order.payment_status = :paymentStatus', { paymentStatus: filters.paymentStatus });
+      query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
     }
 
     if (filters?.consumerId) {
-      query.andWhere('order.consumer_id = :consumerId', { consumerId: filters.consumerId });
+      query.andWhere('order.consumerId = :consumerId', { consumerId: filters.consumerId });
     }
 
     if (filters?.startDate && filters?.endDate) {
-      query.andWhere('order.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('order.createdAt BETWEEN :startDate AND :endDate', {
         startDate: filters.startDate,
         endDate: filters.endDate,
       });
     }
 
-    query.orderBy('order.created_at', 'DESC');
+    query.orderBy('order.createdAt', 'DESC');
     query.take(limit);
     query.skip(skip);
 
@@ -129,6 +129,7 @@ export class OrdersService {
       consumerId: createOrderDto.consumerId,
       orderNumber,
       paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
+      paymentStatus: (createOrderDto.paymentStatus as PaymentStatus) || PaymentStatus.UNPAID,
       deliveryAddress: createOrderDto.deliveryAddress,
       deliveryLat: createOrderDto.deliveryLat,
       deliveryLng: createOrderDto.deliveryLng,
@@ -140,16 +141,26 @@ export class OrdersService {
 
     const savedOrder = await this.ordersRepository.save(order);
 
-    const items = createOrderDto.items.map((item) =>
-      this.orderItemsRepository.create({
-        orderId: savedOrder.id,
-        productId: item.productId,
-        farmerId: item.farmerId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal: item.unitPrice * item.quantity,
-      }),
-    );
+    const items: OrderItem[] = [];
+    for (const item of createOrderDto.items) {
+      let farmerId = item.farmerId;
+      if (!farmerId || farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
+        const prod = await this.productsRepository.findOne({ where: { id: item.productId } });
+        if (prod) {
+          farmerId = prod.farmerId;
+        }
+      }
+      items.push(
+        this.orderItemsRepository.create({
+          orderId: savedOrder.id,
+          productId: item.productId,
+          farmerId: farmerId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.unitPrice * item.quantity,
+        }),
+      );
+    }
 
     await this.orderItemsRepository.save(items);
 

@@ -61,6 +61,7 @@ export class OrderPaginationDto {
 export class CreateOrderDto {
   consumerId: string;
   paymentMethod: string;
+  paymentStatus?: string;
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;

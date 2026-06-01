@@ -46,6 +46,7 @@ export class ProductsService implements OnModuleInit {
       discount: null,
       unit: p.unit,
       stock: p.stockQuantity,
+      farmerId: p.farmerId,
       farmer: p.farmer ? {
         id: p.farmer.id,
         farmName: p.farmer.farmName,
@@ -60,7 +61,9 @@ export class ProductsService implements OnModuleInit {
   async findAll(category?: string, maxPrice?: number, farmerId?: string): Promise<any[]> {
     const qb = this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.category', 'category');
+      .leftJoinAndSelect('p.category', 'category')
+      .leftJoinAndSelect('p.farmer', 'farmer')
+      .leftJoinAndSelect('farmer.user', 'user');
 
     if (farmerId) {
       qb.where('p.farmerId = :farmerId', { farmerId });
