@@ -234,7 +234,7 @@ const fetchProduct = async () => {
     activeImage.value =
       res.gallery?.[0] ||
       res.image ||
-      '/images/placeholder.jpg'
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
 
   } catch (err) {
     console.error('Failed to fetch product:', err)
@@ -293,14 +293,20 @@ const decrease = () => {
   }
 }
 
+import { useCart } from '~/composables/useCart'
+const { addToCart: addToCartComposable } = useCart()
+
 // ================= CART =================
 const addToCart = () => {
-  console.log(
-    'Added to cart:',
-    product.value,
-    'Quantity:',
-    quantity.value
-  )
+  if (product.value) {
+    addToCartComposable(product.value, quantity.value)
+    console.log(
+      'Added to cart:',
+      product.value,
+      'Quantity:',
+      quantity.value
+    )
+  }
 }
 </script>
 

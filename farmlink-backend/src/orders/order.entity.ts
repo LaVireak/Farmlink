@@ -25,7 +25,7 @@ export class Order {
   @Column({ name: 'consumer_id' })
   consumerId: string;
 
-  @Column({ name: 'order_number', length: 20, unique: true })
+  @Column({ name: 'order_number', length: 50, unique: true })
   orderNumber: string;
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })

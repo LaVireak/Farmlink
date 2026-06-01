@@ -7,7 +7,7 @@
 
     <!-- IMAGE -->
     <div class="card-image-wrap">
-      <img :src="product.image || '/placeholder.png'" :alt="product.name" loading="lazy" />
+      <img :src="product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'" :alt="product.name" loading="lazy" />
       
       <!-- HOVER ACTIONS -->
       <div class="card-hover-actions">
