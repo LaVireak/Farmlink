@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useAuthStore } from '../../../stores/auth.store';
 import { getAccessToken } from '../../../services/auth.service';
+import { useRewards } from '../../../composables/useRewards';
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
 definePageMeta({
 	middleware: 'user',
@@ -14,6 +15,7 @@ useHead({
 
 const config = useRuntimeConfig();
 const auth = useAuthStore();
+const { rewardPoints } = useRewards();
 const profile = ref<{
 	id: string;
 	email: string;
@@ -333,7 +335,7 @@ const memberSince = computed(() => {
 
 							<div class="bg-[#ffdcbe] p-6 rounded-2xl border border-[#f0c99f] shadow-[0_2px_0_0_rgba(0,0,0,1)]">
 								<p class="text-[10px] font-extrabold text-[#693c00] uppercase tracking-widest mb-2">Reward Balance</p>
-								<h4 class="text-4xl font-black text-[#2c1600] font-[Manrope,sans-serif] tracking-tight mb-5">4,250 <span class="text-sm font-bold uppercase">Points</span></h4>
+								<h4 class="text-4xl font-black text-[#2c1600] font-[Manrope,sans-serif] tracking-tight mb-5">{{ formatCount(rewardPoints) }} <span class="text-sm font-bold uppercase">Points</span></h4>
 								<button class="w-full py-3 rounded-xl bg-[#2c1600] text-white text-xs font-black uppercase tracking-widest">Redeem Rewards</button>
 							</div>
 						</aside>
