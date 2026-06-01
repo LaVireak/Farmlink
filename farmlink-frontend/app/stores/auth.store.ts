@@ -173,8 +173,14 @@ export const useAuthStore = defineStore('auth', () => {
                     user.value = { ...user.value, ...dbProfile, role: dbProfile.role as AuthUser['role'] };
                     persist();
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.error('[HYDRATE] DB role sync failed:', e);
+                if (e.message && (e.message.includes('Invalid') || e.message.includes('expired') || e.message.includes('Unauthorized') || e.message.includes('401'))) {
+                    await authService.signOut();
+                    accessToken.value = null;
+                    user.value = null;
+                    isAuthenticated.value = false;
+                }
             }
             return;
         }
@@ -201,10 +207,21 @@ export const useAuthStore = defineStore('auth', () => {
                     }
                 }).catch(e => {
                     console.error('[HYDRATE] DB role sync failed:', e);
+                    // If the token is rejected by the backend (e.g. 401), we should clear the invalid session
+                    if (e.message && (e.message.includes('Invalid') || e.message.includes('expired') || e.message.includes('Unauthorized') || e.message.includes('401'))) {
+                        localStorage.removeItem(SESSION_KEY);
+                        accessToken.value = null;
+                        user.value = null;
+                        isAuthenticated.value = false;
+                        hydrated.value = true;
+                    }
                 });
             }
         } catch {
             localStorage.removeItem(SESSION_KEY);
+            accessToken.value = null;
+            user.value = null;
+            isAuthenticated.value = false;
         } finally {
             hydrated.value = true;
         }
@@ -258,8 +275,13 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const signOut = async () => {
-        await authService.signOut();
-        clearSession();
+        try {
+            await authService.signOut();
+        } catch (e) {
+            console.error('Error during signOut:', e);
+        } finally {
+            clearSession();
+        }
     };
 
     return {

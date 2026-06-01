@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3000",
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3001/api",
       stripePublishableKey:
         process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
     },

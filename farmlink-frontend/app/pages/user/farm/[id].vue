@@ -45,6 +45,18 @@
             <div class="font-bold">Description</div>
             <div class="text-gray-700">{{ farm?.description || 'No description available.' }}</div>
           </div>
+
+          <div class="pt-4 border-t border-gray-100">
+            <button
+              @click="chatWithFarmer"
+              class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 active:scale-95 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-md shadow-green-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Chat with Farmer
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -95,249 +107,73 @@
   <CommonAppFooter />
 </template>
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRuntimeConfig } from '#app'
 
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import { Heart } from 'lucide-vue-next'
 
 const route = useRoute()
+const config = useRuntimeConfig()
 
 const id = computed(() => String(route.params.id))
+const farm = ref(null)
 
-/**
- * FULL FARM DATA (6 FARMS)
- * EACH FARM HAS 2 PRODUCTS
- */
-const sampleFarms = ref([
-  {
-    id: 'f1',
-    name: 'Cham River Farm',
-    province: 'Kampong Cham',
-    rating: 4.8,
-    address: 'Cham River Area, Kampong Cham',
-    description: 'Organic vegetable plots near the river.',
-    images: [
-      '/assets/images/farm1.png',
-      '/assets/images/farm1-2.png',
-      '/assets/images/farm1-3.png'
-    ],
-    farmer: {
-      name: 'Sophal',
-      phone: '+85512345678',
-      email: 'sophal@example.com',
-      avatar: '/assets/images/farmer1.png',
-      workingHours: 'Mon–Sat 07:00–17:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p1',
-        name: 'Organic Lettuce',
-        description: 'Fresh hydroponic lettuce.',
-        price: 1.5,
-        image: '/assets/images/product1.png',
-        stock: 12
-      },
-      {
-        id: 'p2',
-        name: 'Cherry Tomatoes',
-        description: 'Sweet cherry tomatoes.',
-        price: 2.2,
-        image: '/assets/images/product2.png',
-        stock: 8
+const fetchFarm = async () => {
+  try {
+    const res = await $fetch(`${config.public.apiUrl}/farmer/${id.value}`)
+    if (res) {
+      farm.value = {
+        id: res.id,
+        name: res.farmName || (res.user ? `${res.user.firstName} ${res.user.lastName}` : 'Unknown Farm'),
+        province: res.province || 'Unknown',
+        rating: 5.0, // Default for now
+        address: res.address || `${res.district || ''}, ${res.province || ''}`.replace(/^,\s*/, '') || 'Address not specified',
+        description: res.user?.bio || res.description || 'Local farm providing fresh produce directly to consumers.',
+        images: res.coverImageUrl ? [res.coverImageUrl] : ['/assets/images/farm-placeholder.jpg'],
+        farmer: {
+          userId: res.user?.id || '',
+          name: res.user ? `${res.user.firstName} ${res.user.lastName}` : 'Farmer',
+          phone: res.user?.phoneNumber || '',
+          email: res.user?.email || '',
+          avatar: res.user?.avatarUrl || '/assets/images/farmer1.png',
+          workingHours: 'Mon-Sat 07:00-17:00',
+          social: { facebook: '', twitter: '' }
+        },
+        products: (res.products || []).map(p => ({
+          id: p.id,
+          name: p.nameEn || p.nameKm,
+          description: p.description,
+          price: Number(p.pricePerUnit),
+          image: p.thumbnailUrl || (p.images && p.images[0]?.url) || '/assets/images/product-placeholder.png',
+          stock: p.stockQuantity
+        }))
       }
-    ]
-  },
-
-  {
-    id: 'f2',
-    name: 'Green Valley Farm',
-    province: 'Kampong Cham',
-    rating: 4.6,
-    address: 'Green Valley Road',
-    description: 'Family-run vegetable farm.',
-    images: ['/assets/images/farm2.png', '/assets/images/farm2-2.png', '/assets/images/farm2-3.png'],
-    farmer: {
-      name: 'Dara',
-      phone: '+85511122233',
-      email: 'dara@example.com',
-      avatar: '/assets/images/farmer1.png',
-      workingHours: 'Mon–Fri 08:00–17:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p3',
-        name: 'Cabbage',
-        description: 'Fresh green cabbage.',
-        price: 1.2,
-        image: '/assets/images/product1.png',
-        stock: 10
-      },
-      {
-        id: 'p4',
-        name: 'Cucumber',
-        description: 'Organic cucumbers.',
-        price: 1.0,
-        image: '/assets/images/product2.png',
-        stock: 6
-      }
-    ]
-  },
-
-  {
-    id: 'f3',
-    name: 'Kandal Fresh',
-    province: 'Kandal',
-    rating: 3.5,
-    address: 'Kandal Market Area',
-    description: 'Mixed produce and local deliveries.',
-    images: ['/assets/images/farm3.png', '/assets/images/farm3-2.png', '/assets/images/farm3-3.png'],
-    farmer: {
-      name: 'Vanna',
-      phone: '+85598765432',
-      email: 'vanna@example.com',
-      avatar: '/assets/images/farmer2.png',
-      workingHours: 'Mon–Sat 08:00–16:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p5',
-        name: 'Carrot',
-        description: 'Fresh carrots.',
-        price: 0.8,
-        image: '/assets/images/product1.png',
-        stock: 15
-      },
-      {
-        id: 'p6',
-        name: 'Spinach',
-        description: 'Organic spinach leaves.',
-        price: 1.3,
-        image: '/assets/images/product2.png',
-        stock: 9
-      }
-    ]
-  },
-
-  {
-    id: 'f4',
-    name: 'Kandal Orchards',
-    province: 'Kandal',
-    rating: 4.2,
-    address: 'Orchard Road, Kandal',
-    description: 'Fruit orchard specialising in mangoes.',
-    images: ['/assets/images/farm4.png', '/assets/images/farm4-2.png', '/assets/images/farm4-3.png'],
-    farmer: {
-      name: 'Sokha',
-      phone: '+85522233344',
-      email: 'sokha@example.com',
-      avatar: '/assets/images/farmer2.png',
-      workingHours: 'Mon–Fri 07:30–16:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p7',
-        name: 'Mango',
-        description: 'Sweet tropical mangoes.',
-        price: 2.5,
-        image: '/assets/images/product1.png',
-        stock: 7
-      },
-      {
-        id: 'p8',
-        name: 'Banana',
-        description: 'Fresh bananas.',
-        price: 1.1,
-        image: '/assets/images/product2.png',
-        stock: 20
-      }
-    ]
-  },
-
-  {
-    id: 'f5',
-    name: 'Ta Keo Greens',
-    province: 'Ta Keo',
-    rating: 4.0,
-    address: 'Ta Keo Zone',
-    description: 'Salad greens and herbs.',
-    images: ['/assets/images/farm5.png', '/assets/images/farm5-2.png', '/assets/images/farm5-3.png'],
-    farmer: {
-      name: 'Rina',
-      phone: '+85533344455',
-      email: 'rina@example.com',
-      avatar: '/assets/images/farmer3.png',
-      workingHours: 'Mon–Sat 08:00–17:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p9',
-        name: 'Lettuce Mix',
-        description: 'Fresh salad mix.',
-        price: 1.4,
-        image: '/assets/images/product1.png',
-        stock: 11
-      },
-      {
-        id: 'p10',
-        name: 'Basil',
-        description: 'Aromatic basil leaves.',
-        price: 0.9,
-        image: '/assets/images/product2.png',
-        stock: 13
-      }
-    ]
-  },
-
-  {
-    id: 'f6',
-    name: 'Ta Keo Hydroponics',
-    province: 'Ta Keo',
-    rating: 3.9,
-    address: 'Hydroponic Zone',
-    description: 'Modern greenhouse operations.',
-    images: ['/assets/images/farm6.png', '/assets/images/farm6-2.png', '/assets/images/farm6-3.png'],
-    farmer: {
-      name: 'Bora',
-      phone: '+85544455566',
-      email: 'bora@example.com',
-      avatar: '/assets/images/farmer3.png',
-      workingHours: 'Mon–Fri 08:00–16:00',
-      social: { facebook: '', twitter: '' }
-    },
-    products: [
-      {
-        id: 'p11',
-        name: 'Hydro Lettuce',
-        description: 'Hydroponic lettuce.',
-        price: 1.6,
-        image: '/assets/images/product1.png',
-        stock: 14
-      },
-      {
-        id: 'p12',
-        name: 'Hydro Spinach',
-        description: 'Clean hydro spinach.',
-        price: 1.7,
-        image: '/assets/images/product2.png',
-        stock: 10
-      }
-    ]
+    }
+  } catch (err) {
+    console.error('Failed to fetch farm details:', err)
   }
-])
+}
 
-/**
- * FIND FARM BY ID
- */
-const farm = computed(() =>
-  sampleFarms.value.find(f => f.id === id.value)
-)
+onMounted(() => {
+  fetchFarm()
+})
+
+const router = useRouter()
+
+function chatWithFarmer() {
+  if (!farm.value?.farmer?.userId) return
+  navigateTo({
+    path: '/user/settings/chat',
+    query: {
+      userId: farm.value.farmer.userId,
+      name: farm.value.farmer.name,
+      avatar: farm.value.farmer.avatar
+    }
+  })
+}
 
 /**
  * CART + FAVORITES

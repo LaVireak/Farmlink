@@ -7,7 +7,7 @@
 
     <!-- IMAGE -->
     <div class="card-image-wrap">
-      <img :src="product.image" :alt="product.name" loading="lazy" />
+      <img :src="product.image || '/placeholder.png'" :alt="product.name" loading="lazy" />
       
       <!-- HOVER ACTIONS -->
       <div class="card-hover-actions">
