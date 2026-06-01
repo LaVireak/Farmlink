@@ -175,19 +175,19 @@
         </div>
 
         <div class="province-grid">
-          <article v-for="farm in provinceFarms" :key="farm.keyPrefix" class="province-card">
+          <article v-for="farm in provinceFarms" :key="farm.keyPrefix || farm.name" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="t(farm.keyPrefix + '.name')" loading="lazy" />
+              <img :src="farm.image" :alt="farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name" loading="lazy" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
               <span class="province-badge">{{ farm.province }}</span>
-              <h3>{{ t(farm.keyPrefix + '.name') }}</h3>
-              <p class="province-desc">{{ t(farm.keyPrefix + '.description') }}</p>
+              <h3>{{ farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name }}</h3>
+              <p class="province-desc">{{ farm.keyPrefix ? t(farm.keyPrefix + '.description') : farm.description }}</p>
               <div class="province-footer">
                 <span class="farm-products">
                   <span class="material-symbols-outlined">restaurant_menu</span>
-                  {{ t(farm.keyPrefix + '.products') }}
+                  {{ farm.keyPrefix ? t(farm.keyPrefix + '.products') : farm.products }}
                 </span>
                 <span class="rating"><span class="star-icon">★</span> {{ farm.rating }}</span>
               </div>
@@ -280,11 +280,11 @@
               <img :src="r.avatar" :alt="r.name" loading="lazy" />
               <div>
                 <strong>{{ r.name }}</strong>
-                <p class="muted-text">{{ t(r.keyPrefix + '.role') }}</p>
+                <p class="muted-text">{{ r.keyPrefix ? t(r.keyPrefix + '.role') : r.role }}</p>
               </div>
             </div>
             <div class="stars">★★★★★</div>
-            <div class="quote">"${{ t(r.keyPrefix + '.quote') }}"</div>
+            <div class="quote">"{{ r.keyPrefix ? t(r.keyPrefix + '.quote') : r.quote }}"</div>
           </article>
         </div>
       </section>

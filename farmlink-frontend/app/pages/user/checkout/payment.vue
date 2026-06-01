@@ -140,15 +140,15 @@
             <div class="space-y-3 pt-6 border-t border-gray-100 mb-8">
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Subtotal</span>
-                <span>$17.00</span>
+                <span>${{ subtotal.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Delivery Fee</span>
-                <span>$5.00</span>
+                <span>${{ deliveryFee.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between items-end pt-4">
                 <span class="text-lg font-bold text-[#0a4d1e]">Total Price</span>
-                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">$21.00</span>
+                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">${{ total.toFixed(2) }}</span>
               </div>
             </div>
 
@@ -201,21 +201,18 @@ import { nextTick, onMounted, reactive, ref } from 'vue'
 import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
 
 import { computed } from 'vue';
+import { useCart } from '@/composables/useCart'
 
-const summaryItems = computed(() => [
-  {
-    name: 'Tomatoes',
-    details: '2 kg',
-    price: 18.5,
-    image: '/images/tomatoes.jpg',
-  },
-  {
-    name: 'Lettuce',
-    details: '1 bunch',
-    price: 6.0,
-    image: '/images/lettuce.jpg',
-  },
-]);
+const { cart, subtotal, deliveryFee, total } = useCart()
+
+const summaryItems = computed(() =>
+  cart.value.map(item => ({
+    name: item.name,
+    details: `${item.variant}`,
+    price: item.price * item.quantity,
+    image: item.image || '/images/placeholder.jpg',
+  }))
+);
 definePageMeta({
   middleware: 'user',
   layout: 'user',

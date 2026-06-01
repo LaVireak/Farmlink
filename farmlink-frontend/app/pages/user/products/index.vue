@@ -186,6 +186,7 @@
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import UserProductCard from '~/components/user/UserProductCard.vue'
+import { useCart } from '~/composables/useCart'
 
 import { useAuthStore } from '~/stores/auth.store'
 
@@ -341,8 +342,10 @@ const sortedProducts = computed(() => {
 })
 
 // ================= CART =================
+const { addToCart } = useCart()
+
 const handleAddToCart = (product) => {
-  console.log('Added to cart:', product)
+  addToCart(product)
 }
 </script>
 
