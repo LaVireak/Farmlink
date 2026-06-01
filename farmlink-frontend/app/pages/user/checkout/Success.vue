@@ -9,7 +9,7 @@
           </svg>
         </div>
         <h1 class="text-4xl font-extrabold text-[#0a4d1e] mb-3 tracking-tight">{{ t('success.title') }}</h1>
-        <p class="text-gray-600 text-lg">{{ t('success.thanks', { name: customerName, orderId: '#FL-8821' }) }}</p>
+        <p class="text-gray-600 text-lg">{{ t('success.thanks', { name: customerName, orderId: orderIdText }) }}</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -45,11 +45,11 @@
           <div class="space-y-3 text-sm">
             <div class="flex justify-between text-gray-500">
               <span>{{ t('success.subtotal') }}</span>
-              <span>${{ subtotal.toFixed(2) }}</span>
+              <span>${{ dynamicSubtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-gray-500">
               <span>{{ t('success.deliveryFee') }}</span>
-              <span>${{ deliveryFee.toFixed(2) }}</span>
+              <span>${{ dynamicDeliveryFee.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-xl font-extrabold text-[#0a4d1e] pt-2">
               <span>{{ t('success.totalPaid') }}</span>
@@ -75,9 +75,8 @@
 
             <div>
               <p class="text-xs text-green-200 uppercase font-bold tracking-widest mb-1">Shipping To</p>
-              <p class="text-sm leading-relaxed opacity-90">
-                123 Orchard Lane,<br />
-                Green Valley, GV 90210
+              <p class="text-sm leading-relaxed opacity-90 whitespace-pre-line">
+                {{ deliveryAddress }}
               </p>
             </div>
           </div>
@@ -94,7 +93,9 @@
           </div>
 
           <div class="flex flex-col items-center gap-4">
-            <button class="w-full bg-[#0a4d1e] text-white py-4 rounded-full font-bold hover:bg-[#083d18] transition-colors flex items-center justify-center gap-2 group">{{ t('success.track') }} <span class="group-hover:translate-x-1 transition-transform">→</span></button>
+            <NuxtLink to="/user/settings/PurchaseHistory?tab=In-Transit" class="w-full bg-[#0a4d1e] text-white py-4 rounded-full font-bold hover:bg-[#083d18] transition-colors flex items-center justify-center gap-2 group no-underline">
+              {{ t('success.track') }} <span class="group-hover:translate-x-1 transition-transform">→</span>
+            </NuxtLink>
             <NuxtLink to="/" class="text-[#0a4d1e] font-bold text-sm hover:underline decoration-2">{{ t('success.return') }}</NuxtLink>
           </div>
         </div>
@@ -111,7 +112,7 @@
         <button class="relative z-10 bg-[#423d00] text-white px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-black transition-colors">
           Read the Story
         </button>
-        </div>
+      </div>
 
     </div>
   </div>
@@ -121,6 +122,8 @@
 import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCart } from '@/composables/useCart'
+import { useAuthStore } from '~/stores/auth.store'
+import { getAccessToken } from '~/services/auth.service'
 import { useRewards } from '@/composables/useRewards'
 
 const { t } = useI18n()
@@ -129,33 +132,140 @@ definePageMeta({
   layout: 'user',
 });
 
-const { rewardPoints, awardPoints } = useRewards()
-const customerName = ref('Johnathan')
-const pointsEarned = ref(0)
+const authStore = useAuthStore()
+const config = useRuntimeConfig()
+const { cart, subtotal, deliveryFee, total } = useCart()
+const { awardPoints } = useRewards()
+
+const customerName = computed(() => {
+  if (authStore.user) {
+    return `${authStore.user.firstName || ''} ${authStore.user.lastName || ''}`.trim() || 'Johnathan'
+  }
+  return 'Johnathan'
+})
+
+const orderIdText = ref('#FL-8821')
+const deliveryAddress = ref('123 Orchard Lane,\nGreen Valley, GV 90210')
+const createdOrder = ref(null)
+const itemsSnapshot = ref([])
 
 const fallbackImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f3f4f6'/%3E%3Cpath d='M20 43l7-9 6 5 9-12 6 16H20z' fill='%23d1d5db'/%3E%3Ccircle cx='25' cy='23' r='4' fill='%23d1d5db'/%3E%3C/svg%3E";
 
-const { cart, subtotal, deliveryFee, total } = useCart()
+const items = computed(() => {
+  if (createdOrder.value) {
+    return createdOrder.value.items.map((item) => ({
+      id: item.id,
+      name: item.product?.nameEn || 'Fresh Produce',
+      desc: item.product?.category || 'Crop',
+      quantity: Number(item.quantity) || 0,
+      price: Number(item.unitPrice) || 0,
+      lineTotal: (Number(item.unitPrice) || 0) * (Number(item.quantity) || 0),
+      image: item.product?.thumbnailUrl || fallbackImage,
+    }))
+  }
+  return itemsSnapshot.value
+})
 
-const items = computed(() =>
-  cart.value.map((item) => ({
-    id: item.id,
-    name: item.name,
-    desc: [item.variant, item.farm].filter(Boolean).join(' • ') || 'Cart item',
-    quantity: Number(item.quantity) || 0,
-    price: Number(item.price) || 0,
-    lineTotal: (Number(item.price) || 0) * (Number(item.quantity) || 0),
-    image: item.image || fallbackImage,
-  }))
-)
+const dynamicSubtotal = computed(() => {
+  if (createdOrder.value) return Number(createdOrder.value.subtotal) || 0
+  return subtotal.value
+})
 
-const totalPaid = computed(() => total.value)
+const dynamicDeliveryFee = computed(() => {
+  if (createdOrder.value) return Number(createdOrder.value.deliveryFee) || 0
+  return deliveryFee
+})
 
-// Award points when user reaches success page
-onMounted(() => {
-  if (totalPaid.value > 0) {
-    pointsEarned.value = awardPoints(totalPaid.value)
+const totalPaid = computed(() => {
+  if (createdOrder.value) return Number(createdOrder.value.totalAmount) || 0
+  return total.value
+})
+
+onMounted(async () => {
+  // Capture address from localStorage
+  const savedAddress = localStorage.getItem('farmlink_checkout_address')
+  let parsedAddress = null
+  if (savedAddress) {
+    try {
+      parsedAddress = JSON.parse(savedAddress)
+      deliveryAddress.value = `${parsedAddress.name}\n${parsedAddress.street},\n${parsedAddress.city}`
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  // Capture payment method
+  const rawPaymentMethod = localStorage.getItem('farmlink_checkout_payment_method') || 'card'
+  let paymentMethod = 'cash_on_delivery'
+  if (rawPaymentMethod === 'card' || rawPaymentMethod === 'stripe') {
+    paymentMethod = 'ipay'
+  } else if (rawPaymentMethod === 'aba_qr') {
+    paymentMethod = 'aba_payway'
+  } else if (rawPaymentMethod === 'cod') {
+    paymentMethod = 'cash_on_delivery'
+  }
+
+  if (cart.value.length > 0) {
+    // Snapshot items to keep displaying on screen even after cart is cleared
+    itemsSnapshot.value = cart.value.map((item) => ({
+      id: item.id,
+      name: item.name,
+      desc: [item.variant, item.farm].filter(Boolean).join(' • ') || 'Cart item',
+      quantity: Number(item.quantity) || 0,
+      price: Number(item.price) || 0,
+      lineTotal: (Number(item.price) || 0) * (Number(item.quantity) || 0),
+      image: item.image || fallbackImage,
+    }))
+
+    try {
+      const token = await getAccessToken()
+      const orderPayload = {
+        consumerId: authStore.user?.id,
+        paymentMethod: paymentMethod,
+        paymentStatus: rawPaymentMethod === 'cod' ? 'unpaid' : 'paid',
+        deliveryAddress: parsedAddress ? `${parsedAddress.street}, ${parsedAddress.city}` : '123 Orchard Lane, Green Valley, GV 90210',
+        deliveryLat: 11.5564,
+        deliveryLng: 104.9282,
+        note: 'Eco-Courier shipment',
+        items: cart.value.map(item => ({
+          productId: item.id,
+          farmerId: item.farmerId || 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111', // default fallback if none
+          quantity: item.quantity,
+          unitPrice: item.price,
+        }))
+      }
+
+      const res = await fetch(`${config.public.apiUrl}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(orderPayload),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        createdOrder.value = data
+        orderIdText.value = `#${data.orderNumber}`
+        
+        // Award points based on total amount paid
+        if (data.totalAmount) {
+          void awardPoints(Number(data.totalAmount))
+        }
+        
+        // Clear cart
+        cart.value = []
+        localStorage.removeItem('farmlink_cart')
+        localStorage.removeItem('farmlink_checkout_payment_method')
+        localStorage.removeItem('farmlink_checkout_address')
+      } else {
+        console.error('Failed to create order in database:', await res.text())
+      }
+    } catch (e) {
+      console.error('Order creation error:', e)
+    }
   }
 })
 </script>

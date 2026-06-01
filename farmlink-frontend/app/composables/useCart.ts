@@ -42,7 +42,7 @@ export const useCart = () => {
   )
 
   // Actions
-  function addToCart(product: any) {
+  function addToCart(product: any, qty = 1) {
     const existingItem = cart.value.find(i => i.id === product.id)
     const resolvedImage =
       product.image ||
@@ -52,7 +52,7 @@ export const useCart = () => {
       ''
 
     if (existingItem) {
-      existingItem.quantity++
+      existingItem.quantity += qty
       if (!existingItem.image && resolvedImage) {
         existingItem.image = resolvedImage
       }
@@ -61,25 +61,26 @@ export const useCart = () => {
         id: product.id,
         name: product.name,
         variant: product.variant || product.category || '',
-        farm: product.farm || product.farmerName || '',
+        farm: product.farm || product.farmerName || (product.farmer ? (product.farmer.farmName || `${product.farmer.firstName} ${product.farmer.lastName}`) : ''),
         image: resolvedImage,
         price: product.price,
-        quantity: 1
+        quantity: qty,
+        farmerId: product.farmerId || product.farmer?.id
       })
     }
   }
 
-  function increase(id: number) {
+  function increase(id: number | string) {
     const item = cart.value.find(i => i.id === id)
     if (item) item.quantity++
   }
 
-  function decrease(id: number) {
+  function decrease(id: number | string) {
     const item = cart.value.find(i => i.id === id)
     if (item && item.quantity > 1) item.quantity--
   }
 
-  function removeItem(id: number) {
+  function removeItem(id: number | string) {
     cart.value = cart.value.filter(i => i.id !== id)
   }
 

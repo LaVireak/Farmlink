@@ -177,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue';
+import { ref, computed, h, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useCart } from '@/composables/useCart';
@@ -289,6 +289,17 @@ const summaryItems = computed(() =>
     image: item.image || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=200'
   }))
 );
+
+watch(selectedAddress, (newId) => {
+  const addr = savedAddresses.value.find(a => a.id === newId);
+  if (addr) {
+    localStorage.setItem('farmlink_checkout_address', JSON.stringify(addr));
+  }
+}, { immediate: true, deep: true });
+
+watch(selectedPayment, (newMethod) => {
+  localStorage.setItem('farmlink_checkout_payment_method', newMethod);
+}, { immediate: true });
 </script>
 
 <style scoped>

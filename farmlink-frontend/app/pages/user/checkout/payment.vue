@@ -93,7 +93,7 @@
               <div>
                 <p class="font-medium">Same as delivery address</p>
                 <p class="text-xs text-gray-500">
-                  123 Orchard Lane, Green Valley, CA 90210
+                  {{ deliveryAddressText }}
                 </p>
               </div>
             </label>
@@ -152,34 +152,11 @@
               </div>
             </div>
 
-            <div class="space-y-4 mb-8">
-              <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Payment Method</p>
-              
-              <div v-for="method in paymentMethods" :key="method.id" 
-                @click="selectedPayment = method.id"
-                class="flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                :class="selectedPayment === method.id ? 'border-[#0a4d1e] bg-[#f7fdf4]' : 'border-gray-100 hover:border-gray-200'">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" :class="method.bgColor">
-                    <component :is="method.icon" class="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p class="font-bold text-sm text-[#0a4d1e] leading-tight">{{ method.title }}</p>
-                    <p class="text-[10px] text-gray-400 font-medium">{{ method.subtitle }}</p>
-                  </div>
-                </div>
-                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                  :class="selectedPayment === method.id ? 'border-[#0a4d1e]' : 'border-gray-200'">
-                  <div v-if="selectedPayment === method.id" class="w-2.5 h-2.5 bg-[#0a4d1e] rounded-full"></div>
-                </div>
-              </div>
-            </div>
 
-            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group no-underline">
-              
-                Continue
-              
-            </NuxtLink>
+            <button @click="processPayment" :disabled="isProcessing" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group disabled:opacity-75 disabled:active:scale-100">
+              <span v-if="isProcessing" class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+              {{ isProcessing ? 'Processing...' : 'Pay Now' }}
+            </button>
             
             <div class="flex items-start gap-3 mt-6 p-4 bg-green-50 rounded-xl text-[#0a4d1e]">
               <span class="material-symbols-outlined text-lg shrink-0">eco</span>
@@ -225,6 +202,7 @@ const form = reactive({
 })
 
 const billingSame = ref(true)
+const deliveryAddressText = ref('123 Orchard Lane, Green Valley, CA 90210')
 
 const stripe = ref<Stripe | null>(null);
 const elements = ref<StripeElements | null>(null);
@@ -236,6 +214,16 @@ const cardError = ref('');
 const isProcessing = ref(false);
 
 onMounted(async () => {
+  const saved = localStorage.getItem('farmlink_checkout_address')
+  if (saved) {
+    try {
+      const addr = JSON.parse(saved)
+      deliveryAddressText.value = `${addr.street}, ${addr.city}`
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const publishableKey = config.public.stripePublishableKey;
 
   if (!publishableKey) {
@@ -315,7 +303,7 @@ async function processPayment() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 57.50, // Hardcoded for this demo, usually comes from cart state
+          amount: total.value, // dynamically pass the cart total
           paymentMethodId: paymentMethod.id,
         }),
       });
