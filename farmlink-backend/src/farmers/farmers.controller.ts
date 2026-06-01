@@ -11,11 +11,26 @@ import {
 import { CreateFarmerOnboardingDto } from './dto/create-farmer.dto'
 import { FarmersService } from './farmers.service'
 import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard'
+import { Public } from '../auth/decorators/public.decorator'
 
 @UseGuards(SupabaseAuthGuard)
 @Controller('farmer')
 export class FarmersController {
   constructor(private readonly farmersService: FarmersService) {}
+
+  // ─── Public ───────────────────────────────────────────────────────────────
+
+  @Public()
+  @Get('list')
+  findAll() {
+    return this.farmersService.findAll()
+  }
+
+  @Public()
+  @Get(':id')
+  findOnePublic(@Param('id') id: string) {
+    return this.farmersService.findOnePublic(id)
+  }
 
   // ─── Onboarding ───────────────────────────────────────────────────────────
 

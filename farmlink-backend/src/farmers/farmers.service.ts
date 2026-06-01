@@ -35,6 +35,41 @@ export class FarmersService {
     private readonly products: Repository<Product>,
   ) {}
 
+  // ─── Public ───────────────────────────────────────────────────────────────
+  async findAll() {
+    return this.farmerProfiles.find({
+      relations: ['user'],
+      select: {
+        id: true,
+        farmName: true,
+        province: true,
+        district: true,
+        isVerified: true,
+        coverImageUrl: true,
+        user: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true
+        }
+      },
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  async findOnePublic(id: string) {
+    const profile = await this.farmerProfiles.findOne({
+      where: { id },
+      relations: ['user', 'products', 'products.images'],
+    });
+
+    if (!profile) {
+      throw new NotFoundException('Farmer profile not found');
+    }
+
+    return profile;
+  }
+
   // ─── Onboarding ───────────────────────────────────────────────────────────
 
   async submitOnboarding(dto: CreateFarmerOnboardingDto) {

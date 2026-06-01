@@ -42,7 +42,7 @@ export const getAccessToken = async (): Promise<string | null> => {
   }
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const PENDING_SIGNUP_KEY = 'farmlink.auth.pending-signup';
 
 const normalizeRoleFromSupabase = (role?: string): UserRole => {

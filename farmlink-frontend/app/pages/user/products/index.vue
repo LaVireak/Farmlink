@@ -212,7 +212,7 @@ const fetchProducts = async () => {
   loading.value = true
 
   try {
-    const res = await $fetch('http://localhost:3001/products', {
+    const res = await $fetch(`${config.public.apiUrl}/products`, {
       headers: {
         Authorization: `Bearer ${authStore.accessToken}`
       }

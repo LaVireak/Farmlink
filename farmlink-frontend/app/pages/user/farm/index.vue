@@ -224,17 +224,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRuntimeConfig } from '#app'
 
 import AppHeader from '~/components/common/AppHeader.vue'
 import AppFooter from '~/components/common/AppFooter.vue'
 
+const config = useRuntimeConfig()
 const search = ref('')
 const sortOrder = ref('asc')
 const province = ref('All')
-const allCategories = ['Kampong Cham', 'Kandal', 'Ta Keo']
 const minRating = ref(0)
+const farms = ref([])
+
+const allCategories = computed(() => {
+  const provinces = new Set(farms.value.map(f => f.province).filter(Boolean))
+  return Array.from(provinces).sort()
+})
 
 const { t } = useI18n()
 
@@ -251,57 +258,27 @@ const clearFilters = () => {
   sortOrder.value = 'asc'
 }
 
-const farms = ref([
-  {
-    id: 'f1',
-    name: 'Cham River Farm',
-    rating: 4.8,
-    province: 'Kampong Cham',
-    description: 'Organic vegetable plots near the river.',
-    image: '/assets/images/farm1.png'
-  },
-  {
-    id: 'f2',
-    name: 'Green Valley Farm',
-    rating: 4.6,
-    province: 'Kampong Cham',
-    description: 'Family-run vegetable farm.',
-    image: '/assets/images/farm1.png'
-  },
-  {
-    id: 'f3',
-    name: 'Kandal Fresh',
-    rating: 3.5,
-    province: 'Kandal',
-    description: 'Mixed produce and local deliveries.',
-    image: '/assets/images/farm2.png'
-  },
-  {
-    id: 'f4',
-    name: 'Kandal Orchards',
-    rating: 4.2,
-    province: 'Kandal',
-    description: 'Fruit orchard specialising in mangoes.',
-    image: '/assets/images/farm2.png'
-  },
-  {
-    id: 'f5',
-    name: 'Ta Keo Greens',
-    rating: 4.0,
-    province: 'Ta Keo',
-    description: 'Specialises in salad greens and herbs.',
-    image: '/assets/images/farm3.png'
-  },
-  {
-    id: 'f6',
-    name: 'Ta Keo Hydroponics',
-    rating: 3.9,
-    province: 'Ta Keo',
-    description: 'Modern greenhouse operations.',
-    image: '/assets/images/farm3.png'
+const fetchFarms = async () => {
+  try {
+    const res = await $fetch(`${config.public.apiUrl}/farmer/list`)
+    if (res && Array.isArray(res)) {
+      farms.value = res.map(f => ({
+        id: f.id,
+        name: f.farmName || (f.user ? `${f.user.firstName} ${f.user.lastName}` : 'Unknown Farm'),
+        rating: 5.0, // Default rating for now
+        province: f.province || 'Other',
+        description: f.user?.bio || 'Local farm providing fresh produce directly to consumers.',
+        image: f.coverImageUrl || '/assets/images/farm1.png'
+      }))
+    }
+  } catch (err) {
+    console.error('Failed to fetch farms:', err)
   }
-  
-])
+}
+
+onMounted(() => {
+  fetchFarms()
+})
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()

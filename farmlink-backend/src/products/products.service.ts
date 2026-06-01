@@ -46,6 +46,13 @@ export class ProductsService implements OnModuleInit {
       discount: null,
       unit: p.unit,
       stock: p.stockQuantity,
+      farmer: p.farmer ? {
+        id: p.farmer.id,
+        farmName: p.farmer.farmName,
+        firstName: p.farmer.user?.firstName,
+        lastName: p.farmer.user?.lastName,
+        isVerified: p.farmer.isVerified,
+      } : null,
     };
   }
 
@@ -78,7 +85,7 @@ export class ProductsService implements OnModuleInit {
   async findOne(id: string): Promise<any> {
     const product = await this.productRepo.findOne({
       where: { id },
-      relations: ['category', 'images'],
+      relations: ['category', 'images', 'farmer', 'farmer.user'],
     });
     if (!product) {
       throw new NotFoundException('Product not found');

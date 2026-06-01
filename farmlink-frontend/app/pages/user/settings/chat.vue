@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useChat } from '~/composables/useChat';
+import { useChatStore } from '~/stores/chat.store';
 import { useAuth } from '~/composables/useAuth';
 
 definePageMeta({ layout: 'user', middleware: 'user' });
 useHead({ title: 'Chat with Farmers | FarmLink Cambodia' });
 
 const chat = useChat();
+const chatStore = useChatStore();
 const { user } = useAuth();
+const route = useRoute();
 const search = ref('');
 const newMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -26,6 +30,35 @@ const currentUserId = computed(() => {
 
 onMounted(async () => {
   await chat.fetchConversations(1, 10);
+
+  const targetUserId = route.query.userId as string;
+  if (targetUserId) {
+    const existing = chatStore.conversations.find(c => c.participant?.id === targetUserId || c.id === targetUserId);
+    if (existing) {
+      await selectContact(existing);
+    } else {
+      const name = (route.query.name as string) || 'Farmer';
+      const avatarUrl = (route.query.avatar as string) || '';
+      
+      const newConv = {
+        id: targetUserId,
+        participant: {
+          id: targetUserId,
+          firstName: name.split(' ')[0],
+          lastName: name.split(' ').slice(1).join(' ') || '',
+          avatarUrl: avatarUrl
+        },
+        lastMessage: 'No messages yet',
+        lastMessageTime: new Date(),
+        unreadCount: 0,
+        createdAt: new Date()
+      };
+      
+      // Add to beginning of conversations list
+      chatStore.conversations.unshift(newConv);
+      await selectContact(newConv);
+    }
+  }
 });
 
 const filteredContacts = computed(() => {

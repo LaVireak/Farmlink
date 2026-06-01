@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <main class="px-8 py-8 bg-[#F5F7F3] min-h-screen font-sans antialiased">
     <FarmerHeader title="Product Management" />
 
@@ -903,7 +903,7 @@ definePageMeta({
   layout: 'farmer'
 })
 
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
 
 const { user, ensureHydrated } = useAuth()
 const authStore = useAuthStore()
@@ -1143,10 +1143,22 @@ async function onFileChangeModal(event: any) {
   const file = event.target.files?.[0]
   if (!file) return
   try {
-    editForm.value.imageUrl = await compressImage(file)
+    const compressed = await compressImage(file)
+    if (editingProductId.value) {
+      editForm.value.imageUrl = compressed
+    } else {
+      addForm.value.imageUrl = compressed
+    }
   } catch {
     const reader = new FileReader()
-    reader.onload = (e) => { editForm.value.imageUrl = e.target?.result as string }
+    reader.onload = (e) => { 
+      const result = e.target?.result as string
+      if (editingProductId.value) {
+        editForm.value.imageUrl = result
+      } else {
+        addForm.value.imageUrl = result
+      }
+    }
     reader.readAsDataURL(file)
   }
 }
