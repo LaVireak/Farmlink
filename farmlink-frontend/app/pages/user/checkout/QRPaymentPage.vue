@@ -1,29 +1,15 @@
 <template>
    <CommonAppHeader />
-  <div class="min-h-screen bg-[#FDFCFB] py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-green-100 selection:text-green-900">
+  <div class="min-h-screen bg-[#FDFCFB] font-sans selection:bg-green-100 selection:text-green-900">
     <!-- Subtle Background Element -->
     <div class="fixed top-0 left-0 w-full h-64 bg-gradient-to-b from-[#f0f9eb] to-transparent pointer-events-none -z-10"></div>
     
-    <div class="max-w-5xl mx-auto">
+    <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
       <!-- Header Section -->
-      <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+      <header class="mb-6">
         <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded">Secure Checkout</span>
-          </div>
-          <h1 class="text-4xl font-extrabold text-[#064e3b] tracking-tight">Finalize Your Harvest</h1>
+          <h1 class="text-4xl font-bold text-[#064e3b] tracking-tight">Finalize Your Harvest</h1>
           <p class="text-slate-500 mt-2 font-medium">Order #{{ tranId?.slice(-8) || '...' }} • Secure QR Payment</p>
-        </div>
-        
-        <!-- Premium Progress Indicator -->
-        <div class="flex items-center gap-3">
-          <div class="flex flex-col items-end">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Step 3 of 3</span>
-            <span class="text-sm font-bold text-green-700">Payment & Confirmation</span>
-          </div>
-          <div class="w-12 h-12 rounded-full border-4 border-green-100 border-t-green-600 flex items-center justify-center">
-            <span class="text-sm font-black text-green-700">100%</span>
-          </div>
         </div>
       </header>
       
@@ -44,11 +30,6 @@
           Payment
         </div>
       </div>
-      <nuxt-link to="/user/checkout/address" class="text-sm text-green-700 font-bold hover:underline flex items-center gap-1 mb-6">
-            <div class=" bg-green-700 text-white rounded-full flex items-center justify-center px-3 py-3">
-              Change Method
-             </div>
-      </nuxt-link>
    
 
       
@@ -59,7 +40,7 @@
           
           <!-- Payment Card -->
           <div class="relative bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(6,78,59,0.08)] border border-green-50 overflow-hidden transition-all hover:shadow-[0_30px_60px_rgba(6,78,59,0.12)]">
-                       <!-- Simplified Immersive Success Overlay -->
+            <!-- Simplified Immersive Success Overlay -->
             <div v-if="paymentStatus === 'paid'" class="absolute inset-0 bg-white flex flex-col items-center justify-center p-8 z-50 animate-in fade-in duration-500">
               <!-- Decorative background glow -->
               <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-green-50/50 to-emerald-50/50 -z-10"></div>
@@ -87,9 +68,13 @@
                 </div>
               </div>
             </div>
->
 
-            <div class="p-10 flex flex-col items-center">
+
+            
+            <div class="p-6 flex flex-col items-center">
+              <NuxtLink to="/user/checkout/address" class="self-start mb-4 bg-green-700 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-800 transition no-underline">
+                Change Method
+              </NuxtLink>
               
               <!-- QR Section -->
               <div class="relative group">
@@ -182,12 +167,12 @@
               <div class="flex justify-between items-center mb-10">
                 <h2 class="text-2xl font-black text-[#064e3b]">Harvest Details</h2>
                 <div class="bg-green-50 px-3 py-1 rounded-full">
-                  <span class="text-[10px] font-black text-green-700 tracking-tighter uppercase">3 Items</span>
+                  <span class="text-[10px] font-black text-green-700 tracking-tighter uppercase">{{ orderItems.length }} Items</span>
                 </div>
               </div>
 
               <div class="space-y-8 mb-10">
-                <div v-for="item in orderItems" :key="item.name" class="flex items-center gap-4 group">
+                <div v-for="item in orderItems" :key="item.id" class="flex items-center gap-4 group">
                   <div class="relative">
                     <div class="absolute inset-0 bg-green-200 rounded-2xl rotate-3 group-hover:rotate-6 transition-transform -z-10 opacity-30"></div>
                     <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-2xl object-cover shadow-sm bg-white" />
@@ -203,18 +188,18 @@
               <div class="space-y-4 pt-8 border-t border-slate-50">
                 <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
                   <span>Subtotal</span>
-                  <span>${{ testAmount.toFixed(2) }}</span>
+                  <span>${{ subtotal.toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
                   <span>Delivery Fee</span>
-                  <span class="text-green-600">Free</span>
+                  <span>${{ deliveryFee.toFixed(2) }}</span>
                 </div>
                 
                 <div class="pt-6">
                   <div class="flex justify-between items-end">
                     <div>
                       <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Total Harvest Amount</span>
-                      <span class="text-4xl font-black text-[#064e3b] tracking-tighter tabular-nums">${{ testAmount.toFixed(2) }}</span>
+                      <span class="text-4xl font-black text-[#064e3b] tracking-tighter tabular-nums">${{ totalAmount.toFixed(2) }}</span>
                     </div>
                     <span class="text-xs font-black text-slate-400 mb-2">USD</span>
                   </div>
@@ -264,6 +249,9 @@ definePageMeta({
 
 const {
   testAmount,
+  subtotal,
+  deliveryFee,
+  totalAmount,
   qrValue,
   qrImageSrc,
   tranId,

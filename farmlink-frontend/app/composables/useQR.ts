@@ -13,37 +13,33 @@ type CheckStatusResponse = {
   providerStatus?: string;
 };
 
+type HarvestItem = {
+  id: number;
+  name: string;
+  qty: number;
+  unitPrice: number;
+  image: string;
+};
+
 export const useQR = () => {
   const config = useRuntimeConfig();
-  // sample order items (used for order summary and to compute QR amount)
-  const orderItems = [
-    {
-      name: 'Heirloom Tomatoes',
-      qty: 1.5,
-      unitPrice: 4.5,
-      image:
-        'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=200',
-    },
-    {
-      name: 'Organic Curly Kale',
-      qty: 2,
-      unitPrice: 3,
-      image:
-        'https://images.unsplash.com/photo-1524179524541-10d54f5903da?auto=format&fit=crop&q=80&w=200',
-    },
-    {
-      name: 'Baby Dutch Carrots',
-      qty: 1,
-      unitPrice: 4.25,
-      image:
-        'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=200',
-    },
-  ];
+  const { cart, subtotal, deliveryFee, total } = useCart();
+  const fallbackImage =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f3f4f6'/%3E%3Cpath d='M20 43l7-9 6 5 9-12 6 16H20z' fill='%23d1d5db'/%3E%3Ccircle cx='25' cy='23' r='4' fill='%23d1d5db'/%3E%3C/svg%3E";
 
-  // compute the total amount based on order items so QR matches shown total
-  const testAmount = computed(() => {
-    return orderItems.reduce((sum, it) => sum + (Number(it.qty) || 0) * (Number(it.unitPrice) || 0), 0);
+  // Build harvest summary directly from cart items.
+  const orderItems = computed<HarvestItem[]>(() => {
+    return cart.value.map((item) => ({
+      id: item.id,
+      name: item.name,
+      qty: Number(item.quantity) || 0,
+      unitPrice: Number(item.price) || 0,
+      image: item.image || fallbackImage,
+    }));
   });
+
+  const totalAmount = computed(() => total.value);
+  const testAmount = totalAmount;
 
   const qrValue = ref('');
   const qrImage = ref('');
@@ -200,6 +196,9 @@ export const useQR = () => {
 
   return {
     testAmount,
+    subtotal,
+    deliveryFee,
+    totalAmount,
     qrValue,
     qrImage,
     qrImageSrc,

@@ -12,17 +12,17 @@
       <div class="flex items-center gap-4 mb-8 text-sm">
         <div class="flex items-center gap-2 text-green-700 font-semibold">
           <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-700 text-white">1</span>
-          ទំនិញក្នុងកន្ត្រក
+          Cart
         </div>
         <div class="flex-1 h-px bg-gray-300"></div>
         <div class="flex items-center gap-2 text-gray-400">
           <span class="w-6 h-6 flex items-center justify-center rounded-full border">2</span>
-          អាសយដ្ឋាន
+          Address
         </div>
         <div class="flex-1 h-px bg-gray-300"></div>
         <div class="flex items-center gap-2 text-gray-400">
           <span class="w-6 h-6 flex items-center justify-center rounded-full border">3</span>
-          ការទូទាត់
+          Payment
         </div>
       </div>
 
@@ -32,64 +32,70 @@
           <div
             v-for="item in cart"
             :key="item.id"
-            class="flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded-xl shadow-sm"
+            class="bg-white p-4 rounded-xl shadow-sm"
           >
-            <!-- Product Info -->
-            <div class="flex items-center gap-4 w-full md:w-auto">
-              <div class="w-16 h-16 bg-gray-200 rounded-lg"></div>
-              <div>
-                <h3 class="font-semibold">{{ item.name }}</h3>
-                <p class="text-sm text-gray-500">{{ item.variant }}</p>
-                <p class="text-xs text-green-700">{{ item.farm }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_124px_160px] md:items-center gap-4 md:gap-6">
+              <!-- Product Info -->
+              <div class="flex items-center gap-4 min-w-0">
+                <img
+                  :src="getCartImage(item)"
+                  :alt="item.name"
+                  class="w-16 h-16 rounded-lg object-cover bg-gray-100 border border-gray-100"
+                />
+                <div class="min-w-0">
+                  <h3 class="font-semibold truncate">{{ item.name }}</h3>
+                  <p class="text-sm text-gray-500 truncate">{{ item.variant }}</p>
+                  <p class="text-xs text-green-700 truncate">{{ item.farm }}</p>
+                </div>
               </div>
-            </div>
 
-            <!-- Quantity -->
-            <div class="flex items-center gap-3 mt-4 md:mt-0">
-              <button
-                @click="decrease(item.id)"
-                class="px-2 py-1 bg-gray-200 rounded"
-              >-</button>
+              <!-- Quantity -->
+              <div class="flex items-center justify-start md:justify-center gap-3 md:w-[124px]">
+                <button
+                  @click="decrease(item.id)"
+                  class="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-md"
+                >-</button>
 
-              <span>{{ item.quantity }}</span>
+                <span class="w-6 text-center font-medium">{{ item.quantity }}</span>
 
-              <button
-                @click="increase(item.id)"
-                class="px-2 py-1 bg-gray-200 rounded"
-              >+</button>
-            </div>
+                <button
+                  @click="increase(item.id)"
+                  class="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-md"
+                >+</button>
+              </div>
 
-            <!-- Price -->
-            <div class="text-right mt-4 md:mt-0">
-              <p class="text-sm text-gray-500">
-                ${{ item.price.toFixed(2) }} × {{ item.quantity }}
-              </p>
-              <p class="font-semibold text-green-700">
-                ${{ (item.price * item.quantity).toFixed(2) }}
-              </p>
-              <button
-                @click="removeItem(item.id)"
-                class="text-xs text-red-500 mt-1"
-              >
-                លុបចេញ
-              </button>
+              <!-- Price -->
+              <div class="text-left md:text-right md:w-[160px]">
+                <p class="text-sm text-gray-500">
+                  ${{ item.price.toFixed(2) }} × {{ item.quantity }}
+                </p>
+                <p class="font-semibold text-green-700">
+                  ${{ (item.price * item.quantity).toFixed(2) }}
+                </p>
+                <button
+                  @click="removeItem(item.id)"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Continue Shopping -->
           <NuxtLink
-            to="/user/checkout/address"
+            to="/user/products"
             class="mt-6 inline-flex w-full items-center justify-center bg-green-700 px-6 py-3 font-semibold text-white no-underline transition hover:bg-green-800 rounded-xl"
           >
-            បន្តទិញទំនិញ
+            Continue Shopping
           </NuxtLink>
           
 
           <!-- Recommendations -->
           <div class="mt-10">
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-semibold text-green-800">មើលផងដែរ</h2>
-              <a href="#" class="text-sm text-green-700">មើលទាំងអស់</a>
+              <h2 class="text-xl font-semibold text-green-800">Recommendations</h2>
+              <a href="#" class="text-sm text-green-700">View All</a>
             </div>
 
             <div class="flex gap-4 overflow-x-auto pb-2">
@@ -104,7 +110,7 @@
                 <p class="text-green-700 font-semibold">
                   ${{ rec.price.toFixed(2) }}
                 </p>
-                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">បន្ថែមទៅកន្ត្រក</button>
+                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">Add to Cart</button>
               </div>
             </div>
           </div>
@@ -112,21 +118,21 @@
 
         <!-- Order Summary -->
         <div class="bg-white p-6 rounded-xl shadow-md h-fit">
-          <h2 class="text-lg font-semibold mb-4">សរុបការកម្មង់</h2>
+          <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
-              <span>សរុបមុនដឹកជញ្ជូន</span>
+              <span>Subtotal</span>
               <span>${{ subtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between">
-              <span>ថ្លៃដឹកជញ្ជូន</span>
+              <span>Delivery Fee</span>
               <span>${{ deliveryFee.toFixed(2) }}</span>
             </div>
           </div>
 
           <div class="flex justify-between font-semibold text-lg mt-4">
-            <span>សរុប</span>
+            <span>Total</span>
             <span class="text-green-700">${{ total.toFixed(2) }}</span>
           </div>
 
@@ -134,12 +140,9 @@
             to="/user/checkout/address"
             class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-green-700 py-3 font-semibold text-white no-underline transition hover:bg-green-800"
           >
-            បន្តទៅបង់ប្រាក់
+            Continue to Payment
           </NuxtLink>
 
-          <p class="text-xs text-gray-500 mt-4">ការបញ្ជាទិញនេះនឹងត្រូវដឹកជញ្ជូនដោយផ្លូវសុវត្ថិភាព និងរហ័ស</p>
-
-          <div class="flex items-center gap-2 mt-4 text-sm text-green-700">ការដឹកជញ្ជូនកាត់បន្ថយកាបូន</div>
         </div>
       </div>
     </div>
@@ -152,6 +155,9 @@
 import { useCart } from '@/composables/useCart';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
+
+const CART_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f3f4f6'/%3E%3Cpath d='M20 43l7-9 6 5 9-12 6 16H20z' fill='%23d1d5db'/%3E%3Ccircle cx='25' cy='23' r='4' fill='%23d1d5db'/%3E%3C/svg%3E";
 
 definePageMeta({
   middleware: 'user',
@@ -168,6 +174,8 @@ const{
   increase,
   decrease,
   removeItem } = useCart();
+
+const getCartImage = (item: { image?: string }) => item.image || CART_PLACEHOLDER
 
 
 </script>

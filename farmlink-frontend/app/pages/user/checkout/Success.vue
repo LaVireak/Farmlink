@@ -20,17 +20,24 @@
             <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ items.length }} {{ t('success.items') }}</span>
           </div>
 
-          <div class="space-y-6">
-            <div v-for="item in items" :key="item.name" class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-full object-cover bg-gray-100" />
-                <div>
-                  <h3 class="font-bold text-gray-800">{{ item.name }}</h3>
-                  <p class="text-xs text-gray-500">{{ item.desc }}</p>
+          <div v-if="items.length" class="space-y-6">
+            <div v-for="item in items" :key="item.id" class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-4 min-w-0">
+                <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-full object-cover bg-gray-100 flex-shrink-0" />
+                <div class="min-w-0">
+                  <h3 class="font-bold text-gray-800 truncate">{{ item.name }}</h3>
+                  <p class="text-xs text-gray-500 truncate">{{ item.desc }}</p>
                 </div>
               </div>
-              <span class="font-bold text-gray-700">${{ item.price.toFixed(2) }}</span>
+              <div class="text-right flex-shrink-0">
+                <p class="text-xs text-gray-400">{{ item.quantity }} × ${{ item.price.toFixed(2) }}</p>
+                <span class="font-bold text-gray-700">${{ item.lineTotal.toFixed(2) }}</span>
+              </div>
             </div>
+          </div>
+
+          <div v-else class="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+            Your cart is empty.
           </div>
 
           <hr class="my-6 border-gray-100" />
@@ -38,15 +45,15 @@
           <div class="space-y-3 text-sm">
             <div class="flex justify-between text-gray-500">
               <span>{{ t('success.subtotal') }}</span>
-              <span>$7.75</span>
+              <span>${{ subtotal.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-gray-500">
               <span>{{ t('success.deliveryFee') }}</span>
-              <span>$2.00</span>
+              <span>${{ deliveryFee.toFixed(2) }}</span>
             </div>
             <div class="flex justify-between text-xl font-extrabold text-[#0a4d1e] pt-2">
               <span>{{ t('success.totalPaid') }}</span>
-              <span>$9.75</span>
+              <span>${{ totalPaid.toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -111,8 +118,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useCart } from '@/composables/useCart'
 
 const { t } = useI18n()
 definePageMeta({
@@ -122,20 +130,24 @@ definePageMeta({
 
 const customerName = ref('Johnathan')
 
-const items = ref([
-  {
-    name: 'Heirloom Carrots',
-    desc: 'Bundled Fresh • 1lb',
-    price: 4.50,
-    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=200'
-  },
-  {
-    name: 'Organic Kale',
-    desc: 'Local Harvest • 1 Bunch',
-    price: 3.25,
-    image: 'https://images.unsplash.com/photo-1524179524541-10d54f5903da?auto=format&fit=crop&q=80&w=200'
-  }
-])
+const fallbackImage =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f3f4f6'/%3E%3Cpath d='M20 43l7-9 6 5 9-12 6 16H20z' fill='%23d1d5db'/%3E%3Ccircle cx='25' cy='23' r='4' fill='%23d1d5db'/%3E%3C/svg%3E";
+
+const { cart, subtotal, deliveryFee, total } = useCart()
+
+const items = computed(() =>
+  cart.value.map((item) => ({
+    id: item.id,
+    name: item.name,
+    desc: [item.variant, item.farm].filter(Boolean).join(' • ') || 'Cart item',
+    quantity: Number(item.quantity) || 0,
+    price: Number(item.price) || 0,
+    lineTotal: (Number(item.price) || 0) * (Number(item.quantity) || 0),
+    image: item.image || fallbackImage,
+  }))
+)
+
+const totalPaid = computed(() => total.value)
 </script>
 
 <style scoped>
