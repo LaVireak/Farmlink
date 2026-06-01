@@ -124,6 +124,7 @@ import { useI18n } from 'vue-i18n'
 import { useCart } from '@/composables/useCart'
 import { useAuthStore } from '~/stores/auth.store'
 import { getAccessToken } from '~/services/auth.service'
+import { useRewards } from '@/composables/useRewards'
 
 const { t } = useI18n()
 definePageMeta({
@@ -134,6 +135,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const config = useRuntimeConfig()
 const { cart, subtotal, deliveryFee, total } = useCart()
+const { awardPoints } = useRewards()
 
 const customerName = computed(() => {
   if (authStore.user) {
@@ -247,6 +249,11 @@ onMounted(async () => {
         const data = await res.json()
         createdOrder.value = data
         orderIdText.value = `#${data.orderNumber}`
+        
+        // Award points based on total amount paid
+        if (data.totalAmount) {
+          void awardPoints(Number(data.totalAmount))
+        }
         
         // Clear cart
         cart.value = []
