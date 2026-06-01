@@ -30,7 +30,7 @@
             <NuxtLink to="/user/products" class="btn-elegant primary">
               <span>{{ t('home.exploreProducts') }}</span>
             </NuxtLink>
-            <NuxtLink to="/about" class="btn-elegant secondary">
+            <NuxtLink to="/user/about" class="btn-elegant secondary">
               <span>{{ t('home.learnMore') }}</span>
               <span class="material-symbols-outlined">arrow_forward</span>
             </NuxtLink>
@@ -168,26 +168,26 @@
             <span class="subtitle">{{ t('common.farm') }}</span>
             <h2>{{ t('home.farmsAcrossCambodia') }}</h2>
           </div>
-          <NuxtLink to="/about" class="view-all">
+          <NuxtLink to="/user/about" class="view-all">
             <span>{{ t('home.exploreProvinces') }}</span>
             <span class="material-symbols-outlined">map</span>
           </NuxtLink>
         </div>
 
         <div class="province-grid">
-          <article v-for="farm in provinceFarms" :key="farm.keyPrefix" class="province-card">
+          <article v-for="farm in provinceFarms" :key="farm.keyPrefix || farm.name" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="t(farm.keyPrefix + '.name')" loading="lazy" />
+              <img :src="farm.image" :alt="farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name" loading="lazy" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
               <span class="province-badge">{{ farm.province }}</span>
-              <h3>{{ t(farm.keyPrefix + '.name') }}</h3>
-              <p class="province-desc">{{ t(farm.keyPrefix + '.description') }}</p>
+              <h3>{{ farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name }}</h3>
+              <p class="province-desc">{{ farm.keyPrefix ? t(farm.keyPrefix + '.description') : farm.description }}</p>
               <div class="province-footer">
                 <span class="farm-products">
                   <span class="material-symbols-outlined">restaurant_menu</span>
-                  {{ t(farm.keyPrefix + '.products') }}
+                  {{ farm.keyPrefix ? t(farm.keyPrefix + '.products') : farm.products }}
                 </span>
                 <span class="rating"><span class="star-icon">★</span> {{ farm.rating }}</span>
               </div>
@@ -230,7 +230,7 @@
             <span class="subtitle">{{ t('common.about') }}</span>
             <h2>{{ t('home.latestStories') }}</h2>
           </div>
-          <NuxtLink to="/about" class="view-all">
+          <NuxtLink to="/user/about" class="view-all">
             <span>{{ t('home.readJournal') }}</span>
             <span class="material-symbols-outlined">book</span>
           </NuxtLink>
@@ -251,7 +251,7 @@
               <p class="muted-text">{{ t(post.keyPrefix + '.excerpt') }}</p>
               <div class="blog-footer">
                 <span class="blog-date">{{ post.date }}</span>
-                <NuxtLink to="/about" class="read-more-link">
+                <NuxtLink to="/user/about" class="read-more-link">
                   <span>{{ t('success.readStory') }}</span>
                   <span class="material-symbols-outlined">arrow_right_alt</span>
                 </NuxtLink>
@@ -280,11 +280,11 @@
               <img :src="r.avatar" :alt="r.name" loading="lazy" />
               <div>
                 <strong>{{ r.name }}</strong>
-                <p class="muted-text">{{ t(r.keyPrefix + '.role') }}</p>
+                <p class="muted-text">{{ r.keyPrefix ? t(r.keyPrefix + '.role') : r.role }}</p>
               </div>
             </div>
             <div class="stars">★★★★★</div>
-            <div class="quote">"${{ t(r.keyPrefix + '.quote') }}"</div>
+            <div class="quote">"{{ r.keyPrefix ? t(r.keyPrefix + '.quote') : r.quote }}"</div>
           </article>
         </div>
       </section>
@@ -295,8 +295,26 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '~/stores/auth.store'
 import { useI18n } from 'vue-i18n'
+
+const authStore = useAuthStore()
+const router = useRouter()
 const { t } = useI18n()
+
+onMounted(async () => {
+  await authStore.hydrate()
+  if (authStore.isAuthenticated) {
+    if (authStore.user?.role === 'farmer') {
+      router.replace('/farmer/dashboard')
+    } else if (authStore.user?.role === 'admin') {
+      router.replace('/admin/dashboard')
+    }
+  }
+})
+
 const products = [
   {
     id: '1',

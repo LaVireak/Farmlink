@@ -492,11 +492,13 @@ import {
     UserPlus, Info, CheckCircle2, ArrowLeft, User, Leaf
 } from 'lucide-vue-next'
 import AdminFarmerTable from '~/components/admin/AdminFarmerTable.vue'
+import { useAuthStore } from '~/stores/auth.store'
 
 definePageMeta({ layout: 'admin', middleware: 'admin',})
 
 const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl
+const auth = useAuthStore()
 
 const allFarmers     = ref([])
 const allBuyers      = ref([])
@@ -506,11 +508,97 @@ const buyersLoading  = ref(false)
 const matchLoading   = ref(false)
 const suspendLoading = ref(false)
 
+const normalizeStatus = (status) => ({
+    active: 'Active',
+    pending: 'Pending',
+    suspended: 'Suspended',
+    inactive: 'Suspended',
+}[String(status || '').toLowerCase()] ?? 'Pending')
+
+const mapFarmer = (profile) => {
+    const user = profile?.user ?? {}
+    const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || profile?.farmName || 'Unknown'
+    const tags = String(profile?.productTags ?? '')
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean)
+    const mainCrop = tags[0] || 'Unknown'
+    const trustScore = profile?.avgRating
+        ? Math.round(Number(profile.avgRating) * 20)
+        : 0
+
+    return {
+        id: profile?.id,
+        userId: profile?.userId,
+        name,
+        phone: user.phoneNumber || '—',
+        location: [profile?.province, profile?.district].filter(Boolean).join(', ') || '—',
+        mainCrop,
+        estYield: profile?.totalSales ? String(profile.totalSales) : '—',
+        trustScore,
+        status: normalizeStatus(user.status ?? (profile?.isVerified ? 'active' : 'pending')),
+        matchStatus: profile?.matchStatus || 'Unmatched',
+        method: '—',
+        farmSize: 0,
+        joinedAt: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—',
+        crops: tags.map(tag => ({
+            name: tag,
+            harvestDate: '—',
+            volume: '—',
+            price: '—',
+        })),
+        matchedBuyer: profile?.matchedBuyerId || undefined,
+        verifiedAt: profile?.verifiedAt || undefined,
+    }
+}
+
+const mapFarmerFromUser = (user) => ({
+    id: user?.id,
+    userId: user?.id,
+    name: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Unknown',
+    phone: user?.phoneNumber ?? '—',
+    location: '—',
+    mainCrop: 'Unknown',
+    estYield: '—',
+    trustScore: 0,
+    status: normalizeStatus(user?.status),
+    matchStatus: 'Unmatched',
+    method: '—',
+    farmSize: 0,
+    joinedAt: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—',
+    crops: [],
+    matchedBuyer: undefined,
+    verifiedAt: undefined,
+})
+
 async function fetchFarmers() {
     loading.value = true
     error.value   = null
     try {
-        allFarmers.value = await $fetch(`${baseURL}/admin/farmers`)
+        const res = await $fetch(`${baseURL}/admin/farmers`, {
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
+        })
+        const raw = Array.isArray(res) ? res : res?.data ?? []
+        const farmers = raw.map(mapFarmer)
+
+        const fallback = await $fetch(`${baseURL}/admin/users`, {
+            params: { role: 'farmer', take: 1000, skip: 0 },
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
+        })
+        const fallbackRaw = Array.isArray(fallback) ? fallback : fallback?.data ?? []
+        const farmerUsers = fallbackRaw.map(mapFarmerFromUser)
+
+        const merged = new Map()
+        for (const farmer of farmers) {
+            const key = farmer.userId || farmer.id
+            if (key) merged.set(key, farmer)
+        }
+        for (const farmer of farmerUsers) {
+            const key = farmer.userId || farmer.id
+            if (key && !merged.has(key)) merged.set(key, farmer)
+        }
+
+        allFarmers.value = Array.from(merged.values())
     } catch (err) {
         error.value = err?.data?.message ?? 'Failed to load farmers'
         showToast(error.value, 'error')
@@ -522,7 +610,16 @@ async function fetchFarmers() {
 async function fetchBuyers() {
     buyersLoading.value = true
     try {
-        allBuyers.value = await $fetch(`${baseURL}/admin/buyers`)
+        const res = await $fetch(`${baseURL}/admin/buyers`, {
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
+        })
+        const raw = Array.isArray(res) ? res : res?.data ?? []
+        allBuyers.value = raw.map((buyer) => ({
+            id: buyer?.id,
+            name: `${buyer?.firstName ?? ''} ${buyer?.lastName ?? ''}`.trim() || buyer?.email || 'Unknown',
+            type: 'Buyer',
+            trustScore: 0,
+        }))
     } catch (err) {
         showToast('Failed to load buyers', 'error')
     } finally {
@@ -530,7 +627,16 @@ async function fetchBuyers() {
     }
 }
 
-onMounted(() => fetchFarmers())
+onMounted(async () => {
+    await auth.hydrate()
+
+    if (!auth.accessToken) {
+        await navigateTo('/auth/signin')
+        return
+    }
+
+    await fetchFarmers()
+})
 
 const countByMatch  = (s) => allFarmers.value.filter(f => f.matchStatus === s).length
 const avgTrustScore = computed(() =>
@@ -542,12 +648,14 @@ const filterStatus = ref('')
 const filterMatch  = ref('')
 const sortBy       = ref('name')
 
+const safeLower = (value) => String(value ?? '').toLowerCase()
+
 const filteredFarmers = computed(() => {
     let result = allFarmers.value.filter(f => {
-        const q  = searchQuery.value.toLowerCase()
-        const ms = f.name.toLowerCase().includes(q) || f.mainCrop.toLowerCase().includes(q)
+        const q  = safeLower(searchQuery.value)
+        const ms = safeLower(f.name).includes(q) || safeLower(f.mainCrop).includes(q)
         const mv = !filterStatus.value || f.status === filterStatus.value
-        const mm = !filterMatch.value  || f.matchStatus.toLowerCase() === filterMatch.value.toLowerCase()
+        const mm = !filterMatch.value  || safeLower(f.matchStatus) === safeLower(filterMatch.value)
         return ms && mv && mm
     })
     return result.sort((a, b) => {
@@ -583,9 +691,9 @@ async function openMatchModal(farmer) {
 
 const filteredBuyers = computed(() => {
     if (!matchModal.value.searchQuery) return allBuyers.value
-    const q = matchModal.value.searchQuery.toLowerCase()
+    const q = safeLower(matchModal.value.searchQuery)
     return allBuyers.value.filter(b =>
-        b.name.toLowerCase().includes(q) || b.type.toLowerCase().includes(q)
+        safeLower(b.name).includes(q) || safeLower(b.type).includes(q)
     )
 })
 

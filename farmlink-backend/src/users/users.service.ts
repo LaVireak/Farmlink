@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { FavoriteFarm } from './favorite-farm.entity';
 import { FavoriteProduct } from './favorite-product.entity';
 import { SupabaseAuthService } from '../auth/supabase-auth.service';
+import { FarmerProfile } from '../farmers/farmer.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,10 +21,31 @@ export class UsersService {
   ) {}
 
   async findById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['farmerProfile'],
+    });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // Auto-create/initialize farmer profile if user role is farmer but profile is null
+    if (user.role === 'farmer' && !user.farmerProfile) {
+      try {
+        const farmerRepo = this.userRepository.manager.getRepository(FarmerProfile);
+        const newProfile = farmerRepo.create({
+          userId: user.id,
+          farmName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'My Local Farm',
+          addressDetail: 'Phnom Penh, Cambodia',
+          isVerified: true,
+          matchStatus: 'approved'
+        });
+        user.farmerProfile = await farmerRepo.save(newProfile);
+      } catch (err) {
+        console.error('Failed to auto-create farmer profile:', err);
+      }
+    }
+
     return user;
   }
 

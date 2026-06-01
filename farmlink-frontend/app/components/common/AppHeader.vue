@@ -105,13 +105,15 @@
           </div>
         </div>
 
-        <div class="relative" id="farm-menu">
-            <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none py-6">
-            <span class="nav-link uppercase text-xs">{{ t('common.farm') }}</span>
-            <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
-          </button>
+        <div class="relative" id="farm-menu" @mouseenter="handleFarmHover(true)" @mouseleave="handleFarmHover(false)">
+          <div class="flex items-center space-x-1 py-6 cursor-pointer">
+            <NuxtLink to="/user/farm" class="nav-link uppercase text-xs">{{ t('common.farm') }}</NuxtLink>
+            <button class="flex items-center focus:outline-none" aria-label="Toggle Farm">
+              <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
+          </div>
 
           <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
                 <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
@@ -146,8 +148,8 @@
           </div>
         </div>
 
-        <NuxtLink to="/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
-        <NuxtLink to="/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
+        <NuxtLink to="/user/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
+        <NuxtLink to="/user/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
       </nav>
 
       <!-- Right Utility Bar -->
@@ -451,9 +453,9 @@ const handleProductHover = (status) => {
   }
 }
 
-const toggleFarm = () => {
-  farmOpen.value = !farmOpen.value
-  if (farmOpen.value) {
+const handleFarmHover = (status) => {
+  farmOpen.value = status
+  if (status) {
     productOpen.value = false
     userMenuOpen.value = false
     notificationsOpen.value = false

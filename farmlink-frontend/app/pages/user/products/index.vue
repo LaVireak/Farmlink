@@ -186,6 +186,7 @@
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import UserProductCard from '~/components/user/UserProductCard.vue'
+import { useCart } from '~/composables/useCart'
 
 import { useAuthStore } from '~/stores/auth.store'
 
@@ -212,7 +213,7 @@ const fetchProducts = async () => {
   loading.value = true
 
   try {
-    const res = await $fetch('http://localhost:3001/products', {
+    const res = await $fetch(`${config.public.apiUrl}/products`, {
       headers: {
         Authorization: `Bearer ${authStore.accessToken}`
       }
@@ -341,8 +342,10 @@ const sortedProducts = computed(() => {
 })
 
 // ================= CART =================
+const { addToCart } = useCart()
+
 const handleAddToCart = (product) => {
-  console.log('Added to cart:', product)
+  addToCart(product)
 }
 </script>
 

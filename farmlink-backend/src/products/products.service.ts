@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
@@ -6,13 +6,31 @@ import { Category } from './category.entity';
 import { ProductStatus } from '../common/enums/product.enum';
 
 @Injectable()
-export class ProductsService {
+export class ProductsService implements OnModuleInit {
   constructor(
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
   ) {}
+
+  async onModuleInit() {
+    try {
+      const count = await this.categoryRepo.count();
+      if (count === 0) {
+        const defaultCategories = [
+          { nameEn: 'Fruits', nameKm: 'ផ្លែឈើ' },
+          { nameEn: 'Vegetables', nameKm: 'បន្លែ' },
+          { nameEn: 'Leafy Greens', nameKm: 'បន្លែស្លឹក' },
+          { nameEn: 'Herbs', nameKm: 'គ្រឿងទេស' },
+        ];
+        await this.categoryRepo.save(defaultCategories);
+        console.log('[ProductsService] Seeded default crop categories.');
+      }
+    } catch (err) {
+      console.error('[ProductsService] Failed to seed default categories:', err);
+    }
+  }
 
   // Normalize a Product entity to the shape the frontend expects
   private normalize(p: Product) {
@@ -28,15 +46,27 @@ export class ProductsService {
       discount: null,
       unit: p.unit,
       stock: p.stockQuantity,
+      farmer: p.farmer ? {
+        id: p.farmer.id,
+        farmName: p.farmer.farmName,
+        firstName: p.farmer.user?.firstName,
+        lastName: p.farmer.user?.lastName,
+        isVerified: p.farmer.isVerified,
+      } : null,
     };
   }
 
   // GET ALL
-  async findAll(category?: string, maxPrice?: number): Promise<any[]> {
+  async findAll(category?: string, maxPrice?: number, farmerId?: string): Promise<any[]> {
     const qb = this.productRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.category', 'category')
-      .where('p.status = :status', { status: ProductStatus.ACTIVE });
+      .leftJoinAndSelect('p.category', 'category');
+
+    if (farmerId) {
+      qb.where('p.farmerId = :farmerId', { farmerId });
+    } else {
+      qb.where('p.status = :status', { status: ProductStatus.ACTIVE });
+    }
 
     if (category) {
       const cats = category.split(',');
@@ -55,7 +85,7 @@ export class ProductsService {
   async findOne(id: string): Promise<any> {
     const product = await this.productRepo.findOne({
       where: { id },
-      relations: ['category', 'images'],
+      relations: ['category', 'images', 'farmer', 'farmer.user'],
     });
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -65,7 +95,47 @@ export class ProductsService {
 
   // CREATE
   async create(data: any) {
-    const product = this.productRepo.create(data);
+    const { category, ...rest } = data;
+    const product = this.productRepo.create(rest) as unknown as Product;
+
+    if (category) {
+      const searchVal = String(category).toLowerCase().trim();
+      let cat = await this.categoryRepo.findOne({
+        where: [
+          { nameEn: category },
+          { nameKm: category }
+        ]
+      });
+
+      if (!cat) {
+        const allCats = await this.categoryRepo.find();
+        cat = allCats.find(c => {
+          const nameEn = String(c.nameEn || '').toLowerCase().trim();
+          const nameKm = String(c.nameKm || '').toLowerCase().trim();
+          return nameEn === searchVal || 
+                 nameKm === searchVal || 
+                 nameEn.includes(searchVal) || 
+                 searchVal.includes(nameEn) ||
+                 (searchVal === 'leafy greens' && nameEn === 'greens') ||
+                 (searchVal === 'greens' && nameEn === 'leafy greens') ||
+                 (searchVal === 'fruits' && nameEn === 'fruit') ||
+                 (searchVal === 'vegetables' && nameEn === 'vegetable');
+        }) || null;
+      }
+
+      if (!cat) {
+        cat = this.categoryRepo.create({
+          nameEn: category,
+          nameKm: category === 'Fruits' ? 'ផ្លែឈើ' : category === 'Vegetables' ? 'បន្លែ' : category === 'Leafy Greens' ? 'បន្លែស្លឹក' : category === 'Herbs' ? 'គ្រឿងទេស' : category
+        });
+        await this.categoryRepo.save(cat);
+      }
+
+      if (cat) {
+        product.category = cat;
+      }
+    }
+
     return this.productRepo.save(product);
   }
 
@@ -73,7 +143,48 @@ export class ProductsService {
   async update(id: string, data: any) {
     const product = await this.productRepo.findOne({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    Object.assign(product, data);
+    
+    const { category, ...rest } = data;
+    Object.assign(product, rest);
+
+    if (category) {
+      const searchVal = String(category).toLowerCase().trim();
+      let cat = await this.categoryRepo.findOne({
+        where: [
+          { nameEn: category },
+          { nameKm: category }
+        ]
+      });
+
+      if (!cat) {
+        const allCats = await this.categoryRepo.find();
+        cat = allCats.find(c => {
+          const nameEn = String(c.nameEn || '').toLowerCase().trim();
+          const nameKm = String(c.nameKm || '').toLowerCase().trim();
+          return nameEn === searchVal || 
+                 nameKm === searchVal || 
+                 nameEn.includes(searchVal) || 
+                 searchVal.includes(nameEn) ||
+                 (searchVal === 'leafy greens' && nameEn === 'greens') ||
+                 (searchVal === 'greens' && nameEn === 'leafy greens') ||
+                 (searchVal === 'fruits' && nameEn === 'fruit') ||
+                 (searchVal === 'vegetables' && nameEn === 'vegetable');
+        }) || null;
+      }
+
+      if (!cat) {
+        cat = this.categoryRepo.create({
+          nameEn: category,
+          nameKm: category === 'Fruits' ? 'ផ្លែឈើ' : category === 'Vegetables' ? 'បន្លែ' : category === 'Leafy Greens' ? 'បន្លែស្លឹក' : category === 'Herbs' ? 'គ្រឿងទេស' : category
+        });
+        await this.categoryRepo.save(cat);
+      }
+
+      if (cat) {
+        product.category = cat;
+      }
+    }
+
     return this.productRepo.save(product);
   }
 

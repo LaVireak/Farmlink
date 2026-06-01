@@ -9,6 +9,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { User } from '../users/user.entity';
+import { Product } from '../products/product.entity';
 
 @Entity('farmer_profiles')
 export class FarmerProfile {
@@ -90,5 +91,8 @@ export class FarmerProfile {
   createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt!: Date;
+  updatedAt: Date;
+
+  @OneToMany(() => Product, (product) => product.farmer)
+  products: Product[];
 }

@@ -2,7 +2,13 @@
   <CommonAppHeader />
 
   <div class="bg-[#f7fdf4]">
-    <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
+     <div class="min-h-screen p-4 md:p-8 text-gray-800 max-w-7xl mx-auto">
+        <!-- Header -->
+     <div class="mb-6">
+        <h1 class="text-3xl font-bold text-green-800">{{ t('cart.title') }}</h1>
+        <p class="text-sm text-gray-500">{{ t('cart.subtitle', { count: totalItems }) }}</p>
+      </div>
+      
       
       <!-- Progress -->
       <div class="flex items-center gap-4 mb-8 text-sm">
@@ -114,15 +120,15 @@
             <div class="space-y-3 pt-6 border-t border-gray-100 mb-8">
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Subtotal</span>
-                <span>$17.00</span>
+                <span>${{ subtotal.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between text-sm font-semibold text-gray-400">
                 <span>Delivery Fee</span>
-                <span>$5.00</span>
+                <span>${{ deliveryFee.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between items-end pt-4">
                 <span class="text-lg font-bold text-[#0a4d1e]">Total Price</span>
-                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">$21.00</span>
+                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">${{ total.toFixed(2) }}</span>
               </div>
             </div>
 
@@ -149,11 +155,10 @@
               </div>
             </div>
 
-            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-95 group no-underline">
-              Continue
-              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+            <NuxtLink :to="checkoutRoute" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group no-underline">
+              
+                Continue
+              
             </NuxtLink>
             
             <div class="flex items-start gap-3 mt-6 p-4 bg-green-50 rounded-xl text-[#0a4d1e]">
@@ -168,14 +173,15 @@
       </div>
     </div>
   </div>
-
   <CommonAppFooter />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-
+import { useI18n } from 'vue-i18n';
+import { useCart } from '@/composables/useCart';
+const { t } = useI18n();
 definePageMeta({
   middleware: 'user',
   layout: 'user',
@@ -184,6 +190,18 @@ definePageMeta({
 useHead({
   title: 'Select Address | FarmLink Checkout'
 });
+
+
+const{  
+  cart,
+  recommendations,
+  subtotal,
+  deliveryFee,
+  total,
+  totalItems,
+  increase,
+  decrease,
+  removeItem } = useCart();
 
 const route = useRoute();
 
@@ -263,26 +281,14 @@ onMounted(() => {
   }
 });
 
-const summaryItems = [
-  {
-    name: 'Heirloom Tomatoes',
-    details: '1.5kg x $4.50',
-    price: 6.75,
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=200'
-  },
-  {
-    name: 'Organic Curly Kale',
-    details: '2 Bunches x $3.00',
-    price: 6.00,
-    image: 'https://images.unsplash.com/photo-1524179524541-10d54f5903da?auto=format&fit=crop&q=80&w=200'
-  },
-  {
-    name: 'Baby Dutch Carrots',
-    details: '1 Bag x $4.25',
-    price: 4.25,
-    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=200'
-  }
-];
+const summaryItems = computed(() =>
+  cart.value.map(item => ({
+    name: item.name,
+    details: `${item.variant}`,
+    price: item.price * item.quantity,
+    image: item.image || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=200'
+  }))
+);
 </script>
 
 <style scoped>

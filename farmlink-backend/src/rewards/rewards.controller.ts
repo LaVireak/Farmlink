@@ -1,31 +1,30 @@
-import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { RewardsService } from './rewards.service';
-import { CreateRewardDto } from './dto/create-reward.dto';
-import { Public } from '../auth/decorators/public.decorator'; //public endpoint, no auth required for testing
-import { RewardDto } from './dto/reward.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Public()
 @Controller('rewards')
 export class RewardsController {
-	constructor(private readonly rewardsService: RewardsService) {}
+  constructor(private readonly rewardsService: RewardsService) {}
 
-	@Get()
-	findAll(): RewardDto[] {
-		return this.rewardsService.findAll();
-	}
+  @Get('balance')
+  async getBalance(@CurrentUser() user: any) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User ID not found in request');
+    }
+    return this.rewardsService.getOrCreateReward(user.id);
+  }
 
-	@Get(':id')
-	findOne(@Param('id', ParseIntPipe) id: number): RewardDto {
-		return this.rewardsService.findOne(id);
-	}
-
-	@Post()
-	create(@Body() dto: CreateRewardDto): RewardDto {
-		return this.rewardsService.create(dto);
-	}
-
-	@Delete(':id')
-	remove(@Param('id', ParseIntPipe) id: number): { deleted: boolean } {
-		return this.rewardsService.remove(id);
-	}
-}
+  @Post('add-points')
+  async addPoints(
+    @CurrentUser() user: any,
+    @Body() body: { amount: number; orderId?: string; description?: string },
+  ) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User ID not found in request');
+    }
+    if (typeof body.amount !== 'number' || body.amount < 0) {
+      throw new BadRequestException('Amount must be a non-negative number');
+    }
+    return this.rewardsService.addPoints(user.id, body.amount, body.orderId, body.description);
+  }
+}

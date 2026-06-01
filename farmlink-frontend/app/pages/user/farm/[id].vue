@@ -45,6 +45,18 @@
             <div class="font-bold">Description</div>
             <div class="text-gray-700">{{ farm?.description || 'No description available.' }}</div>
           </div>
+
+          <div class="pt-4 border-t border-gray-100">
+            <button
+              @click="chatWithFarmer"
+              class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 active:scale-95 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-md shadow-green-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Chat with Farmer
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -94,72 +106,259 @@
 
   <CommonAppFooter />
 </template>
-
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRuntimeConfig } from '#app'
+
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import { Heart } from 'lucide-vue-next'
 
 const route = useRoute()
-const id = route.params.id || 'f1'
+const config = useRuntimeConfig()
 
-const sampleFarms = ref([
-  {
-    id: 'f1',
-    name: 'Green Valley Farm',
-    address: '123 Riverside, Kampong Cham',
-    images: ['/assets/images/farm1.png','/assets/images/farm1-2.png', '/assets/images/farm1-3.png', '/assets/images/farm1-4.png'],
-    farmer: { name: 'Sophea', phone: '+85512345678', email: 'sophea@example.com', avatar: '/assets/images/farmer1.png', workingHours: 'Mon–Sat 07:00–17:00', social: { facebook: 'https://facebook.com/sophea', twitter: '' } },
-    products: [
-      { id: 'p1', name: 'Organic Lettuce', description: 'Fresh hydroponic lettuce.', price: 1.5, image: '/assets/images/product1.png', stock: 12 },
-      { id: 'p2', name: 'Cherry Tomatoes', description: 'Sweet cherry tomatoes.', price: 2.2, image: '/assets/images/product2.png', stock: 0 },
-      { id: 'p4', name: 'Basil Bundle', description: 'Aromatic basil for cooking.', price: 0.9, image: '/assets/images/product1.png', stock: 5 },
-      { id: 'p5', name: 'Spring Mix (250g)', description: 'Assorted salad leaves.', price: 1.8, image: '/assets/images/product2.png', stock: 3 }
-    ]
-  },
-  {
-    id: 'f2',
-    name: 'Kandal Orchards',
-    address: 'Orchard Road, Kandal',
-    images: ['/assets/images/farm2.png'],
-    farmer: { name: 'Vanna', phone: '+85598765432', email: 'vanna@example.com', avatar: '/assets/images/farmer2.png', workingHours: 'Mon–Fri 08:00–16:00', social: { facebook: 'https://facebook.com/vanna', twitter: 'https://twitter.com/vanna' } },
-    products: [
-      { id: 'p3', name: 'Mango (1kg)', description: 'Seasonal mangoes.', price: 3.0, image: '/assets/images/product3.png', stock: 8 }
-    ]
+const id = computed(() => String(route.params.id))
+const farm = ref(null)
+
+const fetchFarm = async () => {
+  try {
+    const res = await $fetch(`${config.public.apiUrl}/farmer/${id.value}`)
+    if (res) {
+      farm.value = {
+        id: res.id,
+        name: res.farmName || (res.user ? `${res.user.firstName} ${res.user.lastName}` : 'Unknown Farm'),
+        province: res.province || 'Unknown',
+        rating: 5.0, // Default for now
+        address: res.address || `${res.district || ''}, ${res.province || ''}`.replace(/^,\s*/, '') || 'Address not specified',
+        description: res.user?.bio || res.description || 'Local farm providing fresh produce directly to consumers.',
+        images: res.coverImageUrl ? [res.coverImageUrl] : ['/assets/images/farm-placeholder.jpg'],
+        farmer: {
+          userId: res.user?.id || '',
+          name: res.user ? `${res.user.firstName} ${res.user.lastName}` : 'Farmer',
+          phone: res.user?.phoneNumber || '',
+          email: res.user?.email || '',
+          avatar: res.user?.avatarUrl || '/assets/images/farmer1.png',
+          workingHours: 'Mon-Sat 07:00-17:00',
+          social: { facebook: '', twitter: '' }
+        },
+        products: (res.products || []).map(p => ({
+          id: p.id,
+          name: p.nameEn || p.nameKm,
+          description: p.description,
+          price: Number(p.pricePerUnit),
+          image: p.thumbnailUrl || (p.images && p.images[0]?.url) || '/assets/images/product-placeholder.png',
+          stock: p.stockQuantity
+        }))
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch farm details:', err)
   }
-])
+}
 
-const farm = computed(() => sampleFarms.value.find(f => f.id === id))
+onMounted(() => {
+  fetchFarm()
+})
 
+const router = useRouter()
+
+function chatWithFarmer() {
+  if (!farm.value?.farmer?.userId) return
+  navigateTo({
+    path: '/user/settings/chat',
+    query: {
+      userId: farm.value.farmer.userId,
+      name: farm.value.farmer.name,
+      avatar: farm.value.farmer.avatar
+    }
+  })
+}
+
+/**
+ * CART + FAVORITES
+ */
 const cart = ref([])
 const favorites = ref(new Set())
 
 function addToCart(prod) {
   if (!prod || prod.stock <= 0) return
-  // decrement stock
+
   prod.stock -= 1
-  // add to simple cart (merge by id)
+
   const existing = cart.value.find(i => i.id === prod.id)
-  if (existing) existing.qty += 1
-  else cart.value.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1 })
-  console.log('Added to cart:', prod.id, 'cart:', cart.value)
+
+  if (existing) {
+    existing.qty += 1
+  } else {
+    cart.value.push({
+      id: prod.id,
+      name: prod.name,
+      price: prod.price,
+      qty: 1
+    })
+  }
 }
 
 function toggleFavorite(prod) {
   if (!prod) return
-  if (favorites.value.has(prod.id)) favorites.value.delete(prod.id)
-  else favorites.value.add(prod.id)
+
+  if (favorites.value.has(prod.id)) {
+    favorites.value.delete(prod.id)
+  } else {
+    favorites.value.add(prod.id)
+  }
 }
 
 function prodFavorited(prod) {
   return prod && favorites.value.has(prod.id)
 }
 
-function formatPrice(p) { if (p == null) return '' ; return `$${p.toFixed(2)}` }
+function formatPrice(p) {
+  return p ? `$${p.toFixed(2)}` : ''
+}
 </script>
 
 <style scoped>
 .max-w-6xl { max-width: 1024px; }
+
+/* PAGE BACKGROUND */
+.page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #e8f5e9, #ffffff 60%);
+  padding-bottom: 40px;
+}
+
+/* MAIN CONTAINER */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* GRID LAYOUT SPACING */
+.grid {
+  gap: 24px;
+}
+
+/* LEFT SIDEBAR (FARMER INFO) */
+aside {
+  background: linear-gradient(180deg, #ffffff, #f7fff7);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(31, 122, 46, 0.1);
+}
+
+/* FARMER IMAGE */
+aside img {
+  width: 110px;        /* or any size you want */
+  height: 110px;      /* must match width for perfect circle */
+  border-radius: 50%; /* THIS makes it circle */
+  object-fit: cover;  /* prevents stretching */
+  border: 4px sold white; /* optional white border */
+  padding: 3px;
+  background: white;
+  display: block;
+  margin: 0 auto;     /* center it */
+}
+
+/* FARMER NAME */
+aside h2 {
+  color: #1f7a2e;
+  font-size: 20px;
+}
+
+/* RIGHT PANEL */
+section {
+  border-radius: 18px;
+}
+
+/* CARD BLOCKS */
+.bg-white {
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* FARM TITLE */
+h3 {
+  color: #1f7a2e;
+}
+
+/* IMAGE GALLERY */
+img {
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+img:hover {
+  transform: scale(1.03);
+}
+
+/* PRODUCT CARD ROW */
+.border.rounded.p-3 {
+  background: linear-gradient(135deg, #ffffff, #f6fff6);
+  border: 1px solid rgba(31, 122, 46, 0.15);
+  transition: 0.2s ease;
+}
+
+.border.rounded.p-3:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* PRICE TEXT */
+.text-green-700 {
+  color: #1f7a2e !important;
+}
+
+/* STOCK BADGE */
+.text-red-500 {
+  font-weight: 600;
+}
+
+/* BUTTON */
+button {
+  transition: 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* BACK BUTTON */
+a {
+  transition: 0.2s;
+}
+
+a:hover {
+  background: #166023 !important;
+}
+
+/* HEART ICON */
+svg {
+  transition: 0.2s ease;
+}
+
+svg:hover {
+  transform: scale(1.2);
+  color: #ff4d4d;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  main {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  aside {
+    margin-bottom: 20px;
+  }
+}
 </style>
