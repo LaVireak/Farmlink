@@ -118,9 +118,10 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCart } from '@/composables/useCart'
+import { useRewards } from '@/composables/useRewards'
 
 const { t } = useI18n()
 definePageMeta({
@@ -128,7 +129,9 @@ definePageMeta({
   layout: 'user',
 });
 
+const { rewardPoints, awardPoints } = useRewards()
 const customerName = ref('Johnathan')
+const pointsEarned = ref(0)
 
 const fallbackImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23f3f4f6'/%3E%3Cpath d='M20 43l7-9 6 5 9-12 6 16H20z' fill='%23d1d5db'/%3E%3Ccircle cx='25' cy='23' r='4' fill='%23d1d5db'/%3E%3C/svg%3E";
@@ -148,6 +151,13 @@ const items = computed(() =>
 )
 
 const totalPaid = computed(() => total.value)
+
+// Award points when user reaches success page
+onMounted(() => {
+  if (totalPaid.value > 0) {
+    pointsEarned.value = awardPoints(totalPaid.value)
+  }
+})
 </script>
 
 <style scoped>
