@@ -2,6 +2,7 @@ import type { CartItem } from '@/types/card.type'
 
 export const useCart = () => {
   const cart = useState<CartItem[]>('cart', () => [])
+  const triggerAnimation = useState<{ id: number; image: string; x: number; y: number } | null>('cart-animation-trigger', () => null)
 
   const recommendations = [
     { id: 1, name: 'Wildflower Honey', farm: 'Busy Bee Apiaries', price: 18 },
@@ -42,7 +43,7 @@ export const useCart = () => {
   )
 
   // Actions
-  function addToCart(product: any, qty = 1) {
+  function addToCart(product: any, qty = 1, event?: MouseEvent) {
     const existingItem = cart.value.find(i => i.id === product.id)
     const resolvedImage =
       product.image ||
@@ -67,6 +68,15 @@ export const useCart = () => {
         quantity: qty,
         farmerId: product.farmerId || product.farmer?.id
       })
+    }
+
+    if (event) {
+      triggerAnimation.value = {
+        id: Date.now() + Math.random(),
+        image: resolvedImage || '/assets/images/placeholder.png',
+        x: event.clientX,
+        y: event.clientY
+      }
     }
   }
 
@@ -94,6 +104,7 @@ export const useCart = () => {
     addToCart,
     increase,
     decrease,
-    removeItem
+    removeItem,
+    triggerAnimation
   }
 }

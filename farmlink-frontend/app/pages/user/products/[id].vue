@@ -144,7 +144,7 @@
             </div>
 
             <button
-              @click="addToCart"
+              @click="addToCart($event)"
               class="add-to-cart-btn"
             >
               Add to Cart
@@ -297,9 +297,9 @@ import { useCart } from '~/composables/useCart'
 const { addToCart: addToCartComposable } = useCart()
 
 // ================= CART =================
-const addToCart = () => {
+const addToCart = (event) => {
   if (product.value) {
-    addToCartComposable(product.value, quantity.value)
+    addToCartComposable(product.value, quantity.value, event)
     console.log(
       'Added to cart:',
       product.value,
