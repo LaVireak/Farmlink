@@ -1,25 +1,25 @@
 <template>
-  <section class="bg-white rounded-2xl shadow-sm border border-gray-100">
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-wrap">
+  <section class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-outline-variant flex-wrap">
       <div class="relative flex-1 min-w-[180px]">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
         <input
           :value="searchQuery"
           @input="$emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
           type="text"
           placeholder="Search products or farmers…"
-          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
+          class="w-full pl-9 pr-4 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
         />
       </div>
 
-      <div class="flex items-center gap-0.5 bg-gray-100 rounded-xl p-1">
+      <div class="flex items-center gap-0.5 bg-surface-container rounded-xl p-1">
         <button
           v-for="s in statusTabs"
           :key="s"
           @click="$emit('update:filterStatus', s)"
           :class="[
             'text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-150',
-            filterStatus === s ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+            filterStatus === s ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'
           ]"
         >
           {{ s }}
@@ -29,7 +29,7 @@
       <select
         :value="filterCategory"
         @change="$emit('update:filterCategory', ($event.target as HTMLSelectElement).value)"
-        class="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white text-gray-600"
+        class="text-sm border border-outline-variant rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface-variant"
       >
         <option value="">All Categories</option>
         <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -39,7 +39,7 @@
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+          <tr class="text-left text-xs text-on-surface-variant border-b border-outline-variant">
             <th class="px-5 py-3 font-medium">Product</th>
             <th class="px-4 py-3 font-medium">Farmer</th>
             <th class="px-4 py-3 font-medium">Category</th>
@@ -54,11 +54,11 @@
           <tr v-if="products.length === 0">
             <td colspan="8" class="px-5 py-14 text-center">
               <div class="flex flex-col items-center gap-3">
-                <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
-                  <PackageSearch class="w-6 h-6 text-gray-300" />
+                <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
+                  <PackageSearch class="w-6 h-6 text-on-surface-variant" />
                 </div>
-                <p class="text-sm font-medium text-gray-500">No products found</p>
-                <p class="text-xs text-gray-400">Try adjusting your filters</p>
+                <p class="text-sm font-medium text-on-surface-variant">No products found</p>
+                <p class="text-xs text-on-surface-variant">Try adjusting your filters</p>
               </div>
             </td>
           </tr>
@@ -66,26 +66,26 @@
           <tr
             v-for="product in products"
             :key="product.id"
-            class="border-b border-gray-50 hover:bg-gray-50/60 transition group"
+            class="border-b border-outline-variant hover:bg-surface-container-low/60 transition group"
           >
             <td class="px-5 py-3.5">
               <div class="flex items-center gap-3">
-                <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-surface-container flex-shrink-0">
                   <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <p class="font-semibold text-gray-800 text-sm">{{ product.name }}</p>
-                  <p class="text-[11px] text-gray-400 font-mono">#PRD-{{ String(product.id).padStart(4, '0') }}</p>
+                  <p class="font-semibold text-on-surface text-sm">{{ product.name }}</p>
+                  <p class="text-[11px] text-on-surface-variant font-mono">#PRD-{{ String(product.id).padStart(4, '0') }}</p>
                 </div>
               </div>
             </td>
 
             <td class="px-4 py-3.5">
               <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                <div class="w-6 h-6 rounded-full bg-secondary-container text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                   {{ initials(product.farmer) }}
                 </div>
-                <span class="text-xs text-gray-700 font-medium">{{ product.farmer }}</span>
+                <span class="text-xs text-on-surface font-medium">{{ product.farmer }}</span>
               </div>
             </td>
 
@@ -95,7 +95,7 @@
               </span>
             </td>
 
-            <td class="px-4 py-3.5 font-semibold text-gray-800">${{ product.price }}</td>
+            <td class="px-4 py-3.5 font-semibold text-on-surface">${{ product.price }}</td>
 
             <td class="px-4 py-3.5">
               <span class="text-xs font-medium px-2.5 py-1 rounded-full" :class="statusClass(product.status)">
@@ -111,19 +111,19 @@
               >
                 <Star
                   class="w-4 h-4 transition-colors"
-                  :class="product.featured ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-100'"
+                  :class="product.featured ? 'text-amber-400 fill-amber-400' : 'text-on-surface-variant fill-surface-container'"
                 />
               </button>
-              <span v-else class="text-gray-200 text-xs">—</span>
+              <span v-else class="text-on-surface-variant text-xs">—</span>
             </td>
 
-            <td class="px-4 py-3.5 text-xs text-gray-400">{{ product.submittedAt }}</td>
+            <td class="px-4 py-3.5 text-xs text-on-surface-variant">{{ product.submittedAt }}</td>
 
             <td class="px-4 py-3.5">
               <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   @click="$emit('viewProduct', product)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition"
                   title="View details"
                 >
                   <Eye class="w-3.5 h-3.5" />
@@ -131,7 +131,7 @@
                 <button
                   v-if="product.status === 'Pending' || product.status === 'Rejected'"
                   @click="$emit('approveProduct', product.id)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-green-50 hover:text-green-600 transition"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-secondary-container hover:text-secondary transition"
                   title="Approve"
                 >
                   <CheckCircle2 class="w-3.5 h-3.5" />
@@ -139,7 +139,7 @@
                 <button
                   v-if="product.status === 'Pending' || product.status === 'Approved'"
                   @click="$emit('rejectProduct', product)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-error transition"
                   title="Reject"
                 >
                   <XCircle class="w-3.5 h-3.5" />

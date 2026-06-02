@@ -413,11 +413,13 @@ import {
     CheckCircle2, XCircle, X,
     AlertCircle,
 } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth.store'
 
 definePageMeta({ middleware: 'admin',layout: 'admin' })
 
 const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl
+const auth = useAuthStore()
 
 const fallbackImage = 'https://placehold.co/80x80?text=IMG'
 
@@ -527,7 +529,7 @@ async function fetchProducts() {
         // Fetch all products (no pagination) so client-side search/filter works
         const res = await $fetch(`${baseURL}/admin/products`, {
             params: { take: 1000 },
-            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
         })
         const raw = res?.data ?? res ?? []
         products.value = raw.map(p => ({
@@ -572,7 +574,14 @@ async function fetchActivity() {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await auth.hydrate()
+
+    if (!auth.accessToken) {
+        await navigateTo('/auth/signin')
+        return
+    }
+
     fetchProducts()
     fetchTrendForRange('7d')
     fetchGoals()
@@ -647,7 +656,7 @@ async function approveProduct(id) {
     try {
         await $fetch(`${baseURL}/admin/products/${id}/approve`, {
             method: 'PATCH',
-            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
         })
         p.status          = 'Approved'
         p.rejectionReason = null
@@ -693,7 +702,7 @@ async function executeReject() {
     try {
         await $fetch(`${baseURL}/admin/products/${p.id}/reject`, {
             method: 'PATCH',
-            headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
             body: { reason: rejectModal.value.reason, note: rejectModal.value.note },
         })
         p.status          = 'Rejected'

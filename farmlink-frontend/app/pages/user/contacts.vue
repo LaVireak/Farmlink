@@ -1,7 +1,7 @@
 <template>
   <CommonAppHeader />
 
-  <main class="max-canvas px-6 py-12 bg-gray-100">
+  <main class="max-canvas px-6 py-12 bg-surface-container-low">
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       <!-- Form Card -->
       <div class="bg-white rounded-lg p-8 shadow">
@@ -54,7 +54,7 @@
       <!-- Info Card -->
     
       <aside >
-        <div class="bg-white rounded-lg p-8 shadow flex flex-col gap-6">
+        <div class="bg-surface-container-lowest rounded-lg p-8 shadow flex flex-col gap-6">
         <div>
           <h2 class="text-xl font-bold">{{ t('contacts.details.contactDetails') }}</h2>
           <p class="text-gray-600 mt-2">{{ t('contacts.details.hq') }}</p>
@@ -62,7 +62,7 @@
 
         <div class="grid grid-cols-1 gap-3 text-sm">
           <div class="flex items-center gap-3">
-            <Mail class="w-5 h-5 text-gray-600" />
+            <Mail class="w-5 h-5 text-on-surface-variant" />
             <div>
               <div class="font-medium">{{ t('contacts.details.email') }}</div>
               <div class="text-gray-600">support@farmlink.example</div>
@@ -70,7 +70,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <MapPin class="w-5 h-5 text-gray-600" />
+            <MapPin class="w-5 h-5 text-on-surface-variant" />
             <div>
               <div class="font-medium">{{ t('contacts.details.address') }}</div>
               <div class="text-gray-600">123 Greenway Farm Rd, Springfield</div>
@@ -78,7 +78,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <Phone class="w-5 h-5 text-gray-600" />
+            <Phone class="w-5 h-5 text-on-surface-variant" />
             <div>
               <div class="font-medium">{{ t('contacts.details.phone') }}</div>
               <div class="text-gray-600">+1 555 1234</div>
@@ -86,7 +86,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <Clock class="w-5 h-5 text-gray-600" />
+            <Clock class="w-5 h-5 text-on-surface-variant" />
             <div>
               <div class="font-medium">{{ t('contacts.details.hours') }}</div>
               <div class="text-gray-600">Mon–Fri 9:00–17:00</div>

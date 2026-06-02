@@ -3,26 +3,66 @@
 @tailwind utilities;
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
+
+/* ← ADD THIS */
+:root {
+  --color-primary: #154212;
+  --color-secondary: #006e1c;
+  --color-secondary-container: #d5f3cf;
+  --color-on-secondary-container: #1b1c1a;
+  --color-surface: #fbf9f6;
+  --color-surface-lowest: #ffffff;
+  --color-surface-low: #f5f3f0;
+  --color-surface-container: #efeeea;
+  --color-surface-high: #e9e8e5;
+  --color-surface-highest: #e3e2df;
+  --color-on-surface: #1b1c1a;
+  --color-on-surface-variant: #42493e;
+  --color-outline: #72796e;
+  --color-outline-variant: #c2c9bb;
+  --color-error: #b42318;
+  --color-error-container: #fee4e2;
+}
+
+.dark {
+  --color-primary: #a8d5a2;
+  --color-secondary: #4caf7d;
+  --color-secondary-container: #1a3d24;
+  --color-on-secondary-container: #d5f3cf;
+  --color-surface: #1b1c1a;
+  --color-surface-lowest: #111110;
+  --color-surface-low: #252524;
+  --color-surface-container: #2a2b28;
+  --color-surface-high: #303130;
+  --color-surface-highest: #3a3b38;
+  --color-on-surface: #e3e2df;
+  --color-on-surface-variant: #c2c9bb;
+  --color-outline: #8c9387;
+  --color-outline-variant: #42493e;
+  --color-error: #f97066;
+  --color-error-container: #3d1a19;
+}
+/* ← END */
 
 html,
 body,
 #__nuxt {
-    min-height: 100%;
-    overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  min-height: 100%;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 #__nuxt::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 body {
-    font-family: sans-serif;
+  font-family: sans-serif;
 }

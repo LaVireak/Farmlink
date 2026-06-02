@@ -10,12 +10,14 @@ import {
 } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import {Public} from '../auth/decorators/public.decorator';
 
 @Controller('stripe')
 export class StripeController {
   constructor(private readonly stripeService: StripeService) {}
 
   // ── Existing charge endpoint (kept public) ──────────────────────────────────
+  @Public()
   @Post('charge')
   async chargeCard(
     @Body() body: { amount: number; paymentMethodId: string },

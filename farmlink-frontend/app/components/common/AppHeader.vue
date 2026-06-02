@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-cream w-full h-auto flex items-center px-8 shadow-sm border-b-2 border-gray-300">
+  <header class="bg-cream w-full h-auto flex items-center px-8 shadow-sm border-b-2 border-outline">
     <div class="container mx-auto flex items-center justify-between">
       
       <!-- Logo Section -->
@@ -31,13 +31,13 @@
             <button class="flex items-center focus:outline-none" aria-label="Toggle Products">
               <svg :class="{ 'rotate-180': productOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-              </svg> 
+              </svg>
             </button>
           </div>
 
           <div 
             v-show="productOpen" 
-            class="absolute left-0 mt-0 w-[740px] bg-white rounded-md shadow-xl z-50 p-8 grid grid-cols-4 gap-4"
+            class="absolute left-0 mt-0 w-[740px] bg-surface-container-lowest rounded-md shadow-xl z-50 p-8 grid grid-cols-4 gap-4"
           >
             <div class="flex flex-col justify-between h-full">
               <div>
@@ -81,13 +81,13 @@
                   <li><NuxtLink to="/user/products?category=fertilizer" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.organicSoils') }}</NuxtLink></li>
                   <li><NuxtLink to="/user/products?category=equipment" class="hover:text-[#1f7a2e] transition-colors">{{ t('common.irrigationGear') }}</NuxtLink></li>
                 </ul>
-                <NuxtLink to="/user/products?category=supplies" class="text-xs font-bold text-[#1f7a2e] underline pt-3 mt-auto block">
+                <NuxtLink to="/user/products?category=supplies" class="text-xs font-bold text-secondary underline pt-3 mt-auto block">
                   All Supplies 
                 </NuxtLink>
               </div>
             </div>
 
-            <NuxtLink to="/user/products" class="relative block w-full h-[250px] rounded overflow-hidden border border-gray-100 shadow-sm group/banner">
+            <NuxtLink to="/user/products" class="relative block w-full h-[250px] rounded overflow-hidden border border-outline-variant shadow-sm group/banner">
               <img 
                 src="/assets/images/farm1.png" 
                 alt="Browse All Farm Categories" 
@@ -105,13 +105,15 @@
           </div>
         </div>
 
-        <div class="relative" id="farm-menu">
-            <button @click.stop="toggleFarm" class="flex items-center space-x-1 cursor-pointer group focus:outline-none py-6">
-            <span class="nav-link uppercase text-xs">{{ t('common.farm') }}</span>
-            <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-            </svg>
-          </button>
+        <div class="relative" id="farm-menu" @mouseenter="handleFarmHover(true)" @mouseleave="handleFarmHover(false)">
+          <div class="flex items-center space-x-1 py-6 cursor-pointer">
+            <NuxtLink to="/user/farm" class="nav-link uppercase text-xs">{{ t('common.farm') }}</NuxtLink>
+            <button class="flex items-center focus:outline-none" aria-label="Toggle Farm">
+              <svg :class="{ 'rotate-180': farmOpen }" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
+          </div>
 
           <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
                 <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
@@ -146,8 +148,8 @@
           </div>
         </div>
 
-        <NuxtLink to="/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
-        <NuxtLink to="/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
+        <NuxtLink to="/user/about" class="nav-link uppercase text-xs py-6">{{ t('common.about') }}</NuxtLink>
+        <NuxtLink to="/user/contacts" class="nav-link uppercase text-xs py-6">{{ t('common.contacts') }}</NuxtLink>
       </nav>
 
       <!-- Right Utility Bar -->
@@ -165,7 +167,7 @@
             :placeholder="t('common.search')"
           />
           <button @click="triggerSearch" class="absolute right-4 top-1/2 -translate-y-1/2" aria-label="Search Submit">
-            <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-on-surface" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
           </button>
@@ -173,7 +175,7 @@
           <!-- Search Dropdown — only shows when 2+ chars typed -->
           <div 
             v-if="showDropdown && searchQuery.trim().length >= 2"
-            class="absolute top-full mt-2 w-full bg-[#FFF7DA] border border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 overflow-hidden"
+            class="absolute top-full mt-2 w-full bg-surface-container-lowest border border-on-surface rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 overflow-hidden"
           >
             <div v-if="searchLoading" class="px-4 py-3 text-sm text-gray-500 text-center">
               {{ t('common.searching') }}
@@ -184,23 +186,23 @@
                 v-for="item in searchResults"
                 :key="item.id + item.type"
                 @mousedown.prevent="goToResult(item)"
-                class="flex items-center gap-3 px-4 py-3 hover:bg-[#f0e8c8] cursor-pointer border-b border-gray-200 last:border-b-0 transition-colors group"
+                class="flex items-center gap-3 px-4 py-3 hover:bg-secondary-container cursor-pointer border-b border-outline-variant last:border-b-0 transition-colors group"
               >
                 <div class="flex-1 min-w-0">
-                  <div class="font-bold text-sm text-gray-800 truncate">{{ item.name }}</div>
-                  <div class="text-xs text-gray-500 truncate mt-0.5">{{ item.description }}</div>
-                  <div class="text-xs text-gray-400 truncate mt-0.5" v-if="item.category">{{ item.category }}</div>
+                  <div class="font-bold text-sm text-on-surface-variant truncate">{{ item.name }}</div>
+                  <div class="text-xs text-on-surface-variant truncate mt-0.5">{{ item.description }}</div>
+                  <div class="text-xs text-on-surface-variant truncate mt-0.5" v-if="item.category">{{ item.category }}</div>
                 </div>
 
                 <div class="flex-shrink-0 relative">
                   <img 
                     :src="item.image || '/assets/images/placeholder.png'" 
                     :alt="item.name"
-                    class="w-14 h-14 object-cover rounded-lg border border-gray-300"
+                    class="w-14 h-14 object-cover rounded-lg border border-outline"
                   />
                   <span 
-                    class="absolute -top-2 -right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-black whitespace-nowrap"
-                    :class="item.type === 'farm' ? 'bg-[#1f7a2e] text-white' : 'bg-yellow-400 text-black'"
+                    class="absolute -top-2 -right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-on-surface whitespace-nowrap"
+                    :class="item.type === 'farm' ? 'bg-secondary text-white dark:text-on-surface' : 'bg-[#EFCF4F] text-on-surface'"
                   >
                     {{ item.type === 'farm' ? '🌿 Farm' : '🥬 Product' }}
                   </span>
@@ -214,46 +216,65 @@
           </div>
         </div>
 
-        <div class="flex items-center space-x-5 text-black gap-3">
+        <div class="flex items-center space-x-5 text-on-surface gap-3">
           <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center">
-            <Heart class="w-6 h-6 text-black" />
+            <Heart class="w-6 h-6 text-on-surface" />
           </NuxtLink>
-          <button aria-label="Shopping Cart" class="flex items-center">
-            <NuxtLink to="/user/checkout/cart" class="flex items-center">
-              <ShoppingCart class="w-6 h-6 text-black" />
+          <button aria-label="Shopping Cart" class="flex items-center" id="header-cart-icon">
+            <NuxtLink to="/user/checkout/cart" class="flex items-center relative transition-transform duration-300" :class="{ 'badge-bounce': isCartBouncing }">
+              <ShoppingCart class="w-6 h-6 text-black transition-colors duration-300" :class="{ 'text-green-600': isCartBouncing }" />
+              <span v-if="totalItems > 0" class="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border border-white transition-transform duration-300" :class="{ 'scale-110': isCartBouncing }">
+                {{ totalItems }}
+              </span>
             </NuxtLink>
           </button>
+
+          <!-- Teleported Container for Fly-to-Cart Particles -->
+          <teleport to="body">
+            <div
+              v-for="p in flyingParticles"
+              :key="p.id"
+              class="flying-product-particle"
+              :style="{
+                '--start-x': `${p.startX}px`,
+                '--start-y': `${p.startY}px`,
+                '--end-x': `${p.endX}px`,
+                '--end-y': `${p.endY}px`,
+                backgroundImage: `url(${p.image})`
+              }"
+            ></div>
+          </teleport>
 
           <!-- Notifications Menu -->
           <div id="notifications-menu" class="relative inline-block">
             <button @click.stop="toggleNotifications" aria-label="Notifications" class="relative flex items-center">
-              <Bell class="w-6 h-6 text-black" />
-              <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5">{{ unreadCount }}</span>
+              <Bell class="w-6 h-6 text-on-surface" />
+              <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-error text-white dark:text-on-surface text-xs rounded-full px-1.5">{{ unreadCount }}</span>
             </button>
 
-            <div v-show="notificationsOpen" class="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <div v-show="notificationsOpen" class="absolute right-0 mt-2 w-80 bg-surface-container-lowest border border-outline-variant rounded-md shadow-lg z-50">
               <div class="p-2">
                 <div class="flex items-center justify-between mb-2">
                   <div class="font-semibold text-sm">Notifications</div>
-                  <button @click="markAllRead" class="text-xs text-blue-600">Mark all read</button>
+                  <button @click="markAllRead" class="text-xs text-secondary">Mark all read</button>
                 </div>
 
                 <ul>
                   <li v-for="note in notifications" :key="note.id" class="border-b last:border-b-0">
-                    <button @click="showNotification(note)" class="w-full text-left px-2 py-2 hover:bg-gray-50 flex">
+                    <button @click="showNotification(note)" class="w-full text-left px-2 py-2 hover:bg-surface-container-lowflex">
                       <div class="flex-1">
                         <div class="text-sm font-medium">{{ note.title }}</div>
-                        <div class="text-xs text-gray-500">{{ note.time }}</div>
+                        <div class="text-xs text-on-surface-variant">{{ note.time }}</div>
                       </div>
-                      <div v-if="!note.read" class="ml-2 w-2 h-2 bg-green-500 rounded-full self-center"></div>
+                      <div v-if="!note.read" class="ml-2 w-2 h-2 bg-secondary rounded-full self-center"></div>
                     </button>
-                    <div v-if="selectedNotification && selectedNotification.id === note.id" class="p-2 text-sm text-gray-700 bg-gray-50">
+                    <div v-if="selectedNotification && selectedNotification.id === note.id" class="p-2 text-sm text-on-surface-variant bg-surface-container-low">
                       {{ selectedNotification.body }}
                     </div>
                   </li>
                 </ul>
 
-                <div v-if="notifications.length === 0" class="p-2 text-sm text-gray-500">No notifications</div>
+                <div v-if="notifications.length === 0" class="p-2 text-sm text-on-surface-variant">No notifications</div>
               </div>
             </div>
           </div>
@@ -451,9 +472,9 @@ const handleProductHover = (status) => {
   }
 }
 
-const toggleFarm = () => {
-  farmOpen.value = !farmOpen.value
-  if (farmOpen.value) {
+const handleFarmHover = (status) => {
+  farmOpen.value = status
+  if (status) {
     productOpen.value = false
     userMenuOpen.value = false
     notificationsOpen.value = false
@@ -511,7 +532,11 @@ function markAllRead() {
 }
 
 function toggleDarkMode() {
-  document.documentElement.classList.toggle('dark')
+  const colorMode = useColorMode()
+
+  const toggleDarkMode = () => {
+    colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+  }
 }
 
 const onClickOutside = (e) => {
@@ -553,7 +578,7 @@ const userAvatar = computed(() => {
 })
 
 const avatarClass = computed(() => {
-  return 'bg-[#1f7a2e] text-white'
+  return 'bg-secondary text-white dark:text-on-surface'
 })
 
 const goToDashboard = () => {
@@ -564,11 +589,47 @@ const goToDashboard = () => {
   return router.push('/')
 }
 
+import { useCart } from '~/composables/useCart'
+
 const handleSignOut = async () => {
   userMenuOpen.value = false
   await auth.signOut()
   router.push('/auth/signin')
 }
+
+// ── Cart Flying Animation ──────────────────────────────
+const { totalItems, triggerAnimation } = useCart()
+const flyingParticles = ref([])
+const isCartBouncing = ref(false)
+
+watch(triggerAnimation, (newVal) => {
+  if (!newVal) return
+
+  const cartIcon = document.getElementById('header-cart-icon')
+  if (!cartIcon) return
+
+  const rect = cartIcon.getBoundingClientRect()
+  const endX = rect.left + rect.width / 2
+  const endY = rect.top + rect.height / 2
+
+  flyingParticles.value.push({
+    id: newVal.id,
+    image: newVal.image,
+    startX: newVal.x,
+    startY: newVal.y,
+    endX,
+    endY
+  })
+
+  // End animation and trigger badge bounce after 800ms
+  setTimeout(() => {
+    flyingParticles.value = flyingParticles.value.filter(p => p.id !== newVal.id)
+    isCartBouncing.value = true
+    setTimeout(() => {
+      isCartBouncing.value = false
+    }, 400)
+  }, 800)
+})
 </script>
 
 <style scoped>
@@ -587,5 +648,49 @@ const handleSignOut = async () => {
   color: #9ca3af;
   font-weight: 400;
   font-style: italic;
+}
+
+/* ── Cart Animations ────────────────────────────── */
+.flying-product-particle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 3px solid #1f7a2e;
+  box-shadow: 0 8px 24px rgba(31, 122, 46, 0.3);
+  pointer-events: none;
+  z-index: 99999;
+  animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.badge-bounce {
+  animation: badgeBounce 0.4s ease-out;
+}
+
+@keyframes flyToCart {
+  0% {
+    transform: translate(calc(var(--start-x) - 24px), calc(var(--start-y) - 24px)) scale(1);
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--end-x) - 24px), calc(var(--end-y) - 24px)) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes badgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
 }
 </style>

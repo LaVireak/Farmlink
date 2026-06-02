@@ -93,7 +93,7 @@
               <div>
                 <p class="font-medium">Same as delivery address</p>
                 <p class="text-xs text-gray-500">
-                  123 Orchard Lane, Green Valley, CA 90210
+                  {{ deliveryAddressText }}
                 </p>
               </div>
             </label>
@@ -119,44 +119,54 @@
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div class="space-y-6">
-        <!-- Summary -->
-        <div class="bg-green-800 text-white p-6 rounded-2xl shadow-lg">
-          <h3 class="font-semibold mb-4">Order Summary</h3>
+               <!-- RIGHT: Order Summary -->
+             <div class="space-y-6 lg:col-span-1 lg:sticky lg:top-8 self-start">
+          <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-gray-50">
+            <h2 class="text-2xl font-black text-[#0a4d1e] mb-8">Order Summary</h2>
+            
+            <div class="space-y-6 mb-8">
+              <div v-for="item in summaryItems" :key="item.name" class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-full object-cover bg-gray-50" />
+                  <div>
+                    <h3 class="font-bold text-gray-800 leading-tight">{{ item.name }}</h3>
+                    <p class="text-xs text-gray-400 font-medium">{{ item.details }}</p>
+                  </div>
+                </div>
+                <span class="font-black text-[#0a4d1e]">${{ item.price.toFixed(2) }}</span>
+              </div>
+            </div>
 
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between">
-              <span>Organic Veggie Box (L)</span>
-              <span>$45.00</span>
+            <div class="space-y-3 pt-6 border-t border-gray-100 mb-8">
+              <div class="flex justify-between text-sm font-semibold text-gray-400">
+                <span>Subtotal</span>
+                <span>${{ subtotal.toFixed(2) }}</span>
+              </div>
+              <div class="flex justify-between text-sm font-semibold text-gray-400">
+                <span>Delivery Fee</span>
+                <span>${{ deliveryFee.toFixed(2) }}</span>
+              </div>
+              <div class="flex justify-between items-end pt-4">
+                <span class="text-lg font-bold text-[#0a4d1e]">Total Price</span>
+                <span class="text-4xl font-black text-[#0a4d1e] tracking-tighter">${{ total.toFixed(2) }}</span>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span>Artisanal Honey Jar</span>
-              <span>$12.50</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Delivery Fee</span>
-              <span>FREE</span>
+
+
+            <button @click="processPayment" :disabled="isProcessing" class="w-full bg-[#0a4d1e] text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-[#083d18] transition-all flex items-center justify-center gap-3 active:scale-110 group disabled:opacity-75 disabled:active:scale-100">
+              <span v-if="isProcessing" class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+              {{ isProcessing ? 'Processing...' : 'Pay Now' }}
+            </button>
+            
+            <div class="flex items-start gap-3 mt-6 p-4 bg-green-50 rounded-xl text-[#0a4d1e]">
+              <span class="material-symbols-outlined text-lg shrink-0">eco</span>
+              <p class="text-xs font-bold leading-relaxed">
+                Your delivery route will be carbon-offset automatically. Thank you for supporting sustainable logistics!
+              </p>
             </div>
           </div>
-
-          <div class="mt-6 border-t border-green-600 pt-4">
-            <p class="text-xs text-green-200">TOTAL AMOUNT</p>
-            <p class="text-2xl font-bold">$57.50</p>
-          </div>
-
-          <button
-            @click="processPayment"
-            :disabled="isProcessing"
-            class="w-full mt-6 bg-[#facc15] text-[#154212] py-4 rounded-xl font-bold text-lg hover:bg-[#fde047] transition-all flex justify-center items-center gap-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
-          >
-            <span>{{ isProcessing ? 'Processing Securely...' : 'Confirm Payment' }}</span>
-            <span v-if="!isProcessing" class="material-symbols-outlined">arrow_forward</span>
-            <span v-else class="material-symbols-outlined animate-spin">progress_activity</span>
-          </button>
-
         </div>
-      </div>
+       
     </div>
   </div>
   </div>
@@ -167,6 +177,19 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { loadStripe, type Stripe, type StripeElements, type StripeCardNumberElement } from '@stripe/stripe-js';
 
+import { computed } from 'vue';
+import { useCart } from '@/composables/useCart'
+
+const { cart, subtotal, deliveryFee, total } = useCart()
+
+const summaryItems = computed(() =>
+  cart.value.map(item => ({
+    name: item.name,
+    details: `${item.variant}`,
+    price: item.price * item.quantity,
+    image: item.image || '/images/placeholder.jpg',
+  }))
+);
 definePageMeta({
   middleware: 'user',
   layout: 'user',
@@ -179,6 +202,7 @@ const form = reactive({
 })
 
 const billingSame = ref(true)
+const deliveryAddressText = ref('123 Orchard Lane, Green Valley, CA 90210')
 
 const stripe = ref<Stripe | null>(null);
 const elements = ref<StripeElements | null>(null);
@@ -190,6 +214,16 @@ const cardError = ref('');
 const isProcessing = ref(false);
 
 onMounted(async () => {
+  const saved = localStorage.getItem('farmlink_checkout_address')
+  if (saved) {
+    try {
+      const addr = JSON.parse(saved)
+      deliveryAddressText.value = `${addr.street}, ${addr.city}`
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const publishableKey = config.public.stripePublishableKey;
 
   if (!publishableKey) {
@@ -263,13 +297,13 @@ async function processPayment() {
   } else {
     // Send the paymentMethod.id to our NestJS backend to actually charge the card!
     try {
-      const response = await fetch('http://localhost:3001/stripe/charge', {
+      const response = await fetch(`${config.public.apiUrl}/stripe/charge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: 57.50, // Hardcoded for this demo, usually comes from cart state
+          amount: total.value, // dynamically pass the cart total
           paymentMethodId: paymentMethod.id,
         }),
       });

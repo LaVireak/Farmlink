@@ -1,52 +1,40 @@
 <template>
-  
-
   <main class="max-canvas bg-[#f7fdf4] px-4 py-8">
-    
-    <div class="flex gap-6">
-      <FarmerSideBar />
+    <FarmerHeader title="Guild Book" />
 
-      <aside class="flex-1">
-        <FarmerHeader title="Guild Book" />
+    <!-- Search & Sort Controls -->
+    <div class="mt-4 flex items-center gap-3">
+      <input v-model="search" placeholder="Search guild entries..." class="flex-1 border rounded-full px-4 py-2" />
+      <div class="flex items-center gap-2">
+        <button @click="setSort('asc')" :class="sortOrder === 'asc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">A→Z</button>
+        <button @click="setSort('desc')" :class="sortOrder === 'desc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">Z→A</button>
+      </div>
+    </div>
 
-        <!-- Search & Sort Controls -->
-        <div class="mt-4 flex items-center gap-3">
-          <input v-model="search" placeholder="Search guild entries..." class="flex-1 border rounded-full px-4 py-2" />
-          <div class="flex items-center gap-2">
-            <button @click="setSort('asc')" :class="sortOrder === 'asc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">A→Z</button>
-            <button @click="setSort('desc')" :class="sortOrder === 'desc' ? activeSortClass : inactiveSortClass" class="px-3 py-2 rounded">Z→A</button>
+    <!-- Grouped List A-D -->
+    <div class="mt-6 space-y-6">
+      <section v-for="group in grouped" :key="group.letter">
+        <h4 class="text-3xl italic font-bold mb-2">Category {{ group.letter }}</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="entry in group.items" :key="entry.name" class="bg-white border-2 border-black rounded-md p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
+            <h3 class="text-lg font-bold mb-2">{{ entry.name }}</h3>
+            <p class="text-gray-600 mb-4">{{ entry.description }}</p>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</span>
+              <NuxtLink :to="`/farmer/guildbook/${entry.id}`" class="ml-auto bg-[#1f7a2e] text-white px-3 py-1 rounded uppercase text-xs inline-flex items-center justify-center">View Details</NuxtLink>
+            </div>
           </div>
         </div>
-
-        <!-- Grouped List A-D -->
-        <div class="mt-6 space-y-6">
-          <section v-for="group in grouped" :key="group.letter">
-            <h4 class="text-3xl italic font-bold mb-2">Category {{ group.letter }}</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div v-for="entry in group.items" :key="entry.name" class="bg-white border-2 border-black rounded-md p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all">
-                <h3 class="text-lg font-bold mb-2">{{ entry.name }}</h3>
-                <p class="text-gray-600 mb-4">{{ entry.description }}</p>
-                <div class="flex items-center gap-4">
-                  <span class="text-sm text-gray-500">Last updated: {{ entry.lastUpdated }}</span>
-                  <NuxtLink :to="`/farmer/guildbook/${entry.id}`" class="ml-auto bg-[#1f7a2e] text-white px-3 py-1 rounded uppercase text-xs inline-flex items-center justify-center">View Details</NuxtLink>
-                </div>
-              </div>
-              
-            </div>
-            <div class="mt-10 border-b-2 border-black"></div>
-          </section>
-          
-        </div>
-
-      </aside>
+        <div class="mt-10 border-b-2 border-black"></div>
+      </section>
     </div>
   </main>
 </template>
 
 <script setup>
-
 definePageMeta({
-  middleware: 'farmer'
+  middleware: 'farmer',
+  layout: 'farmer'
 })
 
 import { ref, computed } from 'vue'

@@ -6,18 +6,18 @@
 
       <!-- Breadcrumb -->
       <nav class="breadcrumbs">
-        <NuxtLink to="/">{{ t('common.home') }}</NuxtLink>
+        <NuxtLink to="/">Home</NuxtLink>
 
         <span class="separator">/</span>
 
         <NuxtLink to="/user/products">
-          {{ t('common.products') }}
+          Products
         </NuxtLink>
 
         <span class="separator">/</span>
 
         <span class="current">
-          {{ product?.name || t('common.loading') }}
+          {{ product?.name || 'Loading...' }}
         </span>
       </nav>
 
@@ -101,13 +101,41 @@
             {{ product.description }}
           </p>
 
+          <!-- Farmer Details -->
+          <div v-if="product.farmer" class="farmer-info-card">
+            <h3 class="farmer-heading">Sold By</h3>
+            <NuxtLink :to="`/user/farm/${product.farmer.id}`" class="farmer-link">
+              <div class="farmer-details">
+                <span class="farm-name">
+                  {{ product.farmer.farmName || (product.farmer.firstName ? `${product.farmer.firstName} ${product.farmer.lastName}` : 'Unknown Farm') }}
+                </span>
+                <span class="farmer-name" v-if="product.farmer.farmName && product.farmer.firstName">
+                  ({{ product.farmer.firstName }} {{ product.farmer.lastName }})
+                </span>
+                <span v-if="product.farmer.isVerified" class="verified-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  Verified
+                </span>
+              </div>
+            </NuxtLink>
+          </div>
+
+          <!-- Stock Status -->
+          <div class="mb-4 mt-2">
+            <span :class="product.stockQuantity > 0 ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-red-100 text-red-700'" class="px-3 py-1.5 rounded-lg text-sm font-semibold inline-block">
+              {{ product.stockQuantity > 0 ? `${product.stockQuantity} units available` : 'Out of Stock' }}
+            </span>
+          </div>
+
           <!-- Quantity -->
-          <div class="action-block">
+          <div class="action-block" v-if="product.stockQuantity > 0">
 
             <div class="quantity-selector">
               <button
                 @click="decrease"
                 class="qty-btn"
+                :disabled="quantity <= 1"
+                :class="{ 'opacity-30 cursor-not-allowed': quantity <= 1 }"
               >
                 −
               </button>
@@ -119,16 +147,27 @@
               <button
                 @click="increase"
                 class="qty-btn"
+                :disabled="quantity >= product.stockQuantity"
+                :class="{ 'opacity-30 cursor-not-allowed': quantity >= product.stockQuantity }"
               >
                 +
               </button>
             </div>
 
             <button
-              @click="addToCart"
+              @click="addToCart($event)"
               class="add-to-cart-btn"
             >
-              {{ t('products.addToCart') }}
+              Add to Cart
+            </button>
+          </div>
+
+          <div v-else class="action-block">
+            <button
+              disabled
+              class="add-to-cart-btn opacity-50 cursor-not-allowed"
+            >
+              Out of Stock
             </button>
           </div>
 
@@ -177,7 +216,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import CommonAppHeader from '~/components/common/AppHeader.vue'
@@ -185,8 +223,6 @@ import CommonAppFooter from '~/components/common/AppFooter.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-
-const { t } = useI18n()
 
 const product = ref(null)
 
@@ -210,15 +246,25 @@ const fetchProduct = async () => {
 
   try {
     const res = await $fetch(
-      `http://localhost:3001/products/${route.params.id}`
+      `${config.public.apiUrl}/products/${route.params.id}`
     )
 
-    product.value = res
+    const mappedRes = {
+      ...res,
+      stockQuantity: res.stock !== undefined ? Number(res.stock) : Number(res.stockQuantity || 0)
+    }
+    product.value = mappedRes
 
     activeImage.value =
-      res.gallery?.[0] ||
-      res.image ||
-      '/images/placeholder.jpg'
+      mappedRes.gallery?.[0] ||
+      mappedRes.image ||
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
+
+    if (mappedRes.stockQuantity <= 0) {
+      quantity.value = 0
+    } else {
+      quantity.value = 1
+    }
 
   } catch (err) {
     console.error('Failed to fetch product:', err)
@@ -268,7 +314,10 @@ const badgeClass = computed(() => {
 
 // ================= QUANTITY =================
 const increase = () => {
-  quantity.value++
+  const maxStock = product.value?.stockQuantity ?? 9999
+  if (quantity.value < maxStock) {
+    quantity.value++
+  }
 }
 
 const decrease = () => {
@@ -277,14 +326,20 @@ const decrease = () => {
   }
 }
 
+import { useCart } from '~/composables/useCart'
+const { addToCart: addToCartComposable } = useCart()
+
 // ================= CART =================
-const addToCart = () => {
-  console.log(
-    'Added to cart:',
-    product.value,
-    'Quantity:',
-    quantity.value
-  )
+const addToCart = (event) => {
+  if (product.value) {
+    addToCartComposable(product.value, quantity.value, event)
+    console.log(
+      'Added to cart:',
+      product.value,
+      'Quantity:',
+      quantity.value
+    )
+  }
 }
 </script>
 
@@ -496,10 +551,68 @@ const addToCart = () => {
 }
 
 .short-desc {
-  font-size: 15px;
+  font-size: 1rem;
+  color: #666;
   line-height: 1.6;
-  color: #4b5563;
-  margin: 0 0 32px;
+  margin-bottom: 2rem;
+}
+
+.farmer-info-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.farmer-heading {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.farmer-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.farmer-link:hover {
+  opacity: 0.8;
+}
+
+.farmer-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.farm-name {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.farmer-name {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #def7ec;
+  color: #03543f;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
 }
 
 /* ACTIONS */

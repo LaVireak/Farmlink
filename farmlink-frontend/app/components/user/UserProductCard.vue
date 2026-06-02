@@ -7,7 +7,7 @@
 
     <!-- IMAGE -->
     <div class="card-image-wrap">
-      <img :src="product.image" :alt="product.name" loading="lazy" />
+      <img :src="product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'" :alt="product.name" loading="lazy" />
       
       <!-- HOVER ACTIONS -->
       <div class="card-hover-actions">
@@ -41,12 +41,15 @@
           <span v-if="product.discount" class="card-discount-tag">-{{ product.discount }}%</span>
         </div>
         
-        <button class="card-add-btn" @click.prevent="$emit('add-to-cart', product)" aria-label="Add to cart">
+        <button v-if="(product.stock !== undefined ? product.stock : product.stockQuantity) > 0" class="card-add-btn" @click.prevent="$emit('add-to-cart', product, $event)" aria-label="Add to cart">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
         </button>
+        <span v-else class="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-lg">
+          Sold Out
+        </span>
       </div>
     </div>
   </NuxtLink>

@@ -4,7 +4,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 const apiFetch = async <T>(path: string, options: RequestInit): Promise<T> => {
   const token = await getAccessToken()
-  const res = await fetch(`${API_BASE}${path}`, {
+  let cleanPath = path
+  if (API_BASE.endsWith('/api') && path.startsWith('/api/')) {
+    cleanPath = path.substring(4)
+  }
+  const res = await fetch(`${API_BASE}${cleanPath}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

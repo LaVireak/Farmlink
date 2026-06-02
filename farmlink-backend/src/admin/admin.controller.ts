@@ -1,10 +1,10 @@
-import { 
-  Controller, 
-  Get, 
-  Patch, 
-  Post, 
-  Param, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Param,
+  Body,
   UseGuards,
   Query,
 } from '@nestjs/common';
@@ -20,7 +20,7 @@ import { SuspendUserDto, UpdateUserRoleDto, UpdateOrderStatusDto, RejectProductD
 @UseGuards(SupabaseAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   // ====== DASHBOARD ======
   @Get('dashboard/stats')

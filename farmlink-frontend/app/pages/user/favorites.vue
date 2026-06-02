@@ -1,5 +1,5 @@
 <template>
-
+  <CommonAppHeader />
   <div class="favorites-page">
 
     <!-- Hero Banner -->
@@ -111,7 +111,7 @@
               <span class="fav-price">${{ item.discount ? (item.price * (1 - item.discount / 100)).toFixed(2) : item.price.toFixed(2) }}</span>
               <span class="text-xs text-gray-400 ml-1">/ {{ item.unit }}</span>
             </div>
-            <button @click="addToCart(item)" class="cart-btn" aria-label="Add to cart">
+            <button @click="addToCart(item, $event)" class="cart-btn" aria-label="Add to cart">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
               </svg>
@@ -143,6 +143,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n'
+
+definePageMeta({
+  middleware: 'user',
+  layout: 'user',
+});
 
 useHead({
   title: 'My Favorites | FarmLink Cambodia',
@@ -271,8 +276,11 @@ function clearAll() {
   showToast(t('favorites.cleared'));
 }
 
-function addToCart(item: any) {
-  // TODO: connect to cart store
+import { useCart } from '~/composables/useCart';
+const { addToCart: addToCartComposable } = useCart();
+
+function addToCart(item: any, event?: MouseEvent) {
+  addToCartComposable(item, 1, event);
   favorites.value = favorites.value.filter(f => f.id !== item.id);
   showToast(t('favorites.addedToCart', { name: item.name }));
 }

@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 export default <Partial<Config>>{
+darkMode: 'class',
 content: [
 './app.vue',
 './app/**/*.{vue,js,ts}',
@@ -13,22 +14,22 @@ content: [
 theme: {
 extend: {
 colors: {
-primary: '#154212',
-secondary: '#006e1c',
-'secondary-container': '#d5f3cf',
-'on-secondary-container': '#1b1c1a',
-surface: '#fbf9f6',
-'surface-container-lowest': '#ffffff',
-'surface-container-low': '#f5f3f0',
-'surface-container': '#efeeea',
-'surface-container-high': '#e9e8e5',
-'surface-container-highest': '#e3e2df',
-'on-surface': '#1b1c1a',
-'on-surface-variant': '#42493e',
-outline: '#72796e',
-'outline-variant': '#c2c9bb',
-error: '#b42318',
-'error-container': '#fee4e2',
+    primary: 'var(--color-primary)',
+    secondary: 'var(--color-secondary)',
+    'secondary-container': 'var(--color-secondary-container)',
+    'on-secondary-container': 'var(--color-on-secondary-container)',
+    surface: 'var(--color-surface)',
+    'surface-container-lowest': 'var(--color-surface-lowest)',
+    'surface-container-low': 'var(--color-surface-low)',
+    'surface-container': 'var(--color-surface-container)',
+    'surface-container-high': 'var(--color-surface-high)',
+    'surface-container-highest': 'var(--color-surface-highest)',
+    'on-surface': 'var(--color-on-surface)',
+    'on-surface-variant': 'var(--color-on-surface-variant)',
+    outline: 'var(--color-outline)',
+    'outline-variant': 'var(--color-outline-variant)',
+    error: 'var(--color-error)',
+    'error-container': 'var(--color-error-container)',
 },
 fontFamily: {
 body: ['Inter', 'sans-serif'],

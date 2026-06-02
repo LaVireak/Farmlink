@@ -1,26 +1,25 @@
 <template>
-  <div class="bg-white shadow rounded-2xl p-6 flex justify-between items-center">
-        <div>
-      <h3 class="text-gray-500 text-sm">{{ title }}</h3>
-      <p class="text-green-600 text-2xl font-bold">{{ value }}</p>
+  <div class="bg-surface-container-lowest shadow rounded-2xl p-6 flex justify-between items-center">
+    <div>
+      <h3 class="text-on-surface-variant text-sm">{{ title }}</h3>
+      <p class="text-secondary text-2xl font-bold">{{ value }}</p>
 
       <div class="flex items-center text-sm mt-1 gap-1">
-        <component 
+        <component
           :is="isPositive ? ArrowUpRight : ArrowDownRight"
-          :class="isPositive ? 'text-green-500' : 'text-red-500'"
+          :class="isPositive ? 'text-secondary' : 'text-error'"
           class="w-4 h-4"
         />
-        <span :class="isPositive ? 'text-green-500' : 'text-red-500'">
+        <span :class="isPositive ? 'text-secondary' : 'text-error'">
           {{ percent }}%
         </span>
-        <span class="text-gray-400 ml-1">vs last month</span>
+        <span class="text-on-surface-variant ml-1">vs last month</span>
       </div>
     </div>
 
-    <div class="bg-gray-100 p-3 rounded-xl">
-      <component :is="icon" class="w-6 h-6 text-gray-700" />
+    <div class="bg-surface-container p-3 rounded-xl">
+      <component :is="icon" class="w-6 h-6 text-on-surface-variant" />
     </div>
-
   </div>
 </template>
 
@@ -36,5 +35,4 @@ const props = defineProps({
 })
 
 const isPositive = computed(() => (props.percent ?? 0) >= 0)
-
 </script>

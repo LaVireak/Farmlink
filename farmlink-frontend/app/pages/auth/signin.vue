@@ -145,11 +145,7 @@
             :disabled="submitting"
             class="primary-btn"
           >
-            {{
-              submitting
-                ? 'Signing in...'
-                : 'Sign In'
-            }}
+            {{ submitting ? 'Signing in...' : 'Sign In' }}
           </button>
 
           <!-- DIVIDER -->
@@ -174,7 +170,7 @@
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
               </svg>
-              {{ googleSubmitting ? '…' : 'Google' }}
+							{{ googleSubmitting ? 'Redirecting…' : 'Google' }}
             </button>
 
             <!-- FACEBOOK -->
@@ -192,39 +188,36 @@
           </div>
 
           <p v-if="googleError" class="feedback feedback-error">{{ googleError }}</p>
-          <p v-if="googleSubmitting" class="feedback">Google</p>
+		  <p v-if="googleSubmitting" class="feedback">Redirecting to Google...</p>
           <p v-if="facebookError" class="feedback feedback-error">{{ facebookError }}</p>
         </form>
 
         <!-- FOOTER -->
         <p class="footer-copy">
-          Don’t have an account?
+          Don't have an account?
 
           <NuxtLink to="/auth/signup">
             Create account
           </NuxtLink>
         </p>
+		<p class="footer-copy">
+					Want to be a farmer?
+					<NuxtLink to="/auth/farmer-signup">Sign up as a farmer</NuxtLink>
+		</p>
       </section>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../../composables/useAuth'
+import { useAuthStore } from '../../stores/auth.store'
 import { isValidEmail } from '../../utils/validation'
 
 const showPassword = ref(false)
-
 const router = useRouter()
-
-const {
-  signIn,
-  signInWithGoogle,
-  signInWithFacebook,
-  getPostSignInRoute,
-} = useAuth()
+const authStore = useAuthStore()
 
 const submitting = ref(false)
 const errorMessage = ref('')
@@ -235,9 +228,7 @@ const googleError = ref('')
 const facebookSubmitting = ref(false)
 const facebookError = ref('')
 
-
-const googleClientId =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const form = reactive({
   email: '',
@@ -248,8 +239,7 @@ const onSubmit = async () => {
   errorMessage.value = ''
 
   if (!form.email || !form.password) {
-    errorMessage.value =
-      'Email and password are required.'
+    errorMessage.value = 'Email and password are required.'
     return
   }
 
@@ -261,14 +251,33 @@ const onSubmit = async () => {
   submitting.value = true
 
   try {
-    const result = await signIn({
+    // signIn() in the store already:
+    // 1. calls authService.signin()
+    // 2. calls applySession() → sets user from Supabase
+    // 3. calls authService.fetchProfile() → overwrites role from your PostgreSQL DB
+    await authStore.signIn({
       email: form.email,
       password: form.password,
     })
 
-    await router.push(
-      getPostSignInRoute(result.user.role)
-    )
+    // ✅ Read role AFTER signIn() fully resolves
+    // At this point authStore.user.role is the real DB role
+    const role = authStore.user?.role
+
+    console.log('[SignIn] Role after full signIn:', role) // Remove after debugging
+
+    if (authStore.lastSyncError) {
+      // fetchProfile failed — role may be wrong, warn but still try to redirect
+      console.warn('[SignIn] Role sync warning:', authStore.lastSyncError)
+    }
+
+    // ✅ Use role directly from store, not from getPostSignInRoute via useAuth
+    const route = authStore.getPostSignInRoute(role ?? 'consumer')
+
+    console.log('[SignIn] Redirecting to:', route) // Remove after debugging
+
+    await router.push(route)
+
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -279,12 +288,11 @@ const onSubmit = async () => {
   }
 }
 
-const handleGoogleCredential = async (
-  credential?: string
-) => {
+// ---- Google ----
+
+const handleGoogleCredential = async (credential?: string) => {
   if (!credential) {
-    googleError.value =
-      'Google sign-in failed.'
+    googleError.value = 'Google sign-in failed.'
     return
   }
 
@@ -292,19 +300,15 @@ const handleGoogleCredential = async (
   googleError.value = ''
 
   try {
-    const result = await signInWithGoogle(
-      credential
-    )
+    await authStore.signInWithGoogle(credential)
 
-    await router.push(
-      getPostSignInRoute(result.user.role)
-    )
+    const role = authStore.user?.role
+    await router.push(authStore.getPostSignInRoute(role ?? 'consumer'))
   } catch (error) {
     googleError.value =
       error instanceof Error
         ? error.message
         : 'Unable to sign in with Google.'
-  } finally {
     googleSubmitting.value = false
   }
 }
@@ -314,18 +318,12 @@ const googleReady = ref(false)
 const initializeGoogle = () => {
   const google = (window as any).google
 
-  if (!google?.accounts?.id) {
-    return false
-  }
+  if (!google?.accounts?.id) return false
 
   google.accounts.id.initialize({
     client_id: googleClientId,
-    callback: (response: {
-      credential?: string
-    }) =>
-      handleGoogleCredential(
-        response.credential
-      ),
+    callback: (response: { credential?: string }) =>
+      handleGoogleCredential(response.credential),
   })
 
   googleReady.value = true
@@ -341,17 +339,16 @@ const handleGoogleClick = () => {
   google.accounts.id.prompt()
 }
 
+// ---- Facebook ----
+
 const handleFacebook = async () => {
-  console.log('[Facebook Login] Button clicked — starting Facebook OAuth flow')
   facebookSubmitting.value = true
   facebookError.value = ''
 
   try {
-    console.log('[Facebook Login] Calling signInWithFacebook()...')
-    await signInWithFacebook()
-    console.log('[Facebook Login] signInWithFacebook() resolved — browser should be redirecting now')
+    await authStore.signInWithFacebook()
+    // Browser redirects here — nothing after this runs
   } catch (error) {
-    console.error('[Facebook Login] Error caught in handleFacebook:', error)
     facebookError.value =
       error instanceof Error
         ? error.message
@@ -360,10 +357,11 @@ const handleFacebook = async () => {
   }
 }
 
+// ---- Mount ----
+
 onMounted(() => {
   if (!googleClientId) {
-    googleError.value =
-      'Google sign-in is not configured.'
+    googleError.value = 'Google sign-in is not configured.'
     return
   }
 
@@ -371,17 +369,11 @@ onMounted(() => {
 
   const tryInit = () => {
     attempts++
-
-    if (initializeGoogle()) {
-      return
-    }
-
+    if (initializeGoogle()) return
     if (attempts >= 20) {
-      googleError.value =
-        'Google sign-in failed to load.'
+      googleError.value = 'Google sign-in failed to load.'
       return
     }
-
     setTimeout(tryInit, 300)
   }
 
@@ -685,7 +677,6 @@ onMounted(() => {
 	border: 1px solid rgba(180,35,24,0.1);
 }
 
-/* premium button */
 .primary-btn {
 	position: relative;
 	height: 56px;
