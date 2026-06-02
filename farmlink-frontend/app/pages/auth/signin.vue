@@ -349,7 +349,6 @@ const handleFacebook = async () => {
   try {
     console.log('[Facebook Login] Calling signInWithFacebook()...')
     await signInWithFacebook()
-    // If we reach here without an error, Supabase is redirecting the browser.
     console.log('[Facebook Login] signInWithFacebook() resolved — browser should be redirecting now')
   } catch (error) {
     console.error('[Facebook Login] Error caught in handleFacebook:', error)
