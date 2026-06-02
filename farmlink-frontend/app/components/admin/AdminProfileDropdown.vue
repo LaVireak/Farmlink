@@ -29,7 +29,6 @@
                             <ul class="space-y-1">
                                 <li><NuxtLink to="/admin/settings/profile" class="block px-3 py-2 hover:bg-surface-container rounded-xl transition-colors duration-150 text-on-surface">Profile</NuxtLink></li>
                                 <li><NuxtLink to="/admin/settings/security" class="block px-3 py-2 hover:bg-surface-container rounded-xl transition-colors duration-150 text-on-surface">Security</NuxtLink></li>
-                                <li><NuxtLink to="/admin/settings/notifications" class="block px-3 py-2 hover:bg-surface-container rounded-xl transition-colors duration-150 text-on-surface">Notification</NuxtLink></li>
                                 <li><NuxtLink to="/admin/settings/appearance" class="block px-3 py-2 hover:bg-surface-container rounded-xl transition-colors duration-150 text-on-surface">Appearance</NuxtLink></li>
                                 <li><NuxtLink to="/admin/settings/team" class="block px-3 py-2 hover:bg-surface-container rounded-xl transition-colors duration-150 text-on-surface">Team</NuxtLink></li>
                                 <li><a href="#" @click.prevent="handleLogout" class="block px-3 py-2 hover:bg-error-container rounded-xl transition-colors duration-150 text-error font-medium">Logout</a></li>

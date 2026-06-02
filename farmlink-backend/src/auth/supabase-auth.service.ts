@@ -13,7 +13,6 @@ import WebSocket from 'ws';
 import { User } from '../users/user.entity';
 import { UserRole } from '../common/enums/role.enum';
 import { UserStatus } from '../common/enums/user-status.enum';
-import type { AdminUserAttributes } from '@supabase/supabase-js'
 
 type SupabaseMetadata = {
   role?: string;
@@ -22,7 +21,8 @@ type SupabaseMetadata = {
   phone?: string;
   farmName?: string;
   address?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
 };
 
 type ParsedImage = {
@@ -173,14 +173,18 @@ export class SupabaseAuthService {
       throw new Error('Unable to resolve uploaded avatar URL');
     }
 
-    await this.syncAvatarMetadata(userId, publicUrl);
+    await this.updateAvatarMetadata(userId, publicUrl);
 
     return publicUrl;
   }
 
-  private async syncAvatarMetadata(
+  async clearAvatarMetadata(userId: string): Promise<void> {
+    await this.updateAvatarMetadata(userId, null);
+  }
+
+  private async updateAvatarMetadata(
     userId: string,
-    avatarUrl: string,
+    avatarUrl: string | null,
   ): Promise<void> {
     const { data, error } = await this.client.auth.admin.getUserById(userId);
     if (error) {
@@ -189,11 +193,20 @@ export class SupabaseAuthService {
 
     const currentMetadata = (data.user?.user_metadata ??
       {}) as SupabaseMetadata;
+    const nextMetadata: SupabaseMetadata = {
+      ...currentMetadata,
+    };
+
+    if (avatarUrl === null) {
+      nextMetadata.avatarUrl = null;
+      nextMetadata.avatar_url = null;
+    } else {
+      nextMetadata.avatarUrl = avatarUrl;
+      nextMetadata.avatar_url = avatarUrl;
+    }
+
     const update: UpdateUserByIdAttributes = {
-      user_metadata: {
-        ...currentMetadata,
-        avatarUrl,
-      },
+      user_metadata: nextMetadata,
     };
 
     const { error: updateError } = await this.client.auth.admin.updateUserById(
@@ -239,7 +252,7 @@ export class SupabaseAuthService {
       user.firstName = metadata.firstName ?? null;
       user.lastName = metadata.lastName ?? null;
       user.phoneNumber = metadata.phone ?? null;
-      user.avatarUrl = metadata.avatarUrl ?? null;
+      user.avatarUrl = metadata.avatarUrl ?? metadata.avatar_url ?? null;
 
       return this.users.save(user);
     }
