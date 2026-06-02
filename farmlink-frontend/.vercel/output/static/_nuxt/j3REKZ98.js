@@ -1,1 +1,0 @@
-import{m as r,$ as s,p as o,x as u}from"./PMle3frw.js";const n=r(async()=>{let t,a;const e=s();if([t,a]=o(()=>e.hydrate()),await t,a(),!e.isAuthenticated||e.user?.role!=="farmer")return u("/404")});export{n as default};

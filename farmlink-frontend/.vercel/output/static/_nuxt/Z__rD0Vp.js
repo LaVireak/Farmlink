@@ -1,1 +1,0 @@
-import{a as s,H as t,h as n,Q as r}from"./PMle3frw.js";const c={},o={class:"min-h-screen bg-[#fbf9f6] text-zinc-900 font-[Inter,sans-serif]"};function a(e,f){return t(),n("div",o,[r(e.$slots,"default")])}const i=s(c,[["render",a]]);export{i as default};
