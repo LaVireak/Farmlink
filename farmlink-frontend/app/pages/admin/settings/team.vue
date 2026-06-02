@@ -27,7 +27,10 @@
               <tbody class="bg-white">
                 <tr v-for="member in members" :key="member.id" class="border-t">
                   <td class="p-4 flex items-center gap-4">
-                    <img :src="member.avatar" class="w-10 h-10 rounded-full object-cover" />
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-900 text-xs font-bold">
+                      <img v-if="member.avatar" :src="member.avatar" class="w-full h-full object-cover" />
+                      <span v-else>{{ memberInitials(member) }}</span>
+                    </div>
                     <div>
                       <div class="font-semibold">{{ member.name }}</div>
                       <div class="text-xs text-gray-500">{{ member.email }}</div>
@@ -70,12 +73,8 @@
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium mb-1">Select Role</label>
-                  <select v-model="inviteForm.role" class="w-full border border-green-700 rounded-lg px-4 py-3">
-                    <option value="Super Admin">Super Admin</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Moderator">Moderator</option>
-                  </select>
+                  <label class="block text-sm font-medium mb-1">Role</label>
+                  <div class="w-full border border-gray-200 rounded-lg px-4 py-3 bg-gray-50 text-sm text-gray-600">Admin</div>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -115,6 +114,7 @@ import { useAuthStore } from '~/stores/auth.store'
 const config = useRuntimeConfig()
 const baseURL = config.public.apiUrl
 const auth = useAuthStore()
+const staticBase = baseURL.replace(/\/api\/?$/, '')
 
 type TeamMember = {
   id: string | number
@@ -130,10 +130,18 @@ const showInvite = ref(false)
 
 const members = ref<TeamMember[]>([])
 
-const inviteForm = ref({ name: '', email: '', role: 'Super Admin', allPermissions: false })
+const inviteForm = ref({ name: '', email: '', allPermissions: false })
+
+const resolveAvatarUrl = (url?: string | null): string => {
+  if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('data:')) return url
+  const normalized = url.replace(/^\/+/, '')
+  return `${staticBase}/${normalized}`
+}
 
 const mapAdminUser = (user: any): TeamMember => {
   const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Unknown'
+  const avatarValue = user?.avatarUrl ?? user?.avatar_url ?? ''
   return {
     id: user?.id,
     name,
@@ -141,8 +149,17 @@ const mapAdminUser = (user: any): TeamMember => {
     role: 'Admin',
     joined: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—',
     active: String(user?.status ?? '').toLowerCase() === 'active',
-    avatar: user?.avatarUrl ?? '/images/farmer.jpg',
+    avatar: resolveAvatarUrl(avatarValue),
   }
+}
+
+const memberInitials = (member: TeamMember) => {
+  const parts = member.name.trim().split(' ').filter(Boolean)
+  const first = parts[0]?.[0] ?? ''
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : ''
+  const initials = `${first}${last}`.trim()
+  if (initials) return initials.toUpperCase()
+  return (member.email || 'FM').slice(0, 2).toUpperCase()
 }
 
 async function fetchAdmins() {
@@ -171,9 +188,9 @@ function sendInvite() {
   }
   // add member locally (in real app, call API)
   const id = Date.now()
-  members.value.push({ id, name: inviteForm.value.name, email: inviteForm.value.email, role: inviteForm.value.role, joined: new Date().toLocaleDateString(), active: true, avatar: '/images/farmer.jpg' })
+  members.value.push({ id, name: inviteForm.value.name, email: inviteForm.value.email, role: 'Admin', joined: new Date().toLocaleDateString(), active: true, avatar: '' })
   // reset and close
-  inviteForm.value = { name: '', email: '', role: 'Super Admin', allPermissions: false }
+  inviteForm.value = { name: '', email: '', allPermissions: false }
   showInvite.value = false
   alert('Invite sent')
 }
@@ -188,8 +205,6 @@ function removeMember(id: string | number) {
 
 function roleClass(role: string) {
   if (role === 'Admin') return 'bg-blue-100 text-blue-600'
-  if (role === 'Super Admin') return 'bg-red-100 text-red-600'
-  if (role === 'Moderator') return 'bg-yellow-100 text-yellow-700'
   return 'bg-gray-100 text-gray-700'
 }
 

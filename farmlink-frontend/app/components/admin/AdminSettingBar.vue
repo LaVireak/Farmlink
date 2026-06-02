@@ -17,7 +17,6 @@
 const settingsNav = [
   { name: 'Personal Info', active: false, to: '/admin/settings/profile' },
   { name: 'Security', active: false, to: '/admin/settings/security' },
-  { name: 'Notifications', active: false, to: '/admin/settings/notifications' },
   { name: 'Appearance', active: false, to: '/admin/settings/appearance' },
   { name: 'Team', active: false, to: '/admin/settings/team' },
 ]
