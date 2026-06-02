@@ -490,12 +490,15 @@ const toggleUserMenu = () => {
   }
 }
 
-const notifications = ref([
-  { id: 1, title: 'New order received', body: 'Order #123 has been placed.', time: '2h ago', read: false },
-  { id: 2, title: 'Message from Farmer John', body: 'Can you deliver extra potatoes?', time: '1d ago', read: false }
-])
+import { useNotifications } from '~/composables/useNotifications'
+
+const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotifications()
+
 const selectedNotification = ref(null)
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+
+onMounted(() => {
+  fetchNotifications()
+})
 
 const toggleNotifications = () => {
   notificationsOpen.value = !notificationsOpen.value
@@ -524,11 +527,11 @@ const setLanguage = async (lang) => {
 
 function showNotification(note) {
   selectedNotification.value = note
-  note.read = true
+  markAsRead(note.id)
 }
 
 function markAllRead() {
-  notifications.value.forEach(n => (n.read = true))
+  markAllAsRead()
 }
 
 function toggleDarkMode() {

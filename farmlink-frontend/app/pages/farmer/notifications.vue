@@ -105,70 +105,48 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useNotifications } from '~/composables/useNotifications'
 
 definePageMeta({
   middleware: 'farmer',
   layout: 'farmer'
 })
 
+const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead: markAllAsReadApi } = useNotifications()
+
 const activeTab = ref('All')
 
-const notifications = ref([
-  {
-    id: 1,
-    category: 'Deliveries',
-    title: 'New Bulk Order Inbound',
-    body: 'Whole Foods Hub requests immediate processing of Heirloom Carrots (20kg) allocation.',
-    time: '12 minutes ago',
-    unread: true,
-    actionText: 'Approve Order'
-  },
-  {
-    id: 2,
-    category: 'Inventory',
-    title: 'Baby Leafy Greens Threshold Breached',
-    body: 'Stock reserves have fallen below 10kg. Restock required to prevent listing suspension.',
-    time: '2 hours ago',
-    unread: true,
-    actionText: 'Restock Manifest'
-  },
-  {
-    id: 3,
-    category: 'Platform',
-    title: 'Settlement Ledger Dispatched',
-    body: 'Your weekly sales settlement statement has been compiled and is ready for download.',
-    time: 'Yesterday',
-    unread: false,
-    actionText: 'Download Statement'
-  },
-  {
-    id: 4,
-    category: 'Platform',
-    title: 'Supabase Authentication Node Synced',
-    body: 'Global OAuth endpoints hydrated successfully. Zero latency reported.',
-    time: '3 days ago',
-    unread: false
-  }
-])
+onMounted(() => {
+  fetchNotifications()
+})
 
-const hasUnread = computed(() => notifications.value.some(n => n.unread))
+const mappedNotifications = computed(() => {
+  return notifications.value.map(n => ({
+    ...n,
+    category: n.type === 'new_message' ? 'Platform' : (n.type?.includes('order') ? 'Deliveries' : 'Platform'),
+    unread: !n.read,
+    actionText: n.type === 'order_placed' ? 'View Order' : null
+  }))
+})
+
+const hasUnread = computed(() => unreadCount.value > 0)
 
 const filteredNotifications = computed(() => {
-  if (activeTab.value === 'All') return notifications.value
-  return notifications.value.filter(n => n.category === activeTab.value)
+  if (activeTab.value === 'All') return mappedNotifications.value
+  return mappedNotifications.value.filter(n => n.category === activeTab.value)
 })
 
 function toggleRead(id) {
-  const noti = notifications.value.find(n => n.id === id)
-  if (noti) noti.unread = !noti.unread
+  markAsRead(id)
 }
 
 function markAllAsRead() {
-  notifications.value.forEach(n => n.unread = false)
+  markAllAsReadApi()
 }
 
 function deleteNotification(id) {
+  // Option: call DELETE /notifications/:id if we have it, otherwise just hide it locally
   notifications.value = notifications.value.filter(n => n.id !== id)
 }
 
