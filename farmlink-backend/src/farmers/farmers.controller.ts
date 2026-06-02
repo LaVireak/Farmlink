@@ -8,6 +8,7 @@ import {
   Request,
   UseGuards,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { CreateFarmerOnboardingDto } from './dto/create-farmer.dto';
 import { UpdateFarmerProfileDto } from './dto/update-farmer.dto';
@@ -69,6 +70,34 @@ export class FarmersController {
   }
 
   // ─── Orders ───────────────────────────────────────────────────────────────
+
+  @Get('orders')
+  getFarmerOrders(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('status') status?: string,
+  ) {
+    return this.farmersService.getFarmerOrders(req.user.id, page, limit, status);
+  }
+
+  @Get('orders/stats')
+  getFarmerOrdersStats(@Request() req) {
+    return this.farmersService.getFarmerOrdersStats(req.user.id);
+  }
+
+  @Patch('orders/:id/status')
+  updateFarmerOrderStatus(
+    @Param('id') orderId: string,
+    @Body() body: { status: string },
+    @Request() req,
+  ) {
+    return this.farmersService.updateFarmerOrderStatus(
+      orderId,
+      body.status,
+      req.user.id,
+    );
+  }
 
   @Get('orders/inbound')
   getInboundOrders(@Request() req) {
