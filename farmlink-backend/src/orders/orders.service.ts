@@ -143,13 +143,25 @@ export class OrdersService {
 
     const items: OrderItem[] = [];
     for (const item of createOrderDto.items) {
+      const prod = await this.productsRepository.findOne({ where: { id: item.productId } });
+      if (!prod) {
+        throw new NotFoundException(`Product with ID ${item.productId} not found`);
+      }
+
+      if (prod.stockQuantity < item.quantity) {
+        throw new BadRequestException(`Insufficient stock for product ${prod.nameEn}. Available: ${prod.stockQuantity}`);
+      }
+
+      // Deduct stock and increase totalSold
+      prod.stockQuantity -= item.quantity;
+      prod.totalSold = (Number(prod.totalSold) || 0) + item.quantity;
+      await this.productsRepository.save(prod);
+
       let farmerId = item.farmerId;
       if (!farmerId || farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
-        const prod = await this.productsRepository.findOne({ where: { id: item.productId } });
-        if (prod) {
-          farmerId = prod.farmerId;
-        }
+        farmerId = prod.farmerId;
       }
+
       items.push(
         this.orderItemsRepository.create({
           orderId: savedOrder.id,
@@ -195,7 +207,10 @@ export class OrdersService {
    * Cancel order
    */
   async cancelOrder(orderId: string, reason?: string): Promise<OrderResponseDto> {
-    const order = await this.ordersRepository.findOne({ where: { id: orderId } });
+    const order = await this.ordersRepository.findOne({ 
+      where: { id: orderId },
+      relations: ['items', 'items.product']
+    });
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
@@ -203,6 +218,17 @@ export class OrdersService {
 
     if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
       throw new BadRequestException(`Cannot cancel order with status ${order.status}`);
+    }
+
+    // Restore stock and adjust totalSold for each item
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        if (item.product) {
+          item.product.stockQuantity += item.quantity;
+          item.product.totalSold = Math.max(0, (Number(item.product.totalSold) || 0) - item.quantity);
+          await this.productsRepository.save(item.product);
+        }
+      }
     }
 
     order.status = OrderStatus.CANCELLED;

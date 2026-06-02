@@ -52,12 +52,27 @@ export const useCart = () => {
       product.images?.[0]?.url ||
       ''
 
+    const stockAvailable = product.stockQuantity !== undefined 
+      ? Number(product.stockQuantity) 
+      : (product.stock !== undefined ? Number(product.stock) : 9999)
+
     if (existingItem) {
+      if (existingItem.quantity + qty > stockAvailable) {
+        qty = stockAvailable - existingItem.quantity
+      }
+      if (qty <= 0) return
+
       existingItem.quantity += qty
+      existingItem.stock = stockAvailable
       if (!existingItem.image && resolvedImage) {
         existingItem.image = resolvedImage
       }
     } else {
+      if (qty > stockAvailable) {
+        qty = stockAvailable
+      }
+      if (qty <= 0) return
+
       cart.value.push({
         id: product.id,
         name: product.name,
@@ -66,7 +81,8 @@ export const useCart = () => {
         image: resolvedImage,
         price: product.price,
         quantity: qty,
-        farmerId: product.farmerId || product.farmer?.id
+        farmerId: product.farmerId || product.farmer?.id,
+        stock: stockAvailable
       })
     }
 
@@ -82,7 +98,12 @@ export const useCart = () => {
 
   function increase(id: number | string) {
     const item = cart.value.find(i => i.id === id)
-    if (item) item.quantity++
+    if (item) {
+      const maxStock = item.stock !== undefined ? Number(item.stock) : 9999
+      if (item.quantity < maxStock) {
+        item.quantity++
+      }
+    }
   }
 
   function decrease(id: number | string) {
