@@ -123,9 +123,11 @@ export class FarmersService {
     const profile = await this.farmerProfiles.findOne({
       where: { userId: farmerId },
     });
+    if (!profile) throw new NotFoundException('Farmer profile not found');
+    const profileId = profile.id;
 
     const activeListings = await this.products.count({
-      where: { farmerId, status: ProductStatus.ACTIVE },
+      where: { farmerId: profileId, status: ProductStatus.ACTIVE },
     });
 
     const in3Days = new Date();
@@ -133,7 +135,7 @@ export class FarmersService {
 
     const endingSoonCount = await this.products.count({
       where: {
-        farmerId,
+        farmerId: profileId,
         status: ProductStatus.ACTIVE,
         seasonEnd: LessThanOrEqual(in3Days),
       },
@@ -151,7 +153,7 @@ export class FarmersService {
       .createQueryBuilder('order')
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
-      .where('product.farmerId = :farmerId', { farmerId })
+      .where('product.farmerId = :profileId', { profileId })
       .andWhere('order.createdAt >= :start', { start: startOfThisWeek })
       .getCount();
 
@@ -159,7 +161,7 @@ export class FarmersService {
       .createQueryBuilder('order')
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
-      .where('product.farmerId = :farmerId', { farmerId })
+      .where('product.farmerId = :profileId', { profileId })
       .andWhere('order.createdAt >= :start', { start: startOfLastWeek })
       .andWhere('order.createdAt < :end', { end: startOfThisWeek })
       .getCount();
@@ -191,13 +193,17 @@ export class FarmersService {
   // ─── Recent Transactions ──────────────────────────────────────────────────
 
   async getRecentTransactions(farmerId: string) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) return { data: [] };
+    const profileId = profile.id;
+
     // Step 1: get distinct order IDs for this farmer using standard SelectQueryBuilder selection
     const orderIdRows = await this.orders
       .createQueryBuilder('order')
       .select('order.id')
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
-      .where('product.farmerId = :farmerId', { farmerId })
+      .where('product.farmerId = :profileId', { profileId })
       .groupBy('order.id')
       .orderBy('order.createdAt', 'DESC')
       .limit(10)
@@ -218,7 +224,7 @@ export class FarmersService {
 
     const data = recentOrders.map((order) => {
       const farmerItems = order.items?.filter(
-        (item) => item.product?.farmerId === farmerId,
+        (item) => item.product?.farmerId === profileId,
       );
       const farmerTotal =
         farmerItems?.reduce(
@@ -284,13 +290,17 @@ export class FarmersService {
   // ─── Inbound Orders ───────────────────────────────────────────────────────
 
   async getInboundOrders(farmerId: string) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) return { data: [] };
+    const profileId = profile.id;
+
     // Step 1: get distinct pending order IDs for this farmer using standard SelectQueryBuilder selection
     const orderIdRows = await this.orders
       .createQueryBuilder('order')
       .select('order.id')
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
-      .where('product.farmerId = :farmerId', { farmerId })
+      .where('product.farmerId = :profileId', { profileId })
       .andWhere('order.status = :status', { status: OrderStatus.PENDING })
       .groupBy('order.id')
       .orderBy('order.createdAt', 'DESC')
@@ -311,7 +321,7 @@ export class FarmersService {
 
     const data = pendingOrders.map((order) => {
       const farmerItems = order.items?.filter(
-        (item) => item.product?.farmerId === farmerId,
+        (item) => item.product?.farmerId === profileId,
       );
       return {
         id: order.id,
@@ -328,18 +338,22 @@ export class FarmersService {
   // ─── Yields Matrix ────────────────────────────────────────────────────────
 
   async getYieldsMatrix(farmerId: string) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) return { data: [] };
+    const profileId = profile.id;
+
     const farmerOrders = await this.orders
       .createQueryBuilder('order')
       .innerJoinAndSelect('order.items', 'item')
       .innerJoinAndSelect('item.product', 'product')
-      .where('product.farmerId = :farmerId', { farmerId })
+      .where('product.farmerId = :profileId', { profileId })
       .andWhere('order.status = :status', { status: OrderStatus.COMPLETED })
       .getMany();
 
     const yieldMap: Record<string, number> = {};
     farmerOrders.forEach((order) => {
       order.items?.forEach((item) => {
-        if (item.product?.farmerId !== farmerId) return;
+        if (item.product?.farmerId !== profileId) return;
         const name = item.product?.nameEn ?? 'Unknown';
         yieldMap[name] =
           (yieldMap[name] ?? 0) + item.quantity * Number(item.unitPrice);
@@ -368,12 +382,16 @@ export class FarmersService {
     action: 'accept' | 'reject',
     farmerId: string,
   ) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) throw new NotFoundException('Farmer profile not found');
+    const profileId = profile.id;
+
     const order = await this.orders
       .createQueryBuilder('order')
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
       .where('order.id = :orderId', { orderId })
-      .andWhere('product.farmerId = :farmerId', { farmerId })
+      .andWhere('product.farmerId = :profileId', { profileId })
       .andWhere('order.status = :status', { status: OrderStatus.PENDING })
       .getOne();
 
@@ -407,8 +425,12 @@ export class FarmersService {
   // ─── Restock Manifest ─────────────────────────────────────────────────────
 
   async triggerRestockManifest(farmerId: string) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) throw new NotFoundException('Farmer profile not found');
+    const profileId = profile.id;
+
     const activeProducts = await this.products.find({
-      where: { farmerId, status: ProductStatus.ACTIVE },
+      where: { farmerId: profileId, status: ProductStatus.ACTIVE },
     });
 
     const lowStock = activeProducts.filter((p) => p.stockQuantity < 10);
@@ -436,6 +458,195 @@ export class FarmersService {
     };
   }
 
+  async getFarmerOrders(
+    farmerId: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+  ) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) return { data: [], total: 0, page, limit, totalPages: 0 };
+    const profileId = profile.id;
+
+    const skip = (page - 1) * limit;
+
+    const query = this.orders
+      .createQueryBuilder('order')
+      .select('order.id')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.product', 'product')
+      .where('product.farmerId = :profileId', { profileId });
+
+    if (status && status !== 'All') {
+      query.andWhere('order.status = :status', { status: status.toLowerCase() });
+    }
+
+    const orderIdRows = await query
+      .groupBy('order.id')
+      .orderBy('order.createdAt', 'DESC')
+      .getRawMany();
+
+    const orderIds = orderIdRows.map((r) => r.order_id);
+    const total = orderIds.length;
+    if (total === 0) return { data: [], total, page, limit, totalPages: 0 };
+
+    const paginatedIds = orderIds.slice(skip, skip + limit);
+
+    const orders = await this.orders
+      .createQueryBuilder('order')
+      .innerJoinAndSelect('order.items', 'item')
+      .innerJoinAndSelect('item.product', 'product')
+      .innerJoinAndSelect('order.consumer', 'consumer')
+      .where('order.id IN (:...paginatedIds)', { paginatedIds })
+      .orderBy('order.createdAt', 'DESC')
+      .getMany();
+
+    const data = orders.map((order) => {
+      const farmerItems = order.items?.filter(
+        (item) => item.product?.farmerId === profileId,
+      );
+      const subtotal = farmerItems?.reduce((sum, item) => sum + item.quantity * Number(item.unitPrice), 0) ?? 0;
+
+      return {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        date: order.createdAt,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        totalAmount: subtotal,
+        consumer: order.consumer ? {
+          firstName: (order.consumer as any).firstName,
+          lastName: (order.consumer as any).lastName,
+          email: order.consumer.email,
+        } : null,
+        items: farmerItems?.map(item => ({
+          nameEn: item.product?.nameEn,
+          quantity: item.quantity,
+          unit: item.product?.unit,
+          unitPrice: Number(item.unitPrice),
+        })) || [],
+      };
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getFarmerOrdersStats(farmerId: string) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) return { totalRevenue: 0, pendingActions: 0, avgFulfillmentDays: 0, activeOrders: 0 };
+    const profileId = profile.id;
+
+    const completedOrders = await this.orders
+      .createQueryBuilder('order')
+      .innerJoinAndSelect('order.items', 'item')
+      .innerJoinAndSelect('item.product', 'product')
+      .where('product.farmerId = :profileId', { profileId })
+      .andWhere('order.status = :status', { status: OrderStatus.COMPLETED })
+      .getMany();
+
+    let totalRevenue = 0;
+    completedOrders.forEach((o) => {
+      o.items?.forEach((item) => {
+        if (item.product?.farmerId === profileId) {
+          totalRevenue += item.quantity * Number(item.unitPrice);
+        }
+      });
+    });
+
+    const pendingCount = await this.orders
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.product', 'product')
+      .where('product.farmerId = :profileId', { profileId })
+      .andWhere('order.status = :status', { status: OrderStatus.PENDING })
+      .groupBy('order.id')
+      .getRawMany();
+    const pendingActions = pendingCount.length;
+
+    const activeCount = await this.orders
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.product', 'product')
+      .where('product.farmerId = :profileId', { profileId })
+      .andWhere('order.status IN (:...statuses)', { statuses: [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.IN_DELIVERY] })
+      .groupBy('order.id')
+      .getRawMany();
+    const activeOrders = activeCount.length;
+
+    let avgFulfillmentDays = 1.2;
+    const fulfilledOrders = completedOrders.filter(o => o.confirmedAt && o.deliveredAt);
+    if (fulfilledOrders.length > 0) {
+      const totalDiffMs = fulfilledOrders.reduce((sum, o) => {
+        const diff = new Date(o.deliveredAt!).getTime() - new Date(o.confirmedAt!).getTime();
+        return sum + diff;
+      }, 0);
+      const avgMs = totalDiffMs / fulfilledOrders.length;
+      avgFulfillmentDays = Number((avgMs / (1000 * 60 * 60 * 24)).toFixed(1));
+    }
+
+    return {
+      totalRevenue,
+      pendingActions,
+      avgFulfillmentDays,
+      activeOrders,
+    };
+  }
+
+  async updateFarmerOrderStatus(
+    orderId: string,
+    status: string,
+    farmerId: string,
+  ) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    if (!profile) throw new NotFoundException('Farmer profile not found');
+    const profileId = profile.id;
+
+    const order = await this.orders
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .innerJoin('item.product', 'product')
+      .where('order.id = :orderId', { orderId })
+      .andWhere('product.farmerId = :profileId', { profileId })
+      .getOne();
+
+    if (!order) {
+      throw new NotFoundException('Order not found or not associated with this farmer');
+    }
+
+    // Map common string values to order status enum values if needed
+    let lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'processing' || lowerStatus === 'preparing') {
+      lowerStatus = OrderStatus.PREPARING;
+    } else if (lowerStatus === 'delivered' || lowerStatus === 'completed') {
+      lowerStatus = OrderStatus.COMPLETED;
+    }
+
+    const validStatuses = Object.values(OrderStatus);
+    if (!validStatuses.includes(lowerStatus as any)) {
+      throw new BadRequestException(`Invalid order status: ${status}`);
+    }
+
+    order.status = lowerStatus as OrderStatus;
+
+    if (order.status === OrderStatus.CONFIRMED) {
+      order.confirmedAt = new Date();
+    } else if (order.status === OrderStatus.COMPLETED) {
+      order.deliveredAt = new Date();
+    } else if (order.status === OrderStatus.CANCELLED) {
+      order.cancelledAt = new Date();
+    }
+
+    await this.orders.save(order);
+
+    return { success: true, status: order.status };
+  }
+
   async updateProfile(userId: string, dto: UpdateFarmerProfileDto) {
     const profile = await this.farmerProfiles.findOne({ where: { userId } });
     if (!profile) throw new NotFoundException('Farmer profile not found');
@@ -452,7 +663,7 @@ export class FarmersService {
 
     if (dto.coverImageDataUrl) {
       profile.coverImageUrl = await this.saveImage(
-        { dataUrl: dto.coverImageDataUrl, name: 'cover.jpg' },
+        { dataUrl: dto.coverImageDataUrl, name: 'cover.jpg', type: 'image/jpeg' },
         'farmers',
       );
     }

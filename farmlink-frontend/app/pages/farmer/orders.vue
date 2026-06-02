@@ -1,78 +1,52 @@
 <template>
-  <div>
+  <main class="px-8 py-8 bg-[#F5F7F3] min-h-screen font-sans antialiased">
+    <FarmerHeader title="Order Management" />
 
-      <!-- Top bar -->
-      <header class="topbar">
-        <div class="search-wrap">
-          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search orders, customers, or IDs..." class="search-input" />
-        </div>
-        <div class="topbar-right">
-          <button class="icon-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </button>
-          <button class="icon-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <div class="user-badge">
-            <div class="user-info">
-              <span class="user-name">Julian Thorne</span>
-              <span class="user-plan">PREMIUM PLAN</span>
-            </div>
-            <div class="user-avatar">JT</div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Page content -->
-      <main class="px-8 py-8">
-
-        <!-- Page header -->
-        <div class="flex items-start justify-between mb-8">
-          <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Order Management</h1>
-            <p class="text-gray-500 text-sm mt-1.5 max-w-lg">
-              Curate and oversee your farm-to-table transactions. Track shipment status and buyer interactions with editorial precision.
-            </p>
-          </div>
-          <div class="flex gap-3 items-center">
-            <button class="px-4 py-2.5 bg-amber-100 text-amber-800 font-semibold text-sm rounded-lg hover:bg-amber-200 transition flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export Report
-            </button>
-            <button class="px-4 py-2.5 bg-green-800 text-white font-semibold text-sm rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              Log Manual Order
-            </button>
-          </div>
-        </div>
+    <!-- Page description & actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-gray-200/50 pb-5">
+      <div>
+        <p class="text-gray-500 text-sm mt-1 max-w-[600px]">
+          Curate and oversee your farm-to-table transactions. Track shipment status and buyer interactions with editorial precision.
+        </p>
+      </div>
+      <div class="flex gap-3 items-center">
+        <button class="px-4 py-2.5 bg-amber-100/60 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl transition flex items-center gap-2 border border-amber-200/30">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Report
+        </button>
+        <button class="px-4 py-2.5 bg-[#2d6a4f] text-[#F5F7F3] font-bold text-xs rounded-xl hover:bg-[#1b4332] transition flex items-center gap-2 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Log Manual Order
+        </button>
+      </div>
+    </div>
 
         <!-- Stats cards -->
         <div class="grid grid-cols-4 gap-4 mb-8">
           <div class="p-4 bg-white rounded-lg border border-gray-100">
-            <div class="text-xs font-semibold text-gray-500 uppercase">Total Revenue (Monthly)</div>
-            <div class="text-2xl font-bold text-gray-900 mt-2">$14,280.00</div>
-            <div class="text-xs text-gray-500 mt-2">+12.5% from 142 transactions</div>
+            <div class="text-xs font-semibold text-gray-500 uppercase">Total Revenue</div>
+            <div class="text-2xl font-bold text-gray-900 mt-2">${{ stats.totalRevenue.toFixed(2) }}</div>
+            <div class="text-xs text-gray-500 mt-2">From completed transactions</div>
           </div>
 
           <div class="p-4 bg-white rounded-lg border border-gray-100">
             <div class="text-xs font-semibold text-gray-500 uppercase">Pending Actions</div>
-            <div class="text-2xl font-bold text-orange-600 mt-2">08</div>
+            <div class="text-2xl font-bold text-orange-600 mt-2">{{ stats.pendingActions.toString().padStart(2, '0') }}</div>
             <div class="text-xs text-gray-500 mt-2">Orders awaiting confirmation</div>
           </div>
 
           <div class="p-4 bg-white rounded-lg border border-gray-100">
             <div class="text-xs font-semibold text-gray-500 uppercase">Avg. Fulfillment</div>
-            <div class="text-2xl font-bold text-gray-900 mt-2">1.2 <span class="text-sm">days</span></div>
+            <div class="text-2xl font-bold text-gray-900 mt-2">{{ stats.avgFulfillmentDays }} <span class="text-sm">days</span></div>
             <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-              <div class="bg-green-600 h-1.5 rounded-full" style="width: 30%"></div>
+              <div class="bg-green-600 h-1.5 rounded-full" :style="{ width: Math.min(100, (stats.avgFulfillmentDays / 3) * 100) + '%' }"></div>
             </div>
           </div>
 
           <div class="p-4 bg-white rounded-lg border border-gray-100">
             <div class="text-xs font-semibold text-gray-500 uppercase">Active Orders</div>
-            <div class="text-2xl font-bold text-green-700 mt-2">142</div>
-            <div class="text-xs text-gray-500 mt-2">This month</div>
+            <div class="text-2xl font-bold text-green-700 mt-2">{{ stats.activeOrders }}</div>
+            <div class="text-xs text-gray-500 mt-2">Orders currently in progress</div>
           </div>
         </div>
 
@@ -94,7 +68,7 @@
                     :key="tab"
                     class="status-tab"
                     :class="{ active: activeTab === tab }"
-                    @click="activeTab = tab"
+                    @click="changeTab(tab)"
                   >{{ tab }}</button>
                 </div>
               </div>
@@ -123,9 +97,9 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="order in filteredOrders" :key="order.id" class="order-row">
+              <tr v-for="order in orders" :key="order.id" class="order-row">
                 <td>
-                  <div class="order-id">{{ order.id }}</div>
+                  <div class="order-id">#{{ order.orderNumber ? order.orderNumber.slice(-8).toUpperCase() : order.id.slice(0, 6).toUpperCase() }}</div>
                   <div class="order-date">{{ order.date }}</div>
                 </td>
                 <td>
@@ -151,36 +125,44 @@
                 <td>
                   <div class="action-cell">
                     <template v-if="order.status === 'CANCELLED'">
-                      <button class="btn-action">RE-OPEN</button>
-                      <button class="btn-icon-danger">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                      </button>
+                      <button @click="updateStatus(order.id, 'PENDING')" class="btn-action">RE-OPEN</button>
                     </template>
                     <template v-else>
-                      <button class="btn-action btn-action--status">
-                        {{ order.status }} <span class="chevron">▾</span>
-                      </button>
-                      <button class="btn-dots">⋮</button>
+                      <select 
+                        :value="order.status" 
+                        @change="updateStatus(order.id, $event.target.value)"
+                        class="btn-action btn-action--status cursor-pointer border border-[#dde5db] px-2 py-1 rounded"
+                      >
+                        <option value="PENDING">PENDING</option>
+                        <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="PREPARING">PREPARING</option>
+                        <option value="IN_DELIVERY">IN_DELIVERY</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
                     </template>
                   </div>
                 </td>
+              </tr>
+              <tr v-if="orders.length === 0">
+                <td colspan="6" class="text-center py-8 text-gray-400">No orders found.</td>
               </tr>
             </tbody>
           </table>
 
           <!-- Pagination -->
-          <div class="pagination-bar">
-            <span class="pagination-info">Showing <strong>1 – 5</strong> of 142 total orders</span>
+          <div class="pagination-bar" v-if="totalOrders > 0">
+            <span class="pagination-info">Showing <strong>{{ (currentPage - 1) * limit + 1 }} – {{ Math.min(currentPage * limit, totalOrders) }}</strong> of {{ totalOrders }} total orders</span>
             <div class="pagination-controls">
-              <button class="page-btn page-btn--arrow" :disabled="currentPage === 1" @click="currentPage--">‹</button>
+              <button class="page-btn page-btn--arrow" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">‹</button>
               <button
                 v-for="p in visiblePages"
                 :key="p"
                 class="page-btn"
                 :class="{ active: currentPage === p, ellipsis: p === '...' }"
-                @click="p !== '...' && (currentPage = p)"
+                @click="p !== '...' && changePage(p)"
               >{{ p }}</button>
-              <button class="page-btn page-btn--arrow" @click="currentPage++">›</button>
+              <button class="page-btn page-btn--arrow" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">›</button>
             </div>
           </div>
         </div>
@@ -195,8 +177,7 @@
           <button class="btn-banner">VIEW DEMAND TRENDS</button>
         </div>
 
-      </main>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -205,81 +186,119 @@ definePageMeta({
   layout: 'farmer'
 })
 
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '../../composables/useAuth'
+import { orderService } from '../../services/order.service'
+
+const { user, ensureHydrated } = useAuth()
 
 const activeTab = ref('All')
 const currentPage = ref(1)
-const statusTabs = ['All', 'Pending', 'Processing']
+const limit = ref(5)
+const totalOrders = ref(0)
+const totalPages = ref(1)
+const loading = ref(false)
 
-const orders = ref([
-  {
-    id: '#ORD-1008',
-    date: 'Oct 24, 2023 · 10:45 AM',
-    buyer: 'Eleanor Abbott',
-    buyerType: 'Local Resident · Tier 1',
-    initials: 'EA',
-    avatarColor: '#c8e6c9',
-    products: 'Heirloom Carrots, Organic Kale',
-    productMeta: '2 items · 15.0 kg total',
-    amount: '$142.50',
-    status: 'PENDING',
-  },
-  {
-    id: '#ORD-1007',
-    date: 'Oct 23, 2023 · 04:12 PM',
-    buyer: 'Marcus Chen',
-    buyerType: 'The Green Bistro · Restaurant',
-    initials: 'MC',
-    avatarColor: '#bbdefb',
-    products: 'Artisanal Honey (Bulk), Lavender',
-    productMeta: '5 items · 12.5 kg total',
-    amount: '$589.00',
-    status: 'CONFIRMED',
-  },
-  {
-    id: '#ORD-1006',
-    date: 'Oct 23, 2023 · 01:55 PM',
-    buyer: 'Sarah Bennett',
-    buyerType: 'Independent Buyer',
-    initials: 'SB',
-    avatarColor: '#d7ccc8',
-    products: 'Sun-Dried Tomatoes (Jars)',
-    productMeta: '12 items · 6.0 kg total',
-    amount: '$96.40',
-    status: 'PROCESSING',
-  },
-  {
-    id: '#ORD-1005',
-    date: 'Oct 22, 2023 · 09:30 AM',
-    buyer: 'Robert Miller',
-    buyerType: 'Wholesale Partner',
-    initials: 'RM',
-    avatarColor: '#ffe0b2',
-    products: 'Organic Braeburn Apples',
-    productMeta: '1 item · 100.0 kg total',
-    amount: '$320.00',
-    status: 'DELIVERED',
-  },
-  {
-    id: '#ORD-1004',
-    date: 'Oct 21, 2023 · 11:20 AM',
-    buyer: 'Jane Doe',
-    buyerType: 'Local Resident',
-    initials: 'JD',
-    avatarColor: '#f8bbd0',
-    products: 'Assorted Root Veggie Box',
-    productMeta: '1 item · 8.0 kg total',
-    amount: '$45.00',
-    status: 'CANCELLED',
-  },
-])
+const statusTabs = ['All', 'Pending', 'Preparing', 'Confirmed', 'Completed', 'Cancelled']
 
-const filteredOrders = computed(() => {
-  if (activeTab.value === 'All') return orders.value
-  return orders.value.filter(o => o.status === activeTab.value.toUpperCase())
+const stats = ref({
+  totalRevenue: 0,
+  pendingActions: 0,
+  avgFulfillmentDays: 0,
+  activeOrders: 0,
 })
 
-const visiblePages = computed(() => [1, 2, 3, '...', 28])
+const orders = ref([])
+
+const fetchOrdersData = async () => {
+  loading.value = true
+  try {
+    const res = await orderService.getFarmerOrders(currentPage.value, limit.value, activeTab.value)
+    orders.value = res.data.map(o => {
+      const initials = o.consumer 
+        ? `${o.consumer.firstName?.[0] || ''}${o.consumer.lastName?.[0] || ''}`.toUpperCase() || 'U'
+        : 'U'
+      
+      const colors = ['#c8e6c9', '#bbdefb', '#d7ccc8', '#ffe0b2', '#f8bbd0']
+      const avatarColor = colors[Math.abs(o.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length]
+      
+      const formattedDate = new Date(o.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }) + ' · ' + new Date(o.date).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
+      return {
+        id: o.id,
+        orderNumber: o.orderNumber,
+        date: formattedDate,
+        buyer: o.consumer ? `${o.consumer.firstName} ${o.consumer.lastName}` : 'Unknown Buyer',
+        buyerType: o.consumer ? o.consumer.email : 'Local Resident',
+        initials,
+        avatarColor,
+        products: o.items.map(i => i.nameEn).join(', '),
+        productMeta: `${o.items.length} items · ${o.items.reduce((sum, i) => sum + i.quantity, 0)} units total`,
+        amount: `$${o.totalAmount.toFixed(2)}`,
+        status: o.status.toUpperCase(),
+      }
+    })
+    totalOrders.value = res.total
+    totalPages.value = res.totalPages
+  } catch (error) {
+    console.error('Failed to fetch farmer orders:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchStatsData = async () => {
+  try {
+    const res = await orderService.getFarmerOrdersStats()
+    stats.value = res
+  } catch (error) {
+    console.error('Failed to fetch farmer order stats:', error)
+  }
+}
+
+const updateStatus = async (orderId, newStatus) => {
+  try {
+    await orderService.updateFarmerOrderStatus(orderId, newStatus)
+    await fetchOrdersData()
+    await fetchStatsData()
+  } catch (error) {
+    console.error('Failed to update status:', error)
+  }
+}
+
+const changeTab = (tab) => {
+  activeTab.value = tab
+  currentPage.value = 1
+  fetchOrdersData()
+}
+
+const changePage = (page) => {
+  currentPage.value = page
+  fetchOrdersData()
+}
+
+const visiblePages = computed(() => {
+  const pages = []
+  for (let i = 1; i <= totalPages.value; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+
+onMounted(async () => {
+  await ensureHydrated()
+  await Promise.all([
+    fetchOrdersData(),
+    fetchStatsData()
+  ])
+})
 </script>
 
 <style scoped>

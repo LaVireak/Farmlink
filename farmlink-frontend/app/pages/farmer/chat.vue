@@ -1,6 +1,8 @@
 <template>
-  <main class="chat-main">
-    <FarmerHeader title="Customer Chat" />
+  <main class="chat-main bg-[#F5F7F3]">
+    <div class="px-6 pt-6 pb-5 border-b border-gray-200/50 mb-6">
+      <FarmerHeader title="Customer Chat" />
+    </div>
 
     <div class="chat-container">
       <!-- Conversations List -->
