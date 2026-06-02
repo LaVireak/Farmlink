@@ -94,7 +94,7 @@
                   <button @click="toggleFavorite(prod)" class="focus:outline-none" aria-label="Toggle favorite">
                     <Heart :class="prodFavorited(prod) ? 'w-6 h-6 text-red-500' : 'w-6 h-6 text-gray-600'" />
                   </button>
-                <button @click="addToCart(prod)" :disabled="prod.stock <= 0" class="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50">Add to cart</button>
+                <button @click="addToCart(prod, $event)" :disabled="prod.stock <= 0" class="px-3 py-1 bg-green-600 text-white rounded disabled:opacity-50">Add to cart</button>
               </div>
             </div>
             <div v-if="!(farm?.products && farm.products.length)" class="text-gray-500">No products listed.</div>
@@ -178,26 +178,16 @@ function chatWithFarmer() {
 /**
  * CART + FAVORITES
  */
-const cart = ref([])
+import { useCart } from '~/composables/useCart'
+const { addToCart: addToCartComposable } = useCart()
+
 const favorites = ref(new Set())
 
-function addToCart(prod) {
+function addToCart(prod, event) {
   if (!prod || prod.stock <= 0) return
 
   prod.stock -= 1
-
-  const existing = cart.value.find(i => i.id === prod.id)
-
-  if (existing) {
-    existing.qty += 1
-  } else {
-    cart.value.push({
-      id: prod.id,
-      name: prod.name,
-      price: prod.price,
-      qty: 1
-    })
-  }
+  addToCartComposable(prod, 1, event)
 }
 
 function toggleFavorite(prod) {

@@ -2,6 +2,7 @@ import type { CartItem } from '@/types/card.type'
 
 export const useCart = () => {
   const cart = useState<CartItem[]>('cart', () => [])
+  const triggerAnimation = useState<{ id: number; image: string; x: number; y: number } | null>('cart-animation-trigger', () => null)
 
   const recommendations = [
     { id: 1, name: 'Wildflower Honey', farm: 'Busy Bee Apiaries', price: 18 },
@@ -42,7 +43,7 @@ export const useCart = () => {
   )
 
   // Actions
-  function addToCart(product: any, qty = 1) {
+  function addToCart(product: any, qty = 1, event?: MouseEvent) {
     const existingItem = cart.value.find(i => i.id === product.id)
     const resolvedImage =
       product.image ||
@@ -51,12 +52,27 @@ export const useCart = () => {
       product.images?.[0]?.url ||
       ''
 
+    const stockAvailable = product.stockQuantity !== undefined 
+      ? Number(product.stockQuantity) 
+      : (product.stock !== undefined ? Number(product.stock) : 9999)
+
     if (existingItem) {
+      if (existingItem.quantity + qty > stockAvailable) {
+        qty = stockAvailable - existingItem.quantity
+      }
+      if (qty <= 0) return
+
       existingItem.quantity += qty
+      existingItem.stock = stockAvailable
       if (!existingItem.image && resolvedImage) {
         existingItem.image = resolvedImage
       }
     } else {
+      if (qty > stockAvailable) {
+        qty = stockAvailable
+      }
+      if (qty <= 0) return
+
       cart.value.push({
         id: product.id,
         name: product.name,
@@ -65,14 +81,29 @@ export const useCart = () => {
         image: resolvedImage,
         price: product.price,
         quantity: qty,
-        farmerId: product.farmerId || product.farmer?.id
+        farmerId: product.farmerId || product.farmer?.id,
+        stock: stockAvailable
       })
+    }
+
+    if (event) {
+      triggerAnimation.value = {
+        id: Date.now() + Math.random(),
+        image: resolvedImage || '/assets/images/placeholder.png',
+        x: event.clientX,
+        y: event.clientY
+      }
     }
   }
 
   function increase(id: number | string) {
     const item = cart.value.find(i => i.id === id)
-    if (item) item.quantity++
+    if (item) {
+      const maxStock = item.stock !== undefined ? Number(item.stock) : 9999
+      if (item.quantity < maxStock) {
+        item.quantity++
+      }
+    }
   }
 
   function decrease(id: number | string) {
@@ -94,6 +125,7 @@ export const useCart = () => {
     addToCart,
     increase,
     decrease,
-    removeItem
+    removeItem,
+    triggerAnimation
   }
 }

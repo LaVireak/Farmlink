@@ -120,13 +120,22 @@
             </NuxtLink>
           </div>
 
+          <!-- Stock Status -->
+          <div class="mb-4 mt-2">
+            <span :class="product.stockQuantity > 0 ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-red-100 text-red-700'" class="px-3 py-1.5 rounded-lg text-sm font-semibold inline-block">
+              {{ product.stockQuantity > 0 ? `${product.stockQuantity} units available` : 'Out of Stock' }}
+            </span>
+          </div>
+
           <!-- Quantity -->
-          <div class="action-block">
+          <div class="action-block" v-if="product.stockQuantity > 0">
 
             <div class="quantity-selector">
               <button
                 @click="decrease"
                 class="qty-btn"
+                :disabled="quantity <= 1"
+                :class="{ 'opacity-30 cursor-not-allowed': quantity <= 1 }"
               >
                 −
               </button>
@@ -138,16 +147,27 @@
               <button
                 @click="increase"
                 class="qty-btn"
+                :disabled="quantity >= product.stockQuantity"
+                :class="{ 'opacity-30 cursor-not-allowed': quantity >= product.stockQuantity }"
               >
                 +
               </button>
             </div>
 
             <button
-              @click="addToCart"
+              @click="addToCart($event)"
               class="add-to-cart-btn"
             >
               Add to Cart
+            </button>
+          </div>
+
+          <div v-else class="action-block">
+            <button
+              disabled
+              class="add-to-cart-btn opacity-50 cursor-not-allowed"
+            >
+              Out of Stock
             </button>
           </div>
 
@@ -229,12 +249,22 @@ const fetchProduct = async () => {
       `${config.public.apiUrl}/products/${route.params.id}`
     )
 
-    product.value = res
+    const mappedRes = {
+      ...res,
+      stockQuantity: res.stock !== undefined ? Number(res.stock) : Number(res.stockQuantity || 0)
+    }
+    product.value = mappedRes
 
     activeImage.value =
-      res.gallery?.[0] ||
-      res.image ||
+      mappedRes.gallery?.[0] ||
+      mappedRes.image ||
       'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
+
+    if (mappedRes.stockQuantity <= 0) {
+      quantity.value = 0
+    } else {
+      quantity.value = 1
+    }
 
   } catch (err) {
     console.error('Failed to fetch product:', err)
@@ -284,7 +314,10 @@ const badgeClass = computed(() => {
 
 // ================= QUANTITY =================
 const increase = () => {
-  quantity.value++
+  const maxStock = product.value?.stockQuantity ?? 9999
+  if (quantity.value < maxStock) {
+    quantity.value++
+  }
 }
 
 const decrease = () => {
@@ -297,9 +330,9 @@ import { useCart } from '~/composables/useCart'
 const { addToCart: addToCartComposable } = useCart()
 
 // ================= CART =================
-const addToCart = () => {
+const addToCart = (event) => {
   if (product.value) {
-    addToCartComposable(product.value, quantity.value)
+    addToCartComposable(product.value, quantity.value, event)
     console.log(
       'Added to cart:',
       product.value,
