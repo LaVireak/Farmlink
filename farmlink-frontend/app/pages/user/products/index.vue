@@ -344,8 +344,8 @@ const sortedProducts = computed(() => {
 // ================= CART =================
 const { addToCart } = useCart()
 
-const handleAddToCart = (product) => {
-  addToCart(product)
+const handleAddToCart = (product, event) => {
+  addToCart(product, 1, event)
 }
 </script>
 

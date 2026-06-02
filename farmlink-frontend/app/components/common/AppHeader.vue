@@ -220,11 +220,30 @@
           <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center">
             <Heart class="w-6 h-6 text-on-surface" />
           </NuxtLink>
-          <button aria-label="Shopping Cart" class="flex items-center">
-            <NuxtLink to="/user/checkout/cart" class="flex items-center">
-              <ShoppingCart class="w-6 h-6 text-on-surface" />
+          <button aria-label="Shopping Cart" class="flex items-center" id="header-cart-icon">
+            <NuxtLink to="/user/checkout/cart" class="flex items-center relative transition-transform duration-300" :class="{ 'badge-bounce': isCartBouncing }">
+              <ShoppingCart class="w-6 h-6 text-black transition-colors duration-300" :class="{ 'text-green-600': isCartBouncing }" />
+              <span v-if="totalItems > 0" class="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border border-white transition-transform duration-300" :class="{ 'scale-110': isCartBouncing }">
+                {{ totalItems }}
+              </span>
             </NuxtLink>
           </button>
+
+          <!-- Teleported Container for Fly-to-Cart Particles -->
+          <teleport to="body">
+            <div
+              v-for="p in flyingParticles"
+              :key="p.id"
+              class="flying-product-particle"
+              :style="{
+                '--start-x': `${p.startX}px`,
+                '--start-y': `${p.startY}px`,
+                '--end-x': `${p.endX}px`,
+                '--end-y': `${p.endY}px`,
+                backgroundImage: `url(${p.image})`
+              }"
+            ></div>
+          </teleport>
 
           <!-- Notifications Menu -->
           <div id="notifications-menu" class="relative inline-block">
@@ -570,11 +589,47 @@ const goToDashboard = () => {
   return router.push('/')
 }
 
+import { useCart } from '~/composables/useCart'
+
 const handleSignOut = async () => {
   userMenuOpen.value = false
   await auth.signOut()
   router.push('/auth/signin')
 }
+
+// ── Cart Flying Animation ──────────────────────────────
+const { totalItems, triggerAnimation } = useCart()
+const flyingParticles = ref([])
+const isCartBouncing = ref(false)
+
+watch(triggerAnimation, (newVal) => {
+  if (!newVal) return
+
+  const cartIcon = document.getElementById('header-cart-icon')
+  if (!cartIcon) return
+
+  const rect = cartIcon.getBoundingClientRect()
+  const endX = rect.left + rect.width / 2
+  const endY = rect.top + rect.height / 2
+
+  flyingParticles.value.push({
+    id: newVal.id,
+    image: newVal.image,
+    startX: newVal.x,
+    startY: newVal.y,
+    endX,
+    endY
+  })
+
+  // End animation and trigger badge bounce after 800ms
+  setTimeout(() => {
+    flyingParticles.value = flyingParticles.value.filter(p => p.id !== newVal.id)
+    isCartBouncing.value = true
+    setTimeout(() => {
+      isCartBouncing.value = false
+    }, 400)
+  }, 800)
+})
 </script>
 
 <style scoped>
@@ -593,5 +648,49 @@ const handleSignOut = async () => {
   color: #9ca3af;
   font-weight: 400;
   font-style: italic;
+}
+
+/* ── Cart Animations ────────────────────────────── */
+.flying-product-particle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 3px solid #1f7a2e;
+  box-shadow: 0 8px 24px rgba(31, 122, 46, 0.3);
+  pointer-events: none;
+  z-index: 99999;
+  animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.badge-bounce {
+  animation: badgeBounce 0.4s ease-out;
+}
+
+@keyframes flyToCart {
+  0% {
+    transform: translate(calc(var(--start-x) - 24px), calc(var(--start-y) - 24px)) scale(1);
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--end-x) - 24px), calc(var(--end-y) - 24px)) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes badgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
 }
 </style>
