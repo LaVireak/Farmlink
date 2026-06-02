@@ -2,23 +2,27 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { randomUUID } from 'crypto'
-import * as fs from 'fs/promises'
-import * as path from 'path'
-import { Repository, LessThanOrEqual } from 'typeorm'
-import { UserRole } from '../common/enums/role.enum'
-import { UserStatus } from '../common/enums/user-status.enum'
-import { OrderStatus } from '../common/enums/order-status.enum'
-import { ProductStatus } from '../common/enums/product.enum'
-import { NotificationType } from '../common/enums/notification-type.enum'
-import { User } from '../users/user.entity'
-import { CreateFarmerOnboardingDto, UploadedImageDto } from './dto/create-farmer.dto'
-import { FarmerProfile } from './farmer.entity'
-import { Order } from '../orders/order.entity'
-import { Notification } from '../notifications/notification.entity'
-import { Product } from '../products/product.entity'
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'crypto';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { Repository, LessThanOrEqual } from 'typeorm';
+import { UserRole } from '../common/enums/role.enum';
+import { UserStatus } from '../common/enums/user-status.enum';
+import { OrderStatus } from '../common/enums/order-status.enum';
+import { ProductStatus } from '../common/enums/product.enum';
+import { NotificationType } from '../common/enums/notification-type.enum';
+import { User } from '../users/user.entity';
+import {
+  CreateFarmerOnboardingDto,
+  UploadedImageDto,
+} from './dto/create-farmer.dto';
+import { FarmerProfile } from './farmer.entity';
+import { Order } from '../orders/order.entity';
+import { Notification } from '../notifications/notification.entity';
+import { Product } from '../products/product.entity';
+import { UpdateFarmerProfileDto } from './dto/update-farmer.dto';
 
 @Injectable()
 export class FarmersService {
@@ -50,10 +54,10 @@ export class FarmersService {
           id: true,
           firstName: true,
           lastName: true,
-          avatarUrl: true
-        }
+          avatarUrl: true,
+        },
       },
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -73,16 +77,18 @@ export class FarmersService {
   // ─── Onboarding ───────────────────────────────────────────────────────────
 
   async submitOnboarding(dto: CreateFarmerOnboardingDto) {
-    const user = await this.users.findOne({ where: { email: dto.email } })
-    if (!user) throw new NotFoundException('Farmer account not found')
+    const user = await this.users.findOne({ where: { email: dto.email } });
+    if (!user) throw new NotFoundException('Farmer account not found');
     if (user.role !== UserRole.FARMER)
-      throw new BadRequestException('User is not a farmer')
+      throw new BadRequestException('User is not a farmer');
     if (user.status !== UserStatus.ACTIVE)
-      throw new BadRequestException('Farmer account is not verified')
+      throw new BadRequestException('Farmer account is not verified');
 
-    if (dto.phone) user.phoneNumber = dto.phone
+    if (dto.phone) user.phoneNumber = dto.phone;
 
-    let profile = await this.farmerProfiles.findOne({ where: { userId: user.id } })
+    let profile = await this.farmerProfiles.findOne({
+      where: { userId: user.id },
+    });
     if (!profile) {
       profile = this.farmerProfiles.create({
         userId: user.id,
@@ -90,36 +96,40 @@ export class FarmersService {
           dto.farmName?.trim() ||
           `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
           'Farm',
-      })
+      });
     }
 
-    if (dto.address) profile.addressDetail = dto.address
-    if (dto.tags?.length) profile.productTags = JSON.stringify(dto.tags)
-    if (dto.idPhoto) profile.idDocumentUrl = await this.saveImage(dto.idPhoto, 'farmers')
-    if (dto.farmDeed) profile.farmDeedUrl = await this.saveImage(dto.farmDeed, 'farmers')
+    if (dto.address) profile.addressDetail = dto.address;
+    if (dto.tags?.length) profile.productTags = JSON.stringify(dto.tags);
+    if (dto.idPhoto)
+      profile.idDocumentUrl = await this.saveImage(dto.idPhoto, 'farmers');
+    if (dto.farmDeed)
+      profile.farmDeedUrl = await this.saveImage(dto.farmDeed, 'farmers');
     if (dto.profilePhoto) {
-      const avatarUrl = await this.saveImage(dto.profilePhoto, 'avatars')
-      user.avatarUrl = avatarUrl
-      profile.coverImageUrl = avatarUrl
+      const avatarUrl = await this.saveImage(dto.profilePhoto, 'avatars');
+      user.avatarUrl = avatarUrl;
+      profile.coverImageUrl = avatarUrl;
     }
 
-    await this.users.save(user)
-    const savedProfile = await this.farmerProfiles.save(profile)
+    await this.users.save(user);
+    const savedProfile = await this.farmerProfiles.save(profile);
 
-    return { message: 'Farmer onboarding saved', profile: savedProfile }
+    return { message: 'Farmer onboarding saved', profile: savedProfile };
   }
 
   // ─── Metrics Summary ──────────────────────────────────────────────────────
 
   async getMetricsSummary(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } })
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
 
     const activeListings = await this.products.count({
       where: { farmerId, status: ProductStatus.ACTIVE },
-    })
+    });
 
-    const in3Days = new Date()
-    in3Days.setDate(in3Days.getDate() + 3)
+    const in3Days = new Date();
+    in3Days.setDate(in3Days.getDate() + 3);
 
     const endingSoonCount = await this.products.count({
       where: {
@@ -127,15 +137,15 @@ export class FarmersService {
         status: ProductStatus.ACTIVE,
         seasonEnd: LessThanOrEqual(in3Days),
       },
-    })
+    });
 
-    const now = new Date()
-    const startOfThisWeek = new Date(now)
-    startOfThisWeek.setDate(now.getDate() - now.getDay())
-    startOfThisWeek.setHours(0, 0, 0, 0)
+    const now = new Date();
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    startOfThisWeek.setHours(0, 0, 0, 0);
 
-    const startOfLastWeek = new Date(startOfThisWeek)
-    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7)
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
 
     const thisWeekOrders = await this.orders
       .createQueryBuilder('order')
@@ -143,7 +153,7 @@ export class FarmersService {
       .innerJoin('item.product', 'product')
       .where('product.farmerId = :farmerId', { farmerId })
       .andWhere('order.createdAt >= :start', { start: startOfThisWeek })
-      .getCount()
+      .getCount();
 
     const lastWeekOrders = await this.orders
       .createQueryBuilder('order')
@@ -152,12 +162,14 @@ export class FarmersService {
       .where('product.farmerId = :farmerId', { farmerId })
       .andWhere('order.createdAt >= :start', { start: startOfLastWeek })
       .andWhere('order.createdAt < :end', { end: startOfThisWeek })
-      .getCount()
+      .getCount();
 
     const weeklyGrowth =
       lastWeekOrders > 0
         ? Math.round(((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100)
-        : thisWeekOrders > 0 ? 100 : 0
+        : thisWeekOrders > 0
+          ? 100
+          : 0;
 
     return {
       data: {
@@ -173,7 +185,7 @@ export class FarmersService {
           inventory: profile?.matchStatus?.toUpperCase() ?? 'UNDER REVIEW',
         },
       },
-    }
+    };
   }
 
   // ─── Recent Transactions ──────────────────────────────────────────────────
@@ -189,10 +201,10 @@ export class FarmersService {
       .groupBy('order.id')
       .orderBy('order.createdAt', 'DESC')
       .limit(10)
-      .getRawMany()
+      .getRawMany();
 
-    const orderIds = orderIdRows.map((r) => r.order_id)
-    if (orderIds.length === 0) return { data: [] }
+    const orderIds = orderIdRows.map((r) => r.order_id);
+    if (orderIds.length === 0) return { data: [] };
 
     // Step 2: fetch full order data for those IDs
     const recentOrders = await this.orders
@@ -202,16 +214,17 @@ export class FarmersService {
       .innerJoinAndSelect('order.consumer', 'consumer')
       .where('order.id IN (:...orderIds)', { orderIds })
       .orderBy('order.createdAt', 'DESC')
-      .getMany()
+      .getMany();
 
     const data = recentOrders.map((order) => {
       const farmerItems = order.items?.filter(
         (item) => item.product?.farmerId === farmerId,
-      )
-      const farmerTotal = farmerItems?.reduce(
-        (sum, item) => sum + item.quantity * Number(item.unitPrice),
-        0,
-      ) ?? 0
+      );
+      const farmerTotal =
+        farmerItems?.reduce(
+          (sum, item) => sum + item.quantity * Number(item.unitPrice),
+          0,
+        ) ?? 0;
 
       return {
         id: `#${order.orderNumber ?? order.id.slice(0, 6).toUpperCase()}`,
@@ -220,11 +233,12 @@ export class FarmersService {
           : 'Unknown',
         product: farmerItems?.[0]?.product?.nameEn ?? '—',
         amount: farmerTotal,
-        status: order.status === OrderStatus.COMPLETED ? 'Fulfilled' : 'Pending',
-      }
-    })
+        status:
+          order.status === OrderStatus.COMPLETED ? 'Fulfilled' : 'Pending',
+      };
+    });
 
-    return { data }
+    return { data };
   }
 
   // ─── Active Broadcasts ────────────────────────────────────────────────────
@@ -234,21 +248,23 @@ export class FarmersService {
       where: { userId: farmerId, isRead: false },
       order: { createdAt: 'DESC' },
       take: 20,
-    })
+    });
 
-    const typeMap: Partial<Record<NotificationType, 'success' | 'warning' | 'info'>> = {
-      [NotificationType.ORDER_PLACED]:     'info',
-      [NotificationType.ORDER_CONFIRMED]:  'success',
-      [NotificationType.ORDER_DELIVERED]:  'success',
-      [NotificationType.ORDER_CANCELLED]:  'warning',
-      [NotificationType.LOW_STOCK]:        'warning',
+    const typeMap: Partial<
+      Record<NotificationType, 'success' | 'warning' | 'info'>
+    > = {
+      [NotificationType.ORDER_PLACED]: 'info',
+      [NotificationType.ORDER_CONFIRMED]: 'success',
+      [NotificationType.ORDER_DELIVERED]: 'success',
+      [NotificationType.ORDER_CANCELLED]: 'warning',
+      [NotificationType.LOW_STOCK]: 'warning',
       [NotificationType.PRODUCT_APPROVED]: 'success',
       [NotificationType.ACCOUNT_VERIFIED]: 'success',
-      [NotificationType.NEW_MESSAGE]:      'info',
-      [NotificationType.NEW_REVIEW]:       'info',
-      [NotificationType.REWARD_EARNED]:    'success',
-      [NotificationType.SYSTEM]:           'info',
-    }
+      [NotificationType.NEW_MESSAGE]: 'info',
+      [NotificationType.NEW_REVIEW]: 'info',
+      [NotificationType.REWARD_EARNED]: 'success',
+      [NotificationType.SYSTEM]: 'info',
+    };
 
     const data = rawAlerts.map((n) => ({
       id: n.id,
@@ -260,9 +276,9 @@ export class FarmersService {
         hour: '2-digit',
         minute: '2-digit',
       }),
-    }))
+    }));
 
-    return { data }
+    return { data };
   }
 
   // ─── Inbound Orders ───────────────────────────────────────────────────────
@@ -278,10 +294,10 @@ export class FarmersService {
       .andWhere('order.status = :status', { status: OrderStatus.PENDING })
       .groupBy('order.id')
       .orderBy('order.createdAt', 'DESC')
-      .getRawMany()
+      .getRawMany();
 
-    const orderIds = orderIdRows.map((r) => r.order_id)
-    if (orderIds.length === 0) return { data: [] }
+    const orderIds = orderIdRows.map((r) => r.order_id);
+    if (orderIds.length === 0) return { data: [] };
 
     // Step 2: fetch full order data for those IDs
     const pendingOrders = await this.orders
@@ -291,22 +307,22 @@ export class FarmersService {
       .innerJoinAndSelect('order.consumer', 'consumer')
       .where('order.id IN (:...orderIds)', { orderIds })
       .orderBy('order.createdAt', 'DESC')
-      .getMany()
+      .getMany();
 
     const data = pendingOrders.map((order) => {
       const farmerItems = order.items?.filter(
         (item) => item.product?.farmerId === farmerId,
-      )
+      );
       return {
         id: order.id,
         product: farmerItems?.[0]?.product?.nameEn ?? 'Unknown Product',
         buyer: order.consumer
           ? `${order.consumer.firstName ?? ''} ${order.consumer.lastName ?? ''}`.trim()
           : 'Unknown Buyer',
-      }
-    })
+      };
+    });
 
-    return { data }
+    return { data };
   }
 
   // ─── Yields Matrix ────────────────────────────────────────────────────────
@@ -318,35 +334,40 @@ export class FarmersService {
       .innerJoinAndSelect('item.product', 'product')
       .where('product.farmerId = :farmerId', { farmerId })
       .andWhere('order.status = :status', { status: OrderStatus.COMPLETED })
-      .getMany()
+      .getMany();
 
-    const yieldMap: Record<string, number> = {}
+    const yieldMap: Record<string, number> = {};
     farmerOrders.forEach((order) => {
       order.items?.forEach((item) => {
-        if (item.product?.farmerId !== farmerId) return
-        const name = item.product?.nameEn ?? 'Unknown'
-        yieldMap[name] = (yieldMap[name] ?? 0) + item.quantity * Number(item.unitPrice)
-      })
-    })
+        if (item.product?.farmerId !== farmerId) return;
+        const name = item.product?.nameEn ?? 'Unknown';
+        yieldMap[name] =
+          (yieldMap[name] ?? 0) + item.quantity * Number(item.unitPrice);
+      });
+    });
 
     const sorted = Object.entries(yieldMap)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 5);
 
-    const max = sorted[0]?.[1] ?? 1
+    const max = sorted[0]?.[1] ?? 1;
 
     const data = sorted.map(([name, value]) => ({
       name,
       value,
       pct: Math.round((value / max) * 100),
-    }))
+    }));
 
-    return { data }
+    return { data };
   }
 
   // ─── Transition Order ─────────────────────────────────────────────────────
 
-  async transitionOrder(orderId: string, action: 'accept' | 'reject', farmerId: string) {
+  async transitionOrder(
+    orderId: string,
+    action: 'accept' | 'reject',
+    farmerId: string,
+  ) {
     const order = await this.orders
       .createQueryBuilder('order')
       .innerJoin('order.items', 'item')
@@ -354,21 +375,23 @@ export class FarmersService {
       .where('order.id = :orderId', { orderId })
       .andWhere('product.farmerId = :farmerId', { farmerId })
       .andWhere('order.status = :status', { status: OrderStatus.PENDING })
-      .getOne()
+      .getOne();
 
-    if (!order) throw new NotFoundException('Order not found or already processed')
+    if (!order)
+      throw new NotFoundException('Order not found or already processed');
 
-    order.status = action === 'accept' ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED
+    order.status =
+      action === 'accept' ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED;
 
     if (action === 'accept') {
-      order.confirmedAt = new Date()
+      order.confirmedAt = new Date();
     } else {
-      order.cancelledAt = new Date()
+      order.cancelledAt = new Date();
     }
 
-    await this.orders.save(order)
+    await this.orders.save(order);
 
-    return { success: true, status: order.status }
+    return { success: true, status: order.status };
   }
 
   // ─── Clear Broadcasts ─────────────────────────────────────────────────────
@@ -377,8 +400,8 @@ export class FarmersService {
     await this.notifications.update(
       { userId: farmerId, isRead: false },
       { isRead: true },
-    )
-    return { success: true }
+    );
+    return { success: true };
   }
 
   // ─── Restock Manifest ─────────────────────────────────────────────────────
@@ -386,12 +409,12 @@ export class FarmersService {
   async triggerRestockManifest(farmerId: string) {
     const activeProducts = await this.products.find({
       where: { farmerId, status: ProductStatus.ACTIVE },
-    })
+    });
 
-    const lowStock = activeProducts.filter((p) => p.stockQuantity < 10)
+    const lowStock = activeProducts.filter((p) => p.stockQuantity < 10);
 
     if (lowStock.length === 0) {
-      return { success: true, message: 'No low stock items found.' }
+      return { success: true, message: 'No low stock items found.' };
     }
 
     const newNotifications = lowStock.map((product) =>
@@ -403,37 +426,70 @@ export class FarmersService {
         refType: 'low_stock_critical',
         isRead: false,
       }),
-    )
+    );
 
-    await this.notifications.save(newNotifications)
+    await this.notifications.save(newNotifications);
 
-    return { success: true, message: 'Restock manifest sent to supplier node.' }
+    return {
+      success: true,
+      message: 'Restock manifest sent to supplier node.',
+    };
+  }
+
+  async updateProfile(userId: string, dto: UpdateFarmerProfileDto) {
+    const profile = await this.farmerProfiles.findOne({ where: { userId } });
+    if (!profile) throw new NotFoundException('Farmer profile not found');
+
+    if (dto.farmName !== undefined) profile.farmName = dto.farmName;
+    if (dto.description !== undefined) profile.description = dto.description;
+    if (dto.addressDetail !== undefined)
+      profile.addressDetail = dto.addressDetail;
+    if (dto.province !== undefined) profile.province = dto.province;
+    if (dto.district !== undefined) profile.district = dto.district;
+    if (dto.latitude !== undefined) profile.latitude = dto.latitude;
+    if (dto.longitude !== undefined) profile.longitude = dto.longitude;
+    if (dto.productTags !== undefined) profile.productTags = dto.productTags;
+
+    if (dto.coverImageDataUrl) {
+      profile.coverImageUrl = await this.saveImage(
+        { dataUrl: dto.coverImageDataUrl, name: 'cover.jpg' },
+        'farmers',
+      );
+    }
+
+    return this.farmerProfiles.save(profile);
   }
 
   // ─── Image Helpers ────────────────────────────────────────────────────────
 
-  private async saveImage(file: UploadedImageDto, folder: string): Promise<string> {
-    const { buffer, ext } = this.parseDataUrl(file)
-    const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '') || 'uploads'
-    const fileName = `${Date.now()}-${randomUUID()}.${ext}`
-    const targetDir = path.join(process.cwd(), 'uploads', safeFolder)
+  private async saveImage(
+    file: UploadedImageDto,
+    folder: string,
+  ): Promise<string> {
+    const { buffer, ext } = this.parseDataUrl(file);
+    const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '') || 'uploads';
+    const fileName = `${Date.now()}-${randomUUID()}.${ext}`;
+    const targetDir = path.join(process.cwd(), 'uploads', safeFolder);
 
-    await fs.mkdir(targetDir, { recursive: true })
-    await fs.writeFile(path.join(targetDir, fileName), buffer)
+    await fs.mkdir(targetDir, { recursive: true });
+    await fs.writeFile(path.join(targetDir, fileName), buffer);
 
-    return path.join('uploads', safeFolder, fileName).replace(/\\/g, '/')
+    return path.join('uploads', safeFolder, fileName).replace(/\\/g, '/');
   }
 
-  private parseDataUrl(file: UploadedImageDto): { buffer: Buffer; ext: string } {
-    const match = /^data:([^;]+);base64,(.*)$/.exec(file.dataUrl)
-    if (!match) throw new BadRequestException('Invalid image payload')
+  private parseDataUrl(file: UploadedImageDto): {
+    buffer: Buffer;
+    ext: string;
+  } {
+    const match = /^data:([^;]+);base64,(.*)$/.exec(file.dataUrl);
+    if (!match) throw new BadRequestException('Invalid image payload');
 
-    const mimeType = match[1]
-    const base64Data = match[2]
-    const buffer = Buffer.from(base64Data, 'base64')
-    const ext = this.resolveExtension(mimeType, file.name)
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+    const ext = this.resolveExtension(mimeType, file.name);
 
-    return { buffer, ext }
+    return { buffer, ext };
   }
 
   private resolveExtension(mimeType: string, name: string): string {
@@ -442,10 +498,10 @@ export class FarmersService {
       'image/png': 'png',
       'image/webp': 'webp',
       'image/gif': 'gif',
-    }
+    };
 
-    if (map[mimeType]) return map[mimeType]
-    const fallback = name.split('.').pop()
-    return fallback ? fallback.toLowerCase() : 'jpg'
+    if (map[mimeType]) return map[mimeType];
+    const fallback = name.split('.').pop();
+    return fallback ? fallback.toLowerCase() : 'jpg';
   }
 }

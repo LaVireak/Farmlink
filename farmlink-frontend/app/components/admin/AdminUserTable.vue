@@ -1,24 +1,24 @@
 <template>
-  <section class="bg-white rounded-2xl shadow-sm border border-gray-100">
-    <div class="px-5 py-4 border-b border-gray-100 space-y-4">
+  <section class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant">
+    <div class="px-5 py-4 border-b border-outline-variant space-y-4">
       <div class="relative flex-1 min-w-[200px]">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
         <input
           :value="searchQuery"
           @input="$emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
           type="text"
           placeholder="Search by name or email…"
-          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
+          class="w-full pl-9 pr-4 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
         />
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-2">Status</label>
+          <label class="text-xs font-semibold text-on-surface-variant block mb-2">Status</label>
           <select
             :value="filterStatus"
             @change="$emit('update:filterStatus', ($event.target as HTMLSelectElement).value)"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
           >
             <option value="">All Status</option>
             <option value="Active">Active</option>
@@ -29,11 +29,11 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-2">Trust Score</label>
+          <label class="text-xs font-semibold text-on-surface-variant block mb-2">Trust Score</label>
           <select
             :value="filterTrust"
             @change="$emit('update:filterTrust', ($event.target as HTMLSelectElement).value)"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
           >
             <option value="">All Scores</option>
             <option value="high">High (80+)</option>
@@ -43,11 +43,11 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-2">Sort By</label>
+          <label class="text-xs font-semibold text-on-surface-variant block mb-2">Sort By</label>
           <select
             :value="sortBy"
             @change="$emit('update:sortBy', ($event.target as HTMLSelectElement).value)"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
           >
             <option value="name">Name (A-Z)</option>
             <option value="trust-desc">Trust Score (High-Low)</option>
@@ -60,7 +60,7 @@
         <div class="flex items-end">
           <button
             @click="$emit('resetFilters')"
-            class="w-full px-3 py-2 text-sm border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 font-medium transition"
+            class="w-full px-3 py-2 text-sm border border-outline text-on-surface-variant rounded-xl hover:bg-surface-container font-medium transition"
           >
             Reset Filters
           </button>
@@ -71,25 +71,25 @@
     <div class="overflow-x-auto">
       <table class="w-full">
         <thead>
-          <tr class="border-b border-gray-100 bg-gray-50">
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">User</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Email</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Trust</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Orders</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Rating</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-600">Province</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-gray-600">Actions</th>
+          <tr class="border-b border-outline-variant bg-surface-container-low">
+            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">User</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Email</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Status</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Trust</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Orders</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Rating</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Province</th>
+            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="users.length === 0">
             <td colspan="8" class="px-5 py-12">
               <div class="flex flex-col items-center gap-3">
-                <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
-                  <UserX class="w-6 h-6 text-gray-300" />
+                <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
+                  <UserX class="w-6 h-6 text-on-surface-variant" />
                 </div>
-                <p class="text-sm font-medium text-gray-500">No users found</p>
+                <p class="text-sm font-medium text-on-surface-variant">No users found</p>
               </div>
             </td>
           </tr>
@@ -97,7 +97,7 @@
           <tr
             v-for="user in users"
             :key="user.id"
-            class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+            class="border-b border-outline-variant hover:bg-surface-container-low transition-colors"
           >
             <td class="px-5 py-4">
               <div class="flex items-center gap-3">
@@ -108,13 +108,13 @@
                   {{ initials(user.name) }}
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-semibold text-gray-900 truncate">{{ user.name }}</p>
+                  <p class="text-sm font-semibold text-on-surface truncate">{{ user.name }}</p>
                 </div>
               </div>
             </td>
 
             <td class="px-5 py-4">
-              <p class="text-sm text-gray-600 truncate">{{ user.email }}</p>
+              <p class="text-sm text-on-surface-variant truncate">{{ user.email }}</p>
             </td>
 
             <td class="px-5 py-4">
@@ -128,31 +128,31 @@
             </td>
 
             <td class="px-5 py-4 text-center">
-              <p class="text-sm font-semibold text-gray-900">{{ user.orders }}</p>
+              <p class="text-sm font-semibold text-on-surface">{{ user.orders }}</p>
             </td>
 
             <td class="px-5 py-4 text-center">
               <p class="text-sm font-semibold">
-                <span class="text-gray-900">{{ user.rating }}</span><span class="text-amber-400">★</span>
+                <span class="text-on-surface">{{ user.rating }}</span><span class="text-amber-400">★</span>
               </p>
             </td>
 
             <td class="px-5 py-4">
-              <p class="text-sm text-gray-600">{{ user.province }}</p>
+              <p class="text-sm text-on-surface-variant">{{ user.province }}</p>
             </td>
 
             <td class="px-5 py-4">
               <div class="flex items-center justify-center gap-2">
                 <button
                   @click="$emit('openUser', user)"
-                  class="p-2 rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
+                  class="p-2 rounded-lg bg-secondary-container text-secondary transition-colors hover:bg-secondary hover:text-white"
                   title="View Profile"
                 >
                   <Eye class="w-4 h-4" />
                 </button>
                 <button
                   @click="$emit('banUser', user)"
-                  class="p-2 rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                  class="p-2 rounded-lg bg-error-container text-error transition-colors hover:bg-error hover:text-white"
                   title="Ban User"
                 >
                   <ShieldX class="w-4 h-4" />
