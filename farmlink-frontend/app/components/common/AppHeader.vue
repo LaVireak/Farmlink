@@ -252,32 +252,31 @@
               <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 bg-error text-white dark:text-on-surface text-xs rounded-full px-1.5">{{ unreadCount }}</span>
             </button>
 
-            <div v-show="notificationsOpen" class="absolute right-0 mt-2 w-80 bg-surface-container-lowest border border-outline-variant rounded-md shadow-lg z-50">
-              <div class="p-2">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="font-semibold text-sm">Notifications</div>
-                  <button @click="markAllRead" class="text-xs text-secondary">Mark all read</button>
-                </div>
-
-                <ul>
-                  <li v-for="note in notifications" :key="note.id" class="border-b last:border-b-0">
-                    <button @click="showNotification(note)" class="w-full text-left px-2 py-2 hover:bg-surface-container-lowflex">
-                      <div class="flex-1">
-                        <div class="text-sm font-medium">{{ note.title }}</div>
-                        <div class="text-xs text-on-surface-variant">{{ note.time }}</div>
-                      </div>
-                      <div v-if="!note.read" class="ml-2 w-2 h-2 bg-secondary rounded-full self-center"></div>
-                    </button>
-                    <div v-if="selectedNotification && selectedNotification.id === note.id" class="p-2 text-sm text-on-surface-variant bg-surface-container-low">
-                      {{ selectedNotification.body }}
+                <div v-show="notificationsOpen" class="absolute right-0 mt-3 w-80 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden">
+                    <div class="p-3 border-b border-outline-variant flex justify-between items-center bg-surface-container/30">
+                        <span class="font-bold text-sm text-on-surface">Notifications</span>
+                        <button @click="markAllAsRead" class="text-xs text-secondary hover:underline font-medium">Mark all read</button>
                     </div>
-                  </li>
-                </ul>
-
-                <div v-if="notifications.length === 0" class="p-2 text-sm text-on-surface-variant">No notifications</div>
-              </div>
+                    <ul class="max-h-[300px] overflow-y-auto">
+                        <li v-for="note in notifications" :key="note.id" class="border-b border-outline-variant last:border-b-0">
+                            <button @click="markAsRead(note.id)" class="w-full text-left p-3 hover:bg-surface-container transition-colors flex gap-3">
+                                <div class="flex-1">
+                                    <div class="text-sm font-bold text-on-surface" :class="{'text-on-surface-variant font-medium': note.read}">{{ note.title }}</div>
+                                    <div class="text-xs text-on-surface-variant mt-1">{{ note.body }}</div>
+                                    <div class="text-[10px] text-outline mt-2">{{ note.time }}</div>
+                                </div>
+                                <div v-if="!note.read" class="w-2 h-2 bg-secondary rounded-full mt-1.5 flex-shrink-0"></div>
+                            </button>
+                        </li>
+                        <li v-if="notifications.length === 0" class="p-4 text-center text-sm text-on-surface-variant italic">
+                            No notifications yet
+                        </li>
+                    </ul>
+                    <div class="p-2 border-t border-outline-variant bg-surface-container/30">
+                        <NuxtLink to="/user/settings/notifications" class="block w-full text-center text-xs font-bold text-secondary hover:underline p-1">View all notifications</NuxtLink>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
 
         <!-- User Profile Dropdown -->
