@@ -23,10 +23,13 @@ export class SupabaseAuthGuard implements CanActivate {
     const header = request.headers.authorization;
 
     if (!header || !header.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid token');
+      // Don't throw immediately, we might have a query token
     }
 
-    const token = header.slice('Bearer '.length).trim();
+    let token = request.headers.authorization?.slice('Bearer '.length).trim();
+    if (!token && request.query.token) {
+      token = request.query.token as string;
+    }
     if (!token) {
       throw new UnauthorizedException('Missing or invalid token');
     }

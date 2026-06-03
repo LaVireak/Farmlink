@@ -22,12 +22,21 @@ export class NotificationsService {
     }
 
     async createNotification(userId: string, type: NotificationType, title: string, message: string, metadata?: any): Promise<Notification> {
+        let refId: string | undefined;
+        let refType: string | undefined;
+
+        if (metadata?.orderId) {
+            refId = metadata.orderId;
+            refType = 'order';
+        }
+
         const notification = this.notificationRepository.create({
             userId,
             type,
             title,
-            message,
-            metadata,
+            body: message,
+            refId,
+            refType,
         });
 
         const saved = await this.notificationRepository.save(notification);
