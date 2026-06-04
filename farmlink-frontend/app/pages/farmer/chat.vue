@@ -1,113 +1,137 @@
 <template>
-  <main class="chat-main bg-[#F5F7F3]">
-    <div class="px-6 pt-6 pb-5 border-b border-gray-200/50 mb-6">
+  <main class="flex-1 flex flex-col bg-surface min-h-screen">
+    <div class="px-6 md:px-10 pt-8 pb-5 border-b border-outline-variant/50 mb-6">
       <FarmerHeader title="Customer Chat" />
     </div>
 
-    <div class="chat-container">
-      <!-- Conversations List -->
-      <aside class="conversations-panel">
-        <div class="conv-header">
-          <h2>Conversations</h2>
-          <span class="unread-total">{{ chat.totalUnread.value }}</span>
-        </div>
+    <!-- Chat panel wrapper -->
+    <div class="flex overflow-hidden bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm mx-6 md:mx-10 mb-8" style="height: calc(100vh - 180px); max-height: calc(100vh - 180px); min-height: 500px;">
+      
+      <!-- Chat Container -->
+      <div class="flex flex-1 w-full h-full bg-surface-container-lowest overflow-hidden min-h-0">
 
-        <div class="conv-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input v-model="search" type="text" placeholder="Search customers..." />
-        </div>
+        <!-- Conversations Panel -->
+        <aside class="w-80 flex-shrink-0 border-r border-outline-variant flex flex-col overflow-hidden bg-surface-container-lowest">
+          <div class="flex items-center justify-between p-5 pb-3">
+            <h2 class="text-lg font-bold text-on-surface">Conversations</h2>
+            <span v-if="chat.totalUnread.value > 0" class="bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[22px] text-center">{{ chat.totalUnread.value }}</span>
+          </div>
 
-        <div class="conv-list">
-          <button
-            v-for="conv in filteredConversations"
-            :key="conv.id"
-            class="conv-item"
-            :class="{ active: chat.activeConversationId.value === conv.id }"
-            @click="selectConversation(conv)"
-          >
-            <div class="conv-avatar">
-              {{ getParticipantInitial(conv) }}
-            </div>
-            <div class="conv-info">
-              <div class="conv-top">
-                <span class="conv-name">{{ getParticipantName(conv) }}</span>
-                <span class="conv-time">{{ conv.lastMessageTime ? formatLastTime(conv.lastMessageTime) : 'N/A' }}</span>
+          <div class="flex items-center gap-2 mx-4 mb-3 px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-on-surface-variant focus-within:border-secondary transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input v-model="search" type="text" placeholder="Search customers..." class="flex-1 bg-transparent border-none outline-none text-sm text-on-surface placeholder-on-surface-variant w-full" />
+          </div>
+
+          <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-outline-variant scrollbar-track-transparent">
+            <button
+              v-for="conv in filteredConversations"
+              :key="conv.id"
+              class="w-full flex items-center gap-3 p-3 border-l-4 transition-colors text-left"
+              :class="chat.activeConversationId.value === conv.id ? 'bg-secondary-container/30 border-secondary' : 'border-transparent hover:bg-surface-container/50'"
+              @click="selectConversation(conv)"
+            >
+              <div class="relative flex-shrink-0 w-10 h-10 rounded-full bg-secondary text-white font-bold flex items-center justify-center border border-outline-variant">
+                <img v-if="conv.participant.avatarUrl" :src="conv.participant.avatarUrl" :alt="conv.participant.firstName" class="w-10 h-10 rounded-full object-cover" />
+                <span v-else>{{ getParticipantInitial(conv) }}</span>
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-surface-container-lowest rounded-full"></div>
               </div>
-              <div class="conv-bottom">
-                <span class="conv-preview">{{ conv.lastMessage || 'No messages yet' }}</span>
-                <span v-if="conv.unreadCount > 0" class="conv-badge">{{ conv.unreadCount }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-sm font-bold text-on-surface truncate pr-2">{{ getParticipantName(conv) }}</span>
+                  <span class="text-[10px] flex-shrink-0" :class="conv.unreadCount > 0 ? 'text-secondary font-bold' : 'text-on-surface-variant'">{{ conv.lastMessageTime ? formatLastTime(conv.lastMessageTime) : 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between items-center gap-2">
+                  <span class="text-xs truncate flex-1" :class="conv.unreadCount > 0 ? 'text-on-surface font-semibold' : 'text-on-surface-variant'">{{ conv.lastMessage || 'No messages yet' }}</span>
+                  <span v-if="conv.unreadCount > 0" class="bg-secondary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0">{{ conv.unreadCount }}</span>
+                </div>
+              </div>
+            </button>
+
+            <div v-if="filteredConversations.length === 0" class="text-center p-8 text-sm text-on-surface-variant">No conversations found</div>
+          </div>
+        </aside>
+
+        <!-- Chat Thread -->
+        <section class="flex-1 flex flex-col overflow-hidden bg-surface min-h-0" v-if="activeConv">
+          <!-- Thread Header -->
+          <div class="flex items-center gap-3 px-5 py-4 border-b border-outline-variant bg-surface-container-lowest">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-secondary text-white font-bold flex items-center justify-center border border-outline-variant">
+              <img v-if="activeConv.participant.avatarUrl" :src="activeConv.participant.avatarUrl" :alt="activeConv.participant.firstName" class="w-10 h-10 rounded-full object-cover" />
+              <span v-else>{{ getParticipantInitial(activeConv) }}</span>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-on-surface m-0">{{ getParticipantName(activeConv) }}</p>
+              <p class="flex items-center gap-1.5 text-[11px] text-on-surface-variant font-medium mt-0.5">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                Active Now
+              </p>
+            </div>
+            <div class="ml-auto">
+              <button title="View Order" class="w-9 h-9 rounded-xl border border-outline-variant flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors cursor-pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4 bg-surface scrollbar-thin scrollbar-thumb-outline-variant scrollbar-track-transparent" ref="messagesArea">
+            <div
+              v-for="msg in chat.activeMessages.value"
+              :key="msg.id"
+              class="flex items-end gap-2"
+              :class="msg.sender.id === currentUserId ? 'flex-row-reverse' : 'flex-row'"
+            >
+              <div v-if="msg.sender.id !== currentUserId" class="flex-shrink-0 w-7 h-7 rounded-full bg-surface-container text-on-surface-variant font-bold text-xs flex items-center justify-center border border-outline-variant">
+                <img v-if="msg.sender.avatarUrl" :src="msg.sender.avatarUrl" :alt="msg.sender.firstName" class="w-7 h-7 rounded-full object-cover" />
+                <span v-else>{{ msg.sender.firstName?.[0]?.toUpperCase() || 'U' }}</span>
+              </div>
+              <div 
+                class="max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed"
+                :class="msg.sender.id === currentUserId ? 'bg-secondary text-white rounded-br-sm' : 'bg-surface-container-lowest text-on-surface border border-outline-variant shadow-sm rounded-bl-sm'"
+              >
+                <p class="m-0">{{ msg.content }}</p>
+                <div class="text-[10px] opacity-70 flex items-center justify-end gap-1 mt-1">
+                  {{ formatTime(msg.createdAt) }}
+                  <span v-if="msg.sender.id === currentUserId && msg.isRead" class="text-green-300 text-[11px] font-bold">✓✓</span>
+                </div>
               </div>
             </div>
-          </button>
+          </div>
 
-          <div v-if="filteredConversations.length === 0" class="conv-empty">
-            No conversations found
-          </div>
-        </div>
-      </aside>
-
-      <!-- Chat Thread -->
-      <section class="chat-thread" v-if="activeConv">
-        <!-- Thread Header -->
-        <div class="thread-header">
-          <div class="thread-avatar">
-            {{ getParticipantInitial(activeConv) }}
-          </div>
-          <div>
-            <p class="thread-name">{{ getParticipantName(activeConv) }}</p>
-            <p class="thread-status">
-              <span class="status-dot online"></span>
-              Active Now
-            </p>
-          </div>
-          <div class="thread-actions">
-            <button title="View Order" class="thread-action-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <!-- Input Bar -->
+          <div class="flex items-center gap-3 px-5 py-4 border-t border-outline-variant bg-surface-container-lowest">
+            <button class="w-10 h-10 rounded-xl border border-outline-variant flex items-center justify-center text-on-surface-variant hover:text-secondary hover:border-secondary transition-colors flex-shrink-0" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input
+              v-model="newMessage"
+              type="text"
+              placeholder="Type a message..."
+              @keydown.enter="sendMessage"
+              class="flex-1 border border-outline-variant rounded-xl px-4 py-2.5 text-sm bg-surface text-on-surface focus:outline-none focus:border-secondary transition-colors w-full"
+              :disabled="chat.loading.value"
+            />
+            <button 
+              @click="sendMessage" 
+              class="w-10 h-10 rounded-xl bg-secondary text-white flex items-center justify-center flex-shrink-0 transition-all hover:opacity-90 disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              :disabled="!newMessage.trim() || chat.loading.value"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
-        </div>
+        </section>
 
-        <!-- Messages -->
-        <div class="messages-area" ref="messagesArea">
-          <MessageBubble
-            v-for="msg in chat.activeMessages.value"
-            :key="msg.id"
-            :text="msg.content"
-            :time="formatTime(msg.createdAt)"
-            :is-sender="msg.sender.id === currentUserId"
-            :avatar="msg.sender.avatarUrl"
-            :sender-name="`${msg.sender.firstName || ''} ${msg.sender.lastName || ''}`.trim()"
-          />
-        </div>
+        <!-- Empty placeholder -->
+        <section class="flex-1 flex flex-col items-center justify-center gap-3 text-on-surface-variant text-sm bg-surface" v-else>
+          <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <p class="font-bold text-base text-on-surface">Conversations</p>
+          <p class="text-xs">Select a conversation to start chatting</p>
+        </section>
 
-        <!-- Input Bar -->
-        <div class="input-bar">
-          <button class="attach-btn" title="Attach file" disabled>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <input
-            v-model="newMessage"
-            type="text"
-            placeholder="Type a message..."
-            @keydown.enter="sendMessage"
-            class="msg-input"
-            :disabled="chat.loading.value"
-          />
-          <button
-            @click="sendMessage"
-            class="send-btn"
-            :disabled="!newMessage.trim() || chat.loading.value"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>
-      </section>
+      </div>
 
-      <!-- Empty Thread Placeholder -->
-      <section class="chat-empty" v-else>
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c2c9bb" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <p>Select a conversation to start chatting</p>
-      </section>
     </div>
   </main>
 </template>
@@ -120,7 +144,6 @@ definePageMeta({
 
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useChat } from '~/composables/useChat'
-import MessageBubble from '~/components/common/MessageBubble.vue'
 import { useAuthStore } from '~/stores/auth.store'
 
 useHead({ title: 'Chat | FarmLink Farmer' })
@@ -206,378 +229,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Chat Container ── */
-.chat-container {
-  display: flex;
-  flex: 1;
-  gap: 0;
-  height: calc(100vh - 72px);
-  overflow: hidden;
-  margin: 0 24px 24px;
-  background: white;
-  border-radius: 20px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
-}
-
-/* ── Conversations Panel ── */
-.conversations-panel {
-  width: 300px;
-  flex-shrink: 0;
-  border-right: 1px solid #f3f4f6;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.conv-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 18px 12px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.unread-total {
-  background: #15803d;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  min-width: 22px;
-  text-align: center;
-}
-
-.conv-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 14px 10px;
-  padding: 8px 12px;
-  background: #f3f4f6;
-  border-radius: 10px;
+/* Optional tiny fix for the inputs taking full width smoothly */
+input::placeholder {
   color: #9ca3af;
-}
-
-.conv-search input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 13px;
-  color: #111827;
-}
-
-.conv-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.conv-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s;
-}
-
-.conv-item:hover { background: #f9fafb; }
-.conv-item.active { background: #f0fdf4; }
-
-.conv-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, #15803d 0%, #2d6a4f 100%);
-}
-
-.conv-info { flex: 1; min-width: 0; }
-
-.conv-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 3px;
-}
-
-.conv-name { font-size: 14px; font-weight: 600; color: #111827; }
-.conv-time { font-size: 11px; color: #9ca3af; }
-
-.conv-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.conv-preview {
-  font-size: 12px;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-.conv-badge {
-  background: #15803d;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.conv-empty {
-  text-align: center;
-  padding: 32px 16px;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-/* ── Chat Thread ── */
-.chat-thread {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.thread-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.thread-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.thread-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; }
-
-.thread-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: #6b7280;
-  margin: 2px 0 0;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.status-dot.online  { background: #22c55e; }
-.status-dot.offline { background: #d1d5db; }
-
-.thread-actions { margin-left: auto; }
-
-.thread-action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  border: 1.5px solid #e5e7eb;
-  background: transparent;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.thread-action-btn:hover { background: #f3f4f6; color: #111827; }
-
-/* ── Messages ── */
-.messages-area {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  background: #fafafa;
-}
-
-.message-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.message-row.from-me  { flex-direction: row-reverse; }
-.message-row.from-them { flex-direction: row; }
-
-.msg-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bubble {
-  max-width: 60%;
-  padding: 10px 14px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.5;
-  position: relative;
-}
-
-.bubble p { margin: 0 0 4px; }
-
-.bubble-me {
-  background: #15803d;
-  color: white;
-  border-bottom-right-radius: 4px;
-}
-
-.bubble-them {
-  background: white;
-  color: #111827;
-  border: 1px solid #e5e7eb;
-  border-bottom-left-radius: 4px;
-}
-
-.msg-time {
-  font-size: 10px;
-  opacity: 0.6;
-  display: block;
-  text-align: right;
-}
-
-/* Typing indicator */
-.typing-bubble {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background: #9ca3af;
-  border-radius: 50%;
-  animation: bounce 1.2s infinite;
-}
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes bounce {
-  0%, 80%, 100% { transform: translateY(0); }
-  40%           { transform: translateY(-6px); }
-}
-
-/* ── Input Bar ── */
-.input-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
-  border-top: 1px solid #f3f4f6;
-  background: white;
-}
-
-.attach-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1.5px solid #e5e7eb;
-  background: transparent;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-.attach-btn:hover { color: #2d6a4f; border-color: #2d6a4f; }
-
-.msg-input {
-  flex: 1;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 14px;
-  outline: none;
-  background: #f9fafb;
-  color: #111827;
-  transition: border-color 0.2s;
-}
-.msg-input:focus { border-color: #15803d; background: white; }
-
-.send-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  border: none;
-  background: #15803d;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: opacity 0.2s, transform 0.1s;
-}
-.send-btn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.05); }
-.send-btn:disabled { background: #d1d5db; cursor: not-allowed; }
-
-/* ── Empty Thread ── */
-.chat-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: #9ca3af;
-  font-size: 14px;
 }
 </style>

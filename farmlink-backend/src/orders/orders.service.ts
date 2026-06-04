@@ -8,6 +8,8 @@ import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, OrderStatsDto, Or
 import { Product } from '../products/product.entity';
 import { PaymentMethod, PaymentStatus } from '../common/enums/payment.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../common/enums/notification-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -18,6 +20,7 @@ export class OrdersService {
     private orderItemsRepository: Repository<OrderItem>,
     @InjectRepository(Product)
     private productsRepository: Repository<Product>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -342,6 +345,7 @@ export class OrdersService {
     if (order.paymentStatus !== PaymentStatus.PAID) {
       order.paymentStatus = PaymentStatus.PAID;
       await this.ordersRepository.save(order);
+      await this.triggerPaymentSuccessNotifications(order.id);
     }
   }
 
@@ -537,6 +541,9 @@ export class OrdersService {
       if (order && order.paymentStatus !== (paymentStatus as any)) {
         order.paymentStatus = paymentStatus as any;
         await this.ordersRepository.save(order);
+        if (paymentStatus === 'paid') {
+          await this.triggerPaymentSuccessNotifications(order.id);
+        }
       }
 
       return {
@@ -568,5 +575,39 @@ export class OrdersService {
       await this.markOrderPaidByReference(tranId);
     }
     return { received: true };
+  }
+
+  private async triggerPaymentSuccessNotifications(orderId: string) {
+    const order = await this.ordersRepository.findOne({ 
+      where: { id: orderId },
+      relations: ['items', 'items.farmer']
+    });
+
+    if (!order) return;
+
+    // Notify Consumer
+    await this.notificationsService.createNotification(
+      order.consumerId,
+      NotificationType.ORDER_CONFIRMED,
+      'Payment Successful',
+      `Your payment for order #${order.orderNumber} was successful.`,
+      { orderId: order.id }
+    );
+
+    // Notify Farmers
+    if (order.items && order.items.length > 0) {
+      const farmerIds = new Set(order.items.map(item => item.farmerId).filter(Boolean));
+      for (const farmerId of farmerIds) {
+        if (farmerId && farmerId !== 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') { // Ignore mock/admin dummy if any
+          await this.notificationsService.createNotification(
+            farmerId,
+            NotificationType.ORDER_PLACED,
+            'New Order Received',
+            `You have received a new order: #${order.orderNumber}.`,
+            { orderId: order.id }
+          );
+        }
+      }
+    }
   }
 }

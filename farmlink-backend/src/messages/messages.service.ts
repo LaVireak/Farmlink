@@ -6,6 +6,8 @@ import { User } from '../users/user.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto, ConversationDto, PaginationDto, UserPreviewDto } from './dto/message-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../common/enums/notification-type.enum';
 
 @Injectable()
 export class MessagesService {
@@ -14,6 +16,7 @@ export class MessagesService {
     private readonly messageRepository: Repository<Message>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async sendMessage(createMessageDto: CreateMessageDto): Promise<MessageResponseDto> {
@@ -41,6 +44,17 @@ export class MessagesService {
     });
 
     const savedMessage = await this.messageRepository.save(message);
+    
+    // Trigger notification
+    const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ') || sender.email || 'Someone';
+    await this.notificationsService.createNotification(
+      createMessageDto.receiverId,
+      NotificationType.NEW_MESSAGE,
+      'New Message',
+      `New message from ${senderName}`,
+      { messageId: savedMessage.id }
+    );
+
     return this.toMessageResponseDto(savedMessage, sender, receiver);
   }
 
