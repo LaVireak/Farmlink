@@ -16,6 +16,8 @@ export default defineNuxtConfig({
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || "http://localhost:3001/api",
       stripePublishableKey: process.env.NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || "",
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || "",
     },
   },
 

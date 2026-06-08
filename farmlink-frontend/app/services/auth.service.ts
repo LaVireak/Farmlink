@@ -10,14 +10,15 @@ import type {
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const runtimeConfig = typeof useRuntimeConfig !== 'undefined' ? useRuntimeConfig() : null;
+const supabaseUrl: string = (runtimeConfig?.public?.supabaseUrl as string) || import.meta.env.NUXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey: string = (runtimeConfig?.public?.supabaseAnonKey as string) || import.meta.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase environment variables are missing.');
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -42,7 +43,7 @@ export const getAccessToken = async (): Promise<string | null> => {
   }
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE: string = (runtimeConfig?.public?.apiUrl as string) || import.meta.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 const PENDING_SIGNUP_KEY = 'farmlink.auth.pending-signup';
 
 const normalizeRoleFromSupabase = (role?: string): UserRole => {
