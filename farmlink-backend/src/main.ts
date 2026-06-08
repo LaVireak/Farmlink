@@ -8,7 +8,7 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://mobile-pc-builder.vercel.app'],
+    origin: ['http://localhost:3000', 'https://mobile-pc-builder.vercel.app', 'https://ffarmllink.vercel.app'],
     credentials: true,
   });
   app.setGlobalPrefix('api');
