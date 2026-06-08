@@ -10,8 +10,8 @@ import type {
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.NUXT_PUBLIC_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.NUXT_PUBLIC_SUPABASE_ANON_KEY as string | undefined;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase environment variables are missing.');
@@ -42,7 +42,7 @@ export const getAccessToken = async (): Promise<string | null> => {
   }
 };
 
-const API_BASE = import.meta.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const PENDING_SIGNUP_KEY = 'farmlink.auth.pending-signup';
 
 const normalizeRoleFromSupabase = (role?: string): UserRole => {
