@@ -26,18 +26,30 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - '3000:3000'
+      - '3001:3000'
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       NODE_ENV: ${NODE_ENV}
+      NODE_OPTIONS: --dns-result-order=ipv4first
       PORT: ${PORT}
-      DB_HOST: postgres
+      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
-    depends_on:
-      postgres:
-        condition: service_healthy
+      DATABASE_URL: ${DATABASE_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      PAYWAY_MERCHANT_ID: ${PAYWAY_MERCHANT_ID}
+      PAYWAY_PUBLIC_KEY: ${PAYWAY_PUBLIC_KEY}
+      PAYWAY_QR_API_URL: ${PAYWAY_QR_API_URL}
+      PAYWAY_CHECK_TRANSACTION_URL: ${PAYWAY_CHECK_TRANSACTION_URL}
+      PAYWAY_CALLBACK_URL: ${PAYWAY_CALLBACK_URL}
+      PAYWAY_QR_IMAGE_TEMPLATE: ${PAYWAY_QR_IMAGE_TEMPLATE}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
 
 volumes:
   postgres_data:

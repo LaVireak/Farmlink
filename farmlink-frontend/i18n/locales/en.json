@@ -1,0 +1,308 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "home": "Home",
+    "products": "Products",
+    "categories": "Categories",
+    "vegetables": "Vegetables",
+    "fruits": "Fruits",
+    "seedsSeedlings": "Seeds & Seedlings",
+    "toolsEquipment": "Tools & Equipment",
+    "popular": "Popular",
+    "bestSellers": "Best Sellers",
+    "newArrivals": "New Arrivals",
+    "discounted": "Discounted",
+    "farm": "Farm",
+    "featuredFarms": "Featured Farms",
+    "about": "About",
+    "contacts": "Contacts",
+    "search": "Search",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications",
+    "settings": "Settings",
+    "language": "Language",
+    "languageEnglish": "English",
+    "languageKhmer": "Khmer",
+    "darkMode": "Dark mode",
+    "signIn": "Sign In",
+    "logOut": "Log Out",
+
+    "searching": "Searching...",
+    "noResults": "No results found for \"{query}\"",
+
+    "allVegetables": "All Vegetables",
+    "allFruits": "All Fruits",
+    "allSupplies": "All Supplies",
+    "shopAllCategories": "Shop All Categories",
+
+    "leafyGreens": "Leafy Greens",
+    "rootCrops": "Root Crops",
+    "cruciferous": "Cruciferous",
+    "organicFresh": "Organic Fresh",
+    "tubersBulbs": "Tubers & Bulbs",
+
+    "citrusFruits": "Citrus Fruits",
+    "berriesMelons": "Berries & Melons",
+    "tropicalFruits": "Tropical Fruits",
+    "orchardPicks": "Orchard Picks",
+    "seasonalSpecials": "Seasonal Specials",
+
+    "heirloomSeeds": "Heirloom Seeds",
+    "starterPlantlets": "Starter Plantlets",
+    "handTools": "Hand Tools",
+    "organicSoils": "Organic Soils",
+    "irrigationGear": "Irrigation Gear",
+
+    "farm1Title": "Farm 1",
+    "farm1Desc": "Organic vegetables & seasonal produce.",
+
+    "farm2Title": "Farm 2",
+    "farm2Desc": "Family-run orchard and beekeeping.",
+
+    "farm3Title": "Farm 3",
+    "farm3Desc": "Hydroponics and greenhouse-grown greens."
+  },
+
+  "home": {
+    "brandBadge": "FarmLink Cambodia",
+    "heroTitle1": "Fresh from",
+    "heroTitleHighlight": "local farms",
+    "heroTitle2": "to your table.",
+    "heroLead": "Premium seasonal produce delivered directly from trusted Cambodian farms to homes and restaurants across Phnom Penh.",
+    "exploreProducts": "Explore Products",
+    "learnMore": "Learn More",
+    "partnerFarms": "Partner farms",
+    "fastDelivery": "Fast delivery",
+    "customerRating": "Customer rating",
+    "todayFreshPicks": "Today's fresh picks",
+
+    "featuredPicks": {
+      "greens": {
+        "name": "Organic Greens",
+        "excerpt": "Harvested 3 hours ago"
+      },
+      "mangoes": {
+        "name": "Sweet Mangoes",
+        "excerpt": "Fresh from Battambang"
+      },
+      "tomatoes": {
+        "name": "Fresh Tomatoes",
+        "excerpt": "Picked this morning"
+      }
+    },
+
+    "popularProducts": "Popular Products",
+    "browseAll": "Browse all",
+    "farmsAcrossCambodia": "Farms Across Cambodia",
+    "exploreProvinces": "Explore provinces",
+    "quickBrowse": "Quick Browse",
+    "exploreCategories": "Explore Fresh Categories",
+    "latestStories": "Latest Stories",
+    "readJournal": "Read journal",
+    "communityReviews": "Community Reviews",
+    "score": "4.9 / 5",
+    "view": "View"
+  },
+
+  "about": {
+    "heroBadge": "Our Journey",
+    "heroTitle": "Cultivating Direct Connections.",
+    "heroLead": "Empowering Cambodian farmers and connecting communities through transparent, fair, and seasonal commerce.",
+    "missions": {
+      "directConnection": {
+        "title": "Direct Connection",
+        "description": "Bridging the gap between farm and table by removing unnecessary layers."
+      },
+      "transparency": {
+        "title": "Transparency",
+        "description": "Every product has a story. We provide full traceability so you know exactly where your food comes from."
+      },
+      "fairPricing": {
+        "title": "Fair Pricing",
+        "description": "Sustainable livelihoods for farmers, fair value for consumers."
+      }
+    },
+    "challenge": {
+      "label": "The Challenge",
+      "title": "Fragmented Harvests",
+      "description": "Traditional supply chains in Cambodia often rely on multiple middlemen, leading to high waste and unfair pricing.",
+      "items": {
+        "opaquePricing": "Opaque Pricing",
+        "inefficientLogistics": "Inefficient Logistics",
+        "producerInsecurity": "Producer Insecurity"
+      }
+    },
+    "solution": {
+      "label": "Our Solution",
+      "title": "Digital Ecosystem",
+      "description": "We replace intermediaries with a direct digital marketplace, empowering farmers with real-time data.",
+      "cards": {
+        "empowered": { "title": "Empowered", "subtitle": "Communities" },
+        "direct": { "title": "Direct", "subtitle": "Delivery" }
+      }
+    },
+    "team": {
+      "title": "Meet the team",
+      "subtitle": "Architects of Sustainability"
+    }
+  },
+  "contacts": {
+    "title": "Get in touch",
+    "lead": "Questions, partnerships or feedback — we'd love to hear from you. Reply time usually within 1-2 business days.",
+    "form": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "sendMessage": "Send Message",
+      "sending": "Sending...",
+      "sent": "Message sent — thank you!",
+      "privacy": "We respect your privacy. Your details will only be used to respond to your request."
+    },
+    "details": {
+      "contactDetails": "Contact details",
+      "hq": "FarmLink HQ",
+      "email": "Email",
+      "address": "Address",
+      "phone": "Phone",
+      "hours": "Hours",
+      "followUs": "Follow us"
+    },
+    "heroImageAlt": "Contact us illustration"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "subtitle": "{count} ITEMS READY FOR HARVEST",
+    "continueShopping": "Continue Shopping",
+    "recommendations": "Goes well with your cart",
+    "viewAll": "VIEW ALL STAPLES",
+    "addToCart": "Add to Cart",
+    "proceedToCheckout": "Proceed to Checkout",
+    "harvestNotice": "Harvesting and delivery typically takes 24–48 hours. By proceeding, you agree to our terms.",
+    "carbon": "🌱 Carbon Neutral Delivery"
+  },
+  "success": {
+    "title": "Harvest Success!",
+    "thanks": "Thank you, {name}! Your order {orderId} is being prepared by our local farmers.",
+    "yourHarvest": "Your Harvest",
+    "items": "Items",
+    "subtotal": "Subtotal",
+    "deliveryFee": "Delivery Fee",
+    "totalPaid": "Total Paid",
+    "track": "Track Your Harvest",
+    "return": "Return to Market",
+    "whileYouWaitTitle": "While you wait...",
+    "readStory": "Read the Story"
+  },
+  "qr": {
+    "finalize": "Finalize Your Harvest",
+    "secureQr": "Secure QR Payment",
+    "refresh": "Refresh Payment Status",
+    "processing": "Processing...",
+    "paymentSuccessToast": "Payment successfully processed!"
+  },
+  "products": {
+    "banner": {
+      "pill": "🌿 FRESH PICKS",
+      "title": "Farm Fresh Produce",
+      "subtitle": "Harvested daily from local Cambodian farms — delivered straight to your table."
+    },
+    "intro": {
+      "title": "Browse Our Products",
+      "subtitle": "Fresh items directly from local farms"
+    },
+    "filter": {
+      "search": "Search",
+      "searchPlaceholder": "Search products...",
+      "category": "Category",
+      "rating": "Rating",
+      "priceRange": "Price Range",
+      "clear": "Clear All Filters"
+    },
+    "showing": "Showing",
+    "results": "products",
+    "sort": {
+      "default": "Sort by: Default",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "rating": "Top Rated",
+      "name": "Name A-Z"
+    },
+    "empty": {
+      "title": "No products found matching your search",
+      "subtitle": "Try adjusting your filters or search keywords."
+    },
+    "addToCart": "Add to Cart",
+    "notFound": { "title": "Product not found", "return": "Return to Shop" }
+  },
+  "favorites": {
+    "banner": { "pill": "❤️ MY WISHLIST" },
+    "title": "My Favorites",
+    "subtitle": "Products you've loved — ready to add to your cart whenever you are.",
+    "saved": "saved",
+    "sort": {
+      "default": "Sort: Default",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "name": "Name A-Z"
+    },
+    "clearAll": "Clear All",
+    "empty": {
+      "title": "No favorites yet",
+      "subtitle": "Browse our fresh produce and tap the heart icon to save items here."
+    },
+    "browse": "Browse Products",
+    "continue": "Continue browsing products",
+    "removed": "Removed from favorites",
+    "cleared": "All favorites cleared",
+    "addedToCart": "{name} added to cart!",
+    "keepShopping": "Continue browsing products"
+  },
+  "farm": {
+    "banner": {
+      "pill": "🌿 FRESH PICKS",
+      "title": "Farm Fresh Produce",
+      "subtitle": "Harvested daily from local Cambodian farms — delivered straight to your table."
+    },
+    "intro": {
+      "title": "Browse Our Farms",
+      "subtitle": "Fresh items directly from local farms"
+    },
+    "filter": {
+      "province": "Province",
+      "allProvinces": "All Provinces",
+      "rating": "Rating",
+      "up": "& up",
+      "clear": "Clear All Filters"
+    },
+    "title": "Farms",
+    "searchPlaceholder": "Search farms...",
+    "view": "View",
+    "empty": "No farms match your filters."
+  },
+ 
+  "productsData": {
+    "p1": { "name": "Morning Greens Box", "excerpt": "Fresh organic vegetables harvested today." },
+    "p2": { "name": "Sweet Mangoes", "excerpt": "Naturally ripened Cambodian mangoes." },
+    "p3": { "name": "Organic Tomatoes", "excerpt": "Farm fresh tomatoes full of flavor." },
+    "p4": { "name": "Kampot Spiced Box", "excerpt": "Curated organic spices and selection premium peppers." }
+  },
+  "farmsData": {
+    "f1": { "name": "Battambang Fruit Garden", "description": "Premium tropical fruits from local orchards.", "products": "Mangoes & Dragon Fruit" },
+    "f2": { "name": "Kampot Pepper Farm", "description": "World famous Kampot pepper directly from farmers.", "products": "Pepper & Spices" },
+    "f3": { "name": "Siem Reap Green House", "description": "Hydroponic lettuce and premium greens.", "products": "Hydroponic Greens" }
+  },
+  "blogsData": {
+    "b1": { "title": "Morning harvest in Takeo", "tag": "Harvest diary", "excerpt": "Experience the beauty of early farm harvesting." },
+    "b2": { "title": "Healthy cooking ideas", "tag": "Chef notes", "excerpt": "Simple seasonal recipes from local ingredients." },
+    "b3": { "title": "Sustainably grown Pepper", "tag": "Spice route", "excerpt": "Discover the heritage of organic pepper in Kampot." },
+    "b4": { "title": "Battambang Fruit Orchards", "tag": "Farmer voice", "excerpt": "How community co-ops are boosting local growers." }
+  },
+  "reviewsData": {
+    "r1": { "role": "Cafe Owner", "quote": "Fresh delivery every single morning." },
+    "r2": { "role": "Health Enthusiast", "quote": "The best quality produce and fruit for my family!" }
+  }
+
+}

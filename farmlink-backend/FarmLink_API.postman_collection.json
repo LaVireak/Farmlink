@@ -1,0 +1,659 @@
+{
+  "info": {
+    "name": "FarmLink API",
+    "_postman_id": "farmlink-api-collection-2026",
+    "description": "Complete API collection for FarmLink Backend (NestJS on http://localhost:3001). Auth routes require a Bearer token in the Authorization header unless marked [PUBLIC].",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",     "value": "http://localhost:3001",       "type": "string" },
+    { "key": "token",       "value": "REPLACE_WITH_SUPABASE_ACCESS_TOKEN", "type": "string" },
+    { "key": "userId",      "value": "REPLACE_WITH_USER_UUID",      "type": "string" },
+    { "key": "farmerId",    "value": "REPLACE_WITH_FARMER_UUID",    "type": "string" },
+    { "key": "productId",   "value": "REPLACE_WITH_PRODUCT_UUID",   "type": "string" },
+    { "key": "orderId",     "value": "REPLACE_WITH_ORDER_UUID",     "type": "string" },
+    { "key": "cartItemId",  "value": "REPLACE_WITH_CART_ITEM_UUID", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Finalize Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/finalize-signup", "host": ["{{baseUrl}}"], "path": ["auth","finalize-signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"password\": \"StrongPassword123!\",\n  \"metadata\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"role\": \"customer\"\n  }\n}"
+            },
+            "description": "POST /auth/finalize-signup — Finalizes a Supabase signup by setting password & metadata via admin API. [NO AUTH REQUIRED]"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] },
+            "description": "GET /users — Returns all users."
+          }
+        },
+        {
+          "name": "Get My Profile (auth required)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/profile", "host": ["{{baseUrl}}"], "path": ["users","profile"] },
+            "description": "GET /users/profile — Returns the profile of the currently authenticated user."
+          }
+        },
+        {
+          "name": "Update My Profile (auth required)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/users/profile", "host": ["{{baseUrl}}"], "path": ["users","profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+85512345678\",\n  \"avatarUrl\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "description": "PATCH /users/profile — Updates the authenticated user's profile."
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}"] },
+            "description": "GET /users/:id — Fetch any user by UUID."
+          }
+        },
+        {
+          "name": "Update User by ID (no auth — dev only)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\"\n}"
+            },
+            "description": "PATCH /users/:id — Dev-only endpoint to update a user without JWT."
+          }
+        },
+        {
+          "name": "Delete User by ID",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}"] },
+            "description": "DELETE /users/:id"
+          }
+        },
+        {
+          "name": "Get Favorite Farms",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/farms", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","farms"] },
+            "description": "GET /users/:id/favorites/farms"
+          }
+        },
+        {
+          "name": "Add Favorite Farm",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/farms/{{farmerId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","farms","{{farmerId}}"] },
+            "description": "POST /users/:id/favorites/farms/:farmerId"
+          }
+        },
+        {
+          "name": "Remove Favorite Farm",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/farms/{{farmerId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","farms","{{farmerId}}"] },
+            "description": "DELETE /users/:id/favorites/farms/:farmerId"
+          }
+        },
+        {
+          "name": "Get Favorite Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/products", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","products"] },
+            "description": "GET /users/:id/favorites/products"
+          }
+        },
+        {
+          "name": "Add Favorite Product",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","products","{{productId}}"] },
+            "description": "POST /users/:id/favorites/products/:productId"
+          }
+        },
+        {
+          "name": "Remove Favorite Product",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/favorites/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["users","{{userId}}","favorites","products","{{productId}}"] },
+            "description": "DELETE /users/:id/favorites/products/:productId"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🌱 Products",
+      "item": [
+        {
+          "name": "Get All Products [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products?category=vegetables&maxPrice=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "category", "value": "vegetables", "description": "Optional category filter" },
+                { "key": "maxPrice", "value": "50",         "description": "Optional max price filter" }
+              ]
+            },
+            "description": "GET /products — Public. Supports ?category= and ?maxPrice= query params."
+          }
+        },
+        {
+          "name": "Get Product by ID [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products","{{productId}}"] },
+            "description": "GET /products/:id — Public."
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fresh Tomatoes\",\n  \"description\": \"Organically grown red tomatoes\",\n  \"price\": 5.99,\n  \"unit\": \"kg\",\n  \"stock\": 100,\n  \"category\": \"vegetables\",\n  \"farmerId\": \"{{farmerId}}\"\n}"
+            },
+            "description": "POST /products — Create a new product (auth required)."
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products","{{productId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 6.50,\n  \"stock\": 80\n}"
+            },
+            "description": "PATCH /products/:id — Update product fields."
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products","{{productId}}"] },
+            "description": "DELETE /products/:id"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🚜 Farmers",
+      "item": [
+        {
+          "name": "Submit Farmer Onboarding",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/farmers/onboarding", "host": ["{{baseUrl}}"], "path": ["farmers","onboarding"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"farmName\": \"Green Valley Farm\",\n  \"description\": \"Family-owned organic farm since 1990\",\n  \"address\": \"123 Rural Road, Phnom Penh\",\n  \"latitude\": 11.5625,\n  \"longitude\": 104.9160,\n  \"phoneNumber\": \"+85512345678\"\n}"
+            },
+            "description": "POST /farmers/onboarding — Submit farmer onboarding form."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛒 Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}"] },
+            "description": "GET /api/cart/:consumerId — Get the cart for a consumer."
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}/items", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}","items"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "description": "POST /api/cart/:consumerId/items"
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}/items/{{cartItemId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}","items","{{cartItemId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "description": "PATCH /api/cart/:consumerId/items/:itemId"
+          }
+        },
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}/items/{{cartItemId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}","items","{{cartItemId}}"] },
+            "description": "DELETE /api/cart/:consumerId/items/:itemId"
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}"] },
+            "description": "DELETE /api/cart/:consumerId — Clear all items from cart."
+          }
+        },
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/cart/{{userId}}/checkout", "host": ["{{baseUrl}}"], "path": ["api","cart","{{userId}}","checkout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"payway\",\n  \"deliveryAddress\": \"456 Market St, Phnom Penh\",\n  \"deliveryLat\": 11.5625,\n  \"deliveryLng\": 104.9160,\n  \"note\": \"Please leave at the gate\"\n}"
+            },
+            "description": "POST /api/cart/:consumerId/checkout — Converts cart to an order."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?page=1&limit=10&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","orders"],
+              "query": [
+                { "key": "page",          "value": "1" },
+                { "key": "limit",         "value": "10" },
+                { "key": "status",        "value": "PENDING",  "description": "PENDING | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED" },
+                { "key": "paymentStatus", "value": "",         "description": "Optional payment status filter", "disabled": true },
+                { "key": "consumerId",    "value": "",         "description": "Optional consumer UUID filter",  "disabled": true }
+              ]
+            },
+            "description": "GET /api/orders — Paginated list of all orders."
+          }
+        },
+        {
+          "name": "Get Orders by Consumer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/consumer/{{userId}}?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","orders","consumer","{{userId}}"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "GET /api/orders/consumer/:consumerId — Orders belonging to a consumer."
+          }
+        },
+        {
+          "name": "Get Order Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/orders/stats", "host": ["{{baseUrl}}"], "path": ["api","orders","stats"] },
+            "description": "GET /api/orders/stats — Order statistics (totals, counts by status)."
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["api","orders","{{orderId}}"] },
+            "description": "GET /api/orders/:id"
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/orders", "host": ["{{baseUrl}}"], "path": ["api","orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumerId\": \"{{userId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 3,\n      \"unitPrice\": 5.99\n    }\n  ],\n  \"deliveryAddress\": \"456 Market St, Phnom Penh\",\n  \"deliveryLat\": 11.5625,\n  \"deliveryLng\": 104.9160,\n  \"paymentMethod\": \"payway\",\n  \"note\": \"Ring the bell twice\"\n}"
+            },
+            "description": "POST /api/orders — Create a new order directly."
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["api","orders","{{orderId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            "description": "PATCH /api/orders/:id/status — Update to PENDING | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api","orders","{{orderId}}","cancel"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer changed mind\"\n}"
+            },
+            "description": "PATCH /api/orders/:id/cancel — Cancel an order with an optional reason."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💳 Payments (PayWay)",
+      "item": [
+        {
+          "name": "Create Demo PayWay QR [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/payments/payway/qr/demo", "host": ["{{baseUrl}}"], "path": ["api","orders","payments","payway","qr","demo"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 15.99,\n  \"currency\": \"USD\",\n  \"orderId\": \"{{orderId}}\"\n}"
+            },
+            "description": "POST /api/orders/payments/payway/qr/demo — Generate a demo dynamic PayWay QR code."
+          }
+        },
+        {
+          "name": "Check PayWay Transaction Status [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/orders/payments/payway/REPLACE_TRAN_ID/status", "host": ["{{baseUrl}}"], "path": ["api","orders","payments","payway","REPLACE_TRAN_ID","status"] },
+            "description": "GET /api/orders/payments/payway/:tranId/status — Check payment status by PayWay transaction ID."
+          }
+        },
+        {
+          "name": "PayWay Webhook [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/orders/payments/payway/webhook", "host": ["{{baseUrl}}"], "path": ["api","orders","payments","payway","webhook"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tranId\": \"TXN123456\",\n  \"status\": \"SUCCESS\",\n  \"amount\": 15.99\n}"
+            },
+            "description": "POST /api/orders/payments/payway/webhook — PayWay sends this after payment."
+          }
+        },
+        {
+          "name": "Stripe Charge Card [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/stripe/charge", "host": ["{{baseUrl}}"], "path": ["stripe","charge"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1599,\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+            },
+            "description": "POST /stripe/charge — Charge a card via Stripe (amount in cents)."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔍 Search",
+      "item": [
+        {
+          "name": "Search Products & Farms [PUBLIC]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/search?q=tomato",
+              "host": ["{{baseUrl}}"],
+              "path": ["search"],
+              "query": [{ "key": "q", "value": "tomato" }]
+            },
+            "description": "GET /search?q= — Full-text search across products and farms."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin (requires admin JWT)",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["admin","dashboard","stats"] },
+            "description": "GET /admin/dashboard/stats"
+          }
+        },
+        {
+          "name": "Get All Users (admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?role=farmer&status=active&search=john&skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin","users"],
+              "query": [
+                { "key": "role",   "value": "farmer" },
+                { "key": "status", "value": "active" },
+                { "key": "search", "value": "john" },
+                { "key": "skip",   "value": "0" },
+                { "key": "take",   "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId}}/suspend", "host": ["{{baseUrl}}"], "path": ["admin","users","{{userId}}","suspend"] },
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Violation of terms\"\n}" }
+          }
+        },
+        {
+          "name": "Reactivate User",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId}}/reactivate", "host": ["{{baseUrl}}"], "path": ["admin","users","{{userId}}","reactivate"] }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId}}/role", "host": ["{{baseUrl}}"], "path": ["admin","users","{{userId}}","role"] },
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"farmer\"\n}" }
+          }
+        },
+        {
+          "name": "Get Farmer Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/farmers/stats", "host": ["{{baseUrl}}"], "path": ["admin","farmers","stats"] }
+          }
+        },
+        {
+          "name": "Get All Farmers (admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/farmers", "host": ["{{baseUrl}}"], "path": ["admin","farmers"] }
+          }
+        },
+        {
+          "name": "Approve Farmer",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/admin/farmers/{{farmerId}}/approve", "host": ["{{baseUrl}}"], "path": ["admin","farmers","{{farmerId}}","approve"] }
+          }
+        },
+        {
+          "name": "Suspend Farmer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/farmers/{{farmerId}}/suspend", "host": ["{{baseUrl}}"], "path": ["admin","farmers","{{farmerId}}","suspend"] },
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Policy violation\"\n}" }
+          }
+        },
+        {
+          "name": "Match Farmer to Buyer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/farmers/{{farmerId}}/match", "host": ["{{baseUrl}}"], "path": ["admin","farmers","{{farmerId}}","match"] },
+            "body": { "mode": "raw", "raw": "{\n  \"buyerId\": \"{{userId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Get Buyers",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/buyers", "host": ["{{baseUrl}}"], "path": ["admin","buyers"] }
+          }
+        },
+        {
+          "name": "Get All Orders (admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders?status=PENDING&skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin","orders"],
+              "query": [
+                { "key": "status", "value": "PENDING" },
+                { "key": "search", "value": "",        "disabled": true },
+                { "key": "skip",   "value": "0" },
+                { "key": "take",   "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order Stats (admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/orders/stats", "host": ["{{baseUrl}}"], "path": ["admin","orders","stats"] }
+          }
+        },
+        {
+          "name": "Update Order Status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["admin","orders","{{orderId}}","status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"SHIPPED\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Products (admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/products?status=pending&skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin","products"],
+              "query": [
+                { "key": "status",   "value": "pending" },
+                { "key": "category", "value": "",         "disabled": true },
+                { "key": "search",   "value": "",         "disabled": true },
+                { "key": "skip",     "value": "0" },
+                { "key": "take",     "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product Stats (admin)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/products/stats", "host": ["{{baseUrl}}"], "path": ["admin","products","stats"] }
+          }
+        },
+        {
+          "name": "Approve Product",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/admin/products/{{productId}}/approve", "host": ["{{baseUrl}}"], "path": ["admin","products","{{productId}}","approve"] }
+          }
+        },
+        {
+          "name": "Reject Product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/admin/products/{{productId}}/reject", "host": ["{{baseUrl}}"], "path": ["admin","products","{{productId}}","reject"] },
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Low quality images\"\n}" }
+          }
+        }
+      ]
+    }
+
+  ]
+}
