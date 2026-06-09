@@ -138,8 +138,8 @@ const loadQuickStatistics = async () => {
 		const headers = await getAuthHeaders();
 
 		const [ordersResponse, savedProductsResponse] = await Promise.all([
-			fetch(`/api/orders/consumer/${currentId}?page=1&limit=1000`, { headers }),
-			fetch(`/api/users/${currentId}/favorites/products`, { headers }),
+			fetch(`${config.public.apiUrl}/orders/consumer/${currentId}?page=1&limit=1000`, { headers }),
+			fetch(`${config.public.apiUrl}/users/${currentId}/favorites/products`, { headers }),
 		]);
 
 		if (ordersResponse.ok) {
