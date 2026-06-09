@@ -271,7 +271,7 @@ const {
 watch(paymentStatus, (newStatus) => {
   if (newStatus === 'paid') {
     setTimeout(() => {
-      navigateTo('/user/checkout/Success')
+      navigateTo(`/user/checkout/Success?payment_ref=${tranId.value}`)
     }, 2500) // 2.5s delay to let the user see the success state
   }
 })

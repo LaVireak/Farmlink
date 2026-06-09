@@ -62,6 +62,7 @@ export class CreateOrderDto {
   consumerId: string;
   paymentMethod: string;
   paymentStatus?: string;
+  paymentRef?: string;
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;

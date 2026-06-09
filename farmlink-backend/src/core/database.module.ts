@@ -53,19 +53,31 @@ export const ALL_ENTITIES = [
       imports: [ConfigModule],
       inject: [ConfigService],
 
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.get<string>('DATABASE_URL'),
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
-        username: config.get<string>('DB_USERNAME') || config.get<string>('DB_USER'),
-        password: String(config.get('DB_PASSWORD') || config.get('DB_PASS') || ''),
-        database: config.get<string>('DB_NAME'),
-        ssl: config.get<string>('DB_HOST') !== 'localhost' && config.get<string>('DB_HOST') !== 'postgres' ? { rejectUnauthorized: false } : false,
-        entities: ALL_ENTITIES,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
-        logging: false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('DATABASE_URL');
+        if (url) {
+          return {
+            type: 'postgres',
+            url,
+            ssl: { rejectUnauthorized: false },
+            entities: ALL_ENTITIES,
+            synchronize: config.get<string>('NODE_ENV') !== 'production',
+            logging: false,
+          };
+        }
+        return {
+          type: 'postgres',
+          host: config.get<string>('DB_HOST', 'localhost'),
+          port: config.get<number>('DB_PORT', 5432),
+          username: config.get<string>('DB_USERNAME') || config.get<string>('DB_USER'),
+          password: String(config.get('DB_PASSWORD') || config.get('DB_PASS') || ''),
+          database: config.get<string>('DB_NAME'),
+          ssl: config.get<string>('DB_HOST') !== 'localhost' && config.get<string>('DB_HOST') !== 'postgres' ? { rejectUnauthorized: false } : false,
+          entities: ALL_ENTITIES,
+          synchronize: config.get<string>('NODE_ENV') !== 'production',
+          logging: false,
+        };
+      },
     }),
   ],
 })
