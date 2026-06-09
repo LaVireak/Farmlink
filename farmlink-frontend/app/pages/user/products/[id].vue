@@ -24,8 +24,9 @@
       <!-- Product -->
       <div v-if="product" class="main-content">
 
-        <!-- Image -->
+        <!-- LEFT SIDE : IMAGE -->
         <div class="gallery-section">
+
           <div class="main-image-wrap">
             <img
               :src="activeImage"
@@ -40,9 +41,10 @@
               {{ product.badge }}
             </span>
           </div>
+
         </div>
 
-        <!-- Info -->
+        <!-- RIGHT SIDE : PRODUCT INFO -->
         <div class="info-section">
 
           <div class="product-category">
@@ -55,6 +57,7 @@
 
           <!-- Rating -->
           <div class="product-rating">
+
             <span class="stars">
               <span
                 v-for="i in 5"
@@ -72,6 +75,7 @@
             <span class="rating-text">
               {{ (product.rating || 5).toFixed(1) }}
             </span>
+
           </div>
 
           <!-- Price -->
@@ -94,6 +98,7 @@
             >
               -{{ product.discount }}%
             </span>
+
           </div>
 
           <!-- Description -->
@@ -101,41 +106,83 @@
             {{ product.description }}
           </p>
 
-          <!-- Farmer Details -->
-          <div v-if="product.farmer" class="farmer-info-card">
-            <h3 class="farmer-heading">Sold By</h3>
-            <NuxtLink :to="`/user/farm/${product.farmer.id}`" class="farmer-link">
+          <!-- Farmer -->
+          <div
+            v-if="product.farmer"
+            class="farmer-info-card"
+          >
+            <h3 class="farmer-heading">
+              Sold By
+            </h3>
+
+            <NuxtLink
+              :to="`/user/farm/${product.farmer.id}`"
+              class="farmer-link"
+            >
               <div class="farmer-details">
+
                 <span class="farm-name">
-                  {{ product.farmer.farmName || (product.farmer.firstName ? `${product.farmer.firstName} ${product.farmer.lastName}` : 'Unknown Farm') }}
+                  {{
+                    product.farmer.farmName ||
+                    (product.farmer.firstName
+                      ? `${product.farmer.firstName} ${product.farmer.lastName}`
+                      : 'Unknown Farm')
+                  }}
                 </span>
-                <span class="farmer-name" v-if="product.farmer.farmName && product.farmer.firstName">
-                  ({{ product.farmer.firstName }} {{ product.farmer.lastName }})
+
+                <span
+                  class="farmer-name"
+                  v-if="
+                    product.farmer.farmName &&
+                    product.farmer.firstName
+                  "
+                >
+                  ({{ product.farmer.firstName }}
+                  {{ product.farmer.lastName }})
                 </span>
-                <span v-if="product.farmer.isVerified" class="verified-badge">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  Verified
+
+                <span
+                  v-if="product.farmer.isVerified"
+                  class="verified-badge"
+                >
+                  ✓ Verified
                 </span>
+
               </div>
             </NuxtLink>
           </div>
 
-          <!-- Stock Status -->
+          <!-- Stock -->
           <div class="mb-4 mt-2">
-            <span :class="product.stockQuantity > 0 ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-red-100 text-red-700'" class="px-3 py-1.5 rounded-lg text-sm font-semibold inline-block">
-              {{ product.stockQuantity > 0 ? `${product.stockQuantity} units available` : 'Out of Stock' }}
+
+            <span
+              :class="
+                product.stockQuantity > 0
+                  ? 'bg-[#dcfce7] text-[#15803d]'
+                  : 'bg-red-100 text-red-700'
+              "
+              class="px-3 py-1.5 rounded-lg text-sm font-semibold inline-block"
+            >
+              {{
+                product.stockQuantity > 0
+                  ? `${product.stockQuantity} units available`
+                  : 'Out of Stock'
+              }}
             </span>
+
           </div>
 
           <!-- Quantity -->
-          <div class="action-block" v-if="product.stockQuantity > 0">
+          <div
+            class="action-block"
+            v-if="product.stockQuantity > 0"
+          >
 
             <div class="quantity-selector">
+
               <button
                 @click="decrease"
                 class="qty-btn"
-                :disabled="quantity <= 1"
-                :class="{ 'opacity-30 cursor-not-allowed': quantity <= 1 }"
               >
                 −
               </button>
@@ -147,11 +194,10 @@
               <button
                 @click="increase"
                 class="qty-btn"
-                :disabled="quantity >= product.stockQuantity"
-                :class="{ 'opacity-30 cursor-not-allowed': quantity >= product.stockQuantity }"
               >
                 +
               </button>
+
             </div>
 
             <button
@@ -160,22 +206,26 @@
             >
               Add to Cart
             </button>
+
           </div>
 
           <div v-else class="action-block">
+
             <button
               disabled
               class="add-to-cart-btn opacity-50 cursor-not-allowed"
             >
               Out of Stock
             </button>
+
           </div>
 
-          <!-- Gallery -->
+          <!-- Thumbnails -->
           <div
             class="thumbnail-row mt-6"
             v-if="product.gallery?.length > 1"
           >
+
             <button
               v-for="(img, idx) in product.gallery"
               :key="idx"
@@ -187,17 +237,68 @@
             >
               <img :src="img" />
             </button>
+
           </div>
+
+          <!-- COMMUNITY REVIEWS -->
+          <section class="community-review-section">
+
+            <div class="review-title">
+              <h2>Community Reviews</h2>
+              <p>
+                See what customers think about this product
+              </p>
+            </div>
+
+            <div class="review-grid">
+
+              <div
+                v-for="(review,index) in reviews"
+                :key="index"
+                class="review-card"
+              >
+
+                <div class="review-user">
+
+                  <div class="avatar">
+                    {{ review.name.charAt(0) }}
+                  </div>
+
+                  <div>
+                    <h4>{{ review.name }}</h4>
+                    <span>Verified Purchase</span>
+                  </div>
+
+                </div>
+
+                <div class="review-stars">
+                  ★★★★★
+                </div>
+
+                <p>
+                  {{ review.comment }}
+                </p>
+
+              </div>
+
+            </div>
+
+          </section>
+
         </div>
+
       </div>
 
       <!-- Loading -->
-      <div v-else-if="loading" class="loading-state">
+      <div v-if="loading" class="loading-state">
         <p>Loading product...</p>
       </div>
 
       <!-- Not Found -->
-      <div v-else class="not-found">
+      <div
+        v-if="!loading && !product"
+        class="not-found"
+      >
         <h2>Product not found</h2>
 
         <NuxtLink
@@ -346,120 +447,98 @@ const addToCart = (event) => {
 <style scoped>
 .product-detail-page {
   min-height: 100vh;
-  background: #f4f4ee;
-  font-family: 'Inter', sans-serif;
-  padding: 32px 20px 60px;
+  background: linear-gradient(to bottom, #f8faf7, #eef4ee);
+  font-family: "Inter", sans-serif;
+  padding: 40px 24px 80px;
 }
 
 .detail-container {
-  width: 100%;
-  padding: 0 12px;
-  margin: 0 auto;
+  max-width: 1400px;
+  margin: auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
 }
 
+/* Breadcrumb */
 .breadcrumbs {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
-  font-weight: 500;
 }
 
 .breadcrumbs a {
-  color: #42493e;
+  color: #4b5563;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: .3s;
 }
 
 .breadcrumbs a:hover {
-  color: #2e7e3f;
+  color: #2e7d32;
 }
 
-.breadcrumbs .separator {
-  color: #9ca3af;
+.current {
+  color: #1b5e20;
+  font-weight: 700;
 }
 
-.breadcrumbs .current {
-  color: #1f6a35;
-  font-weight: 600;
-}
-
+/* Main Product Card */
 .main-content {
   display: grid;
-  grid-template-columns: 50% 1fr;
-  gap: 45px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 35px;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.05),
+    0 2px 10px rgba(0,0,0,0.03);
 }
 
+/* Gallery */
 .gallery-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-left: 68px;
+  gap: 18px;
 }
 
 .main-image-wrap {
   position: relative;
-  width: 95%;
-  height: 70vh;
-  border-radius: 16px;
+  width: 100%;
+  height: 620px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  background: #f8faf8;
+  border: 1px solid #e5e7eb;
 }
 
 .main-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform .5s ease;
 }
 
 .main-image-wrap:hover .main-image {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
-
-.card-badge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  z-index: 10;
-}
-.badge-sale { background: #fee2e2; color: #dc2626; }
-.badge-new { background: #dbeafe; color: #1d4ed8; }
-.badge-best { background: #fef3c7; color: #b45309; }
-.badge-default { background: #dcfce7; color: #15803d; }
 
 .thumbnail-row {
   display: flex;
-  gap: 25px;
+  gap: 15px;
 }
 
 .thumb-btn {
-  width: 120px;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  border: 2px solid transparent;
+  width: 95px;
+  height: 95px;
+  border-radius: 14px;
   overflow: hidden;
+  border: 2px solid transparent;
   cursor: pointer;
-  padding: 0;
-  background: #fff;
-  transition: all 0.2s;
+  transition: .3s;
+  background: white;
 }
 
 .thumb-btn img {
@@ -468,183 +547,181 @@ const addToCart = (event) => {
   object-fit: cover;
 }
 
-.thumb-btn.active {
-  border-color: #2e7e3f;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(46, 126, 63, 0.2);
+.thumb-btn:hover {
+  transform: translateY(-4px);
 }
 
+.thumb-btn.active {
+  border-color: #2e7d32;
+  box-shadow: 0 6px 20px rgba(46,125,50,.15);
+}
+
+/* Badges */
+.card-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 10;
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-sale {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.badge-new {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-best {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.badge-default {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Product Info */
 .info-section {
   display: flex;
   flex-direction: column;
 }
 
 .product-category {
-  font-size: 12px;
-  font-weight: 700;
+  color: #2e7d32;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #2e7e3f;
-  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 13px;
 }
 
 .product-title {
-  margin: 0 0 12px;
-  font-size: 32px;
+  font-size: 42px;
   font-weight: 800;
-  color: #1b1c1a;
-  line-height: 1.1;
+  color: #111827;
+  margin: 12px 0 18px;
+  line-height: 1.2;
 }
 
 .product-rating {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
 .stars {
-  font-size: 16px;
   display: flex;
-  gap: 2px;
+  gap: 3px;
+  font-size: 18px;
 }
 
-.star-filled { color: #f59e0b; }
-.star-empty { color: #d1d5db; }
+.star-filled {
+  color: #fbbf24;
+}
+
+.star-empty {
+  color: #d1d5db;
+}
 
 .rating-text {
-  font-size: 14px;
-  font-weight: 500;
   color: #6b7280;
 }
 
+/* Price */
 .product-price-block {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(200, 210, 200, 0.4);
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-bottom: 25px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .price {
-  font-size: 36px;
+  font-size: 42px;
   font-weight: 800;
-  color: #1f6a35;
-  line-height: 1;
+  color: #2e7d32;
 }
 
 .original-price {
-  font-size: 18px;
-  color: #9ca3af;
+  font-size: 22px;
   text-decoration: line-through;
-  font-weight: 500;
+  color: #9ca3af;
 }
 
 .discount-tag {
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.short-desc {
-  font-size: 1rem;
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 2rem;
-}
-
-.farmer-info-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: #ffebee;
+  color: #d32f2f;
+  padding: 6px 12px;
   border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 2rem;
+  font-weight: 700;
 }
 
-.farmer-heading {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  color: #9ca3af;
-  margin: 0 0 0.5rem 0;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+/* Description */
+.short-desc {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 30px;
 }
 
-.farmer-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  transition: opacity 0.2s;
-}
-
-.farmer-link:hover {
-  opacity: 0.8;
-}
-
-.farmer-details {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+/* Farmer Card */
+.farmer-info-card {
+  background: #f8faf8;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 30px;
 }
 
 .farm-name {
+  font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
-  font-size: 1.1rem;
-}
-
-.farmer-name {
-  color: #6b7280;
-  font-size: 0.95rem;
+  color: #111827;
 }
 
 .verified-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: #def7ec;
-  color: #03543f;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 10px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-/* ACTIONS */
+/* Quantity + Buttons */
 .action-block {
   display: flex;
-  align-items: stretch;
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .quantity-selector {
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 1px solid #c2c9bb;
+  border: 1px solid #d1d5db;
   border-radius: 999px;
-  padding: 4px;
+  background: white;
+  padding: 6px;
 }
 
 .qty-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: transparent;
-  font-size: 20px;
-  color: #42493e;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 50%;
-  transition: background 0.2s;
+  cursor: pointer;
+  font-size: 20px;
 }
 
 .qty-btn:hover {
@@ -652,143 +729,215 @@ const addToCart = (event) => {
 }
 
 .qty-val {
-  min-width: 32px;
+  min-width: 40px;
   text-align: center;
   font-weight: 700;
-  font-size: 16px;
-  color: #1b1c1a;
 }
 
 .add-to-cart-btn {
-  padding: 0 48px;
+  flex: 1;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #2e7e3f, #1f6130);
-  color: #fff;
-  font-size: 15px;
+  background: linear-gradient(135deg,#2e7d32,#1b5e20);
+  color: white;
   font-weight: 700;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(46, 126, 63, 0.25);
+  transition: .3s;
 }
 
 .add-to-cart-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(107, 161, 119, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(46,125,50,.25);
 }
 
 .save-btn {
-  width: 48px;
-  height: 48px;
-  border: 1px solid #c2c9bb;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: #fff;
-  color: #42493e;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid #d1d5db;
+  background: white;
   cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
 }
 
 .save-btn:hover {
-  border-color: #ef4444;
-  color: #ef4444;
+  color: red;
+  border-color: red;
 }
 
-.save-btn.is-saved {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: #fef2f2;
-}
-
-/* DELIVERY INFO */
+/* Delivery */
 .delivery-info {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  background: #f8faf8;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
 }
 
 .info-item {
   display: flex;
-  align-items: center;
   gap: 12px;
-  color: #4b5563;
-  font-size: 14px;
+  margin-bottom: 12px;
 }
 
-.info-item svg {
-  color: #2e7e3f;
-  flex-shrink: 0;
-}
-
-.info-item strong {
-  color: #1b1c1a;
-}
-
+/* Tabs */
 .tabs-section {
-  background: #fff;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  background: white;
+  border-radius: 24px;
+  padding: 35px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.05);
 }
 
 .tabs-header {
   display: flex;
-  gap: 32px;
+  gap: 35px;
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 24px;
+  margin-bottom: 25px;
 }
 
 .tab-btn {
-  padding: 0 0 12px;
   border: none;
-  background: transparent;
-  font-size: 16px;
+  background: none;
+  padding-bottom: 14px;
+  cursor: pointer;
   font-weight: 600;
   color: #6b7280;
-  cursor: pointer;
   position: relative;
-  transition: color 0.2s;
-}
-
-.tab-btn:hover {
-  color: #1b1c1a;
 }
 
 .tab-btn.active {
-  color: #2e7e3f;
+  color: #2e7d32;
 }
 
 .tab-btn.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
-  right: 0;
+  width: 100%;
   height: 3px;
-  background: #2e7e3f;
-  border-radius: 3px 3px 0 0;
+  background: #2e7d32;
+  border-radius: 10px;
 }
 
-.tab-content {
-  font-size: 15px;
-  line-height: 1.6;
+/* Reviews */
+.review-card {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid #f1f5f9;
+}
+
+/* Related Products */
+.section-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+  gap: 24px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .main-image-wrap {
+    height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-title {
+    font-size: 30px;
+  }
+
+  .price {
+    font-size: 32px;
+  }
+
+  .action-block {
+    flex-wrap: wrap;
+  }
+
+  .add-to-cart-btn {
+    width: 100%;
+    min-height: 56px;
+  }
+
+  .main-image-wrap {
+    height: 380px;
+  }
+
+  .tabs-section,
+  .main-content {
+    padding: 20px;
+  }
+}
+/* ==========================================
+   PRODUCT DETAILS SECTION
+========================================== */
+
+.details-section {
+  display: grid;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.section-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.section-card h2 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 18px;
+}
+
+.section-card p {
   color: #4b5563;
+  line-height: 1.8;
 }
 
-.tab-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1b1c1a;
-  margin: 0 0 12px;
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.reviews-list {
+.feature-list li {
+  padding: 14px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 500;
+  color: #374151;
+}
+
+.feature-list li:last-child {
+  border-bottom: none;
+}
+
+/* ==========================================
+   COMMUNITY REVIEW SECTION
+========================================== */
+
+.community-review-section {
+  margin-top: 35px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.review-grid {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -796,80 +945,288 @@ const addToCart = (event) => {
 
 .review-card {
   background: #f9fafb;
-  border-radius: 12px;
-  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
 }
 
-.review-header {
+.review-user {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.review-stars {
+  margin: 10px 0;
+  color: #fbbf24;
+  font-size: 18px;
+}
+
+.review-title h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.review-title p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.review-title h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.review-title p {
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* Rating Summary */
+
+.review-summary {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.rating-box {
+  background: #f8faf8;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+}
+
+.rating-box h1 {
+  font-size: 72px;
+  line-height: 1;
+  color: #2e7d32;
+  font-weight: 800;
+}
+
+.stars-big {
+  font-size: 26px;
+  color: #fbbf24;
+  margin: 10px 0;
+}
+
+.rating-box span {
+  color: #6b7280;
+}
+
+.rating-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.rating-row span {
+  min-width: 40px;
+  font-weight: 600;
+}
+
+.bar {
+  flex: 1;
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #2e7d32,
+    #4caf50
+  );
+  border-radius: 999px;
+}
+
+/* Review Cards */
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(350px,1fr));
+  gap: 20px;
+}
+
+.review-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 24px;
+  transition: all .3s ease;
+}
+
+.review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.06);
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    #2e7d32,
+    #4caf50
+  );
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-user h4 {
+  margin: 0;
+  color: #111827;
+}
+
+.review-user span {
+  font-size: 13px;
+  color: #2e7d32;
+}
+
+.review-stars {
+  color: #fbbf24;
+  margin: 14px 0;
+  font-size: 18px;
+}
+
+.review-card p {
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+/* ==========================================
+   RELATED PRODUCTS
+========================================== */
+
+.related-products-section {
+  margin-top: 50px;
+}
+
+.related-products-section h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+  gap: 24px;
+}
+
+.related-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e5e7eb;
+  transition: all .3s ease;
+}
+
+.related-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.08);
+}
+
+.related-card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.related-info {
+  padding: 18px;
+}
+
+.related-info h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
   margin-bottom: 8px;
 }
 
-.reviewer-name {
+.related-info span {
+  color: #2e7d32;
   font-weight: 700;
-  color: #1b1c1a;
+  font-size: 18px;
 }
 
-.review-comment {
-  margin: 0;
-}
+/* ==========================================
+   MOBILE
+========================================== */
 
-.related-products {
-  margin-top: 24px;
-}
+@media (max-width: 768px) {
 
-.section-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #1b1c1a;
-  margin: 0 0 24px;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 32px;
-}
-
-@media (max-width: 900px) {
-  .main-content {
+  .review-summary {
     grid-template-columns: 1fr;
-    gap: 32px;
+  }
+
+  .community-review-section {
+    padding: 24px;
+  }
+
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .related-grid {
+    grid-template-columns: repeat(2,1fr);
+    gap: 14px;
+  }
+
+  .rating-box h1 {
+    font-size: 56px;
   }
 }
 
-@media (max-width: 600px) {
-  .product-detail-page {
-    padding: 16px 12px 40px;
+@media (max-width: 500px) {
+
+  .related-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .main-content, .tabs-section {
-    padding: 20px;
-  }
-  
-  .product-title {
-    font-size: 24px;
-  }
-  
-  .price {
-    font-size: 28px;
-  }
-  
-  .action-block {
-    flex-wrap: wrap;
-  }
-  
-  .add-to-cart-btn {
-    width: 100%;
-    order: 3;
-    padding: 14px;
-  }
-  
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+
+  .review-title h2,
+  .related-products-section h2 {
+    font-size: 26px;
   }
 }
 </style>
+
