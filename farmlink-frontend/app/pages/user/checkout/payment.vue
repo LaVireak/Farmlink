@@ -313,7 +313,7 @@ async function processPayment() {
       if (response.ok && data.status === 'succeeded') {
         // Success! Navigate to the success page!
         console.log('Payment Succeeded! ID:', data.id);
-        navigateTo('/user/checkout/Success');
+        navigateTo(`/user/checkout/Success?payment_ref=${data.id}`);
       } else {
         throw new Error(data.message || 'Payment failed on server');
       }

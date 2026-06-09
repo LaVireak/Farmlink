@@ -11,12 +11,44 @@ export const useCart = () => {
     { id: 4, name: 'Organic Whole Milk', farm: 'Meadow Brook Dairy', price: 6.5 }
   ]
 
+  const config = useRuntimeConfig()
+
+  async function validateCart() {
+    if (cart.value.length === 0) return
+    try {
+      const products = await $fetch<any[]>(`${config.public.apiUrl}/products`)
+      const validCart = cart.value.filter(item => {
+        const prod = products.find(p => p.id === item.id)
+        if (!prod) return false
+        
+        // Update price and stock in case they changed in backend
+        item.price = Number(prod.pricePerUnit) || item.price
+        const stockAvailable = prod.stockQuantity !== undefined 
+          ? Number(prod.stockQuantity) 
+          : (prod.stock !== undefined ? Number(prod.stock) : 9999)
+        item.stock = stockAvailable
+        if (item.quantity > stockAvailable) {
+          item.quantity = stockAvailable
+        }
+        return item.quantity > 0
+      })
+
+      if (validCart.length !== cart.value.length || JSON.stringify(validCart) !== JSON.stringify(cart.value)) {
+        cart.value = validCart
+        localStorage.setItem('farmlink_cart', JSON.stringify(validCart))
+      }
+    } catch (e) {
+      console.error('Failed to validate cart:', e)
+    }
+  }
+
   // Load cart from localStorage on init
-  onMounted(() => {
+  onMounted(async () => {
     const saved = localStorage.getItem('farmlink_cart')
     if (saved) {
       try {
         cart.value = JSON.parse(saved)
+        await validateCart()
       } catch (e) {
         console.error('Failed to load cart from localStorage:', e)
         cart.value = []
@@ -126,6 +158,7 @@ export const useCart = () => {
     increase,
     decrease,
     removeItem,
-    triggerAnimation
+    triggerAnimation,
+    validateCart
   }
 }

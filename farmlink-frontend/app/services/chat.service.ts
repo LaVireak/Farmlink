@@ -1,6 +1,6 @@
 import { getAccessToken } from './auth.service'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
 const apiFetch = async <T>(path: string, options: RequestInit): Promise<T> => {
   const token = await getAccessToken()

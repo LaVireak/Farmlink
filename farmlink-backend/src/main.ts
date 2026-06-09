@@ -7,8 +7,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
+  const origins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://mobile-pc-builder.vercel.app',
+    'https://ffarmllink.vercel.app',
+  ];
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://mobile-pc-builder.vercel.app', 'https://ffarmllink.vercel.app'],
+    origin: origins,
     credentials: true,
   });
   app.setGlobalPrefix('api');

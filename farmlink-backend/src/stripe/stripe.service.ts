@@ -27,7 +27,7 @@ export class StripeService {
         currency: 'usd',
         payment_method: paymentMethodId,
         confirm: true,
-        return_url: 'http://localhost:3000/user/checkout/Success',
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/user/checkout/Success`,
       });
       return paymentIntent;
     } catch (error: any) {
