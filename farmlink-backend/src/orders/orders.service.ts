@@ -128,56 +128,60 @@ export class OrdersService {
 
     const orderNumber = this.generateOrderNumber();
 
-    const order = this.ordersRepository.create({
-      consumerId: createOrderDto.consumerId,
-      orderNumber,
-      paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
-      paymentStatus: (createOrderDto.paymentStatus as PaymentStatus) || PaymentStatus.UNPAID,
-      deliveryAddress: createOrderDto.deliveryAddress,
-      deliveryLat: createOrderDto.deliveryLat,
-      deliveryLng: createOrderDto.deliveryLng,
-      note: createOrderDto.note,
-      subtotal,
-      deliveryFee,
-      totalAmount,
+    const savedOrder = await this.ordersRepository.manager.transaction(async (tem) => {
+      const order = tem.create(Order, {
+        consumerId: createOrderDto.consumerId,
+        orderNumber,
+        paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
+        paymentStatus: (createOrderDto.paymentStatus as PaymentStatus) || PaymentStatus.UNPAID,
+        paymentRef: createOrderDto.paymentRef,
+        deliveryAddress: createOrderDto.deliveryAddress,
+        deliveryLat: createOrderDto.deliveryLat,
+        deliveryLng: createOrderDto.deliveryLng,
+        note: createOrderDto.note,
+        subtotal,
+        deliveryFee,
+        totalAmount,
+      });
+
+      const saved = await tem.save(Order, order);
+
+      const items: OrderItem[] = [];
+      for (const item of createOrderDto.items) {
+        const prod = await tem.findOne(Product, { where: { id: item.productId } });
+        if (!prod) {
+          throw new NotFoundException(`Product with ID ${item.productId} not found`);
+        }
+
+        if (prod.stockQuantity < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for product ${prod.nameEn}. Available: ${prod.stockQuantity}`);
+        }
+
+        // Deduct stock and increase totalSold
+        prod.stockQuantity -= item.quantity;
+        prod.totalSold = (Number(prod.totalSold) || 0) + item.quantity;
+        await tem.save(Product, prod);
+
+        let farmerId = item.farmerId;
+        if (!farmerId || farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
+          farmerId = prod.farmerId;
+        }
+
+        items.push(
+          tem.create(OrderItem, {
+            orderId: saved.id,
+            productId: item.productId,
+            farmerId: farmerId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.unitPrice * item.quantity,
+          }),
+        );
+      }
+
+      await tem.save(OrderItem, items);
+      return saved;
     });
-
-    const savedOrder = await this.ordersRepository.save(order);
-
-    const items: OrderItem[] = [];
-    for (const item of createOrderDto.items) {
-      const prod = await this.productsRepository.findOne({ where: { id: item.productId } });
-      if (!prod) {
-        throw new NotFoundException(`Product with ID ${item.productId} not found`);
-      }
-
-      if (prod.stockQuantity < item.quantity) {
-        throw new BadRequestException(`Insufficient stock for product ${prod.nameEn}. Available: ${prod.stockQuantity}`);
-      }
-
-      // Deduct stock and increase totalSold
-      prod.stockQuantity -= item.quantity;
-      prod.totalSold = (Number(prod.totalSold) || 0) + item.quantity;
-      await this.productsRepository.save(prod);
-
-      let farmerId = item.farmerId;
-      if (!farmerId || farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
-        farmerId = prod.farmerId;
-      }
-
-      items.push(
-        this.orderItemsRepository.create({
-          orderId: savedOrder.id,
-          productId: item.productId,
-          farmerId: farmerId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          subtotal: item.unitPrice * item.quantity,
-        }),
-      );
-    }
-
-    await this.orderItemsRepository.save(items);
 
     return this.getOrderById(savedOrder.id);
   }
