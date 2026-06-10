@@ -1,10 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
-import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
+import {
+  OrderResponseDto,
+  OrderPaginationDto,
+  CreateOrderDto,
+  OrderStatsDto,
+  OrderFilterDto,
+} from './dto/order.dto';
 import { Product } from '../products/product.entity';
 import { PaymentMethod, PaymentStatus } from '../common/enums/payment.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
@@ -45,11 +55,15 @@ export class OrdersService {
     }
 
     if (filters?.paymentStatus) {
-      query.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus: filters.paymentStatus });
+      query.andWhere('order.paymentStatus = :paymentStatus', {
+        paymentStatus: filters.paymentStatus,
+      });
     }
 
     if (filters?.consumerId) {
-      query.andWhere('order.consumerId = :consumerId', { consumerId: filters.consumerId });
+      query.andWhere('order.consumerId = :consumerId', {
+        consumerId: filters.consumerId,
+      });
     }
 
     if (filters?.startDate && filters?.endDate) {
@@ -123,65 +137,79 @@ export class OrdersService {
       subtotal += item.unitPrice * item.quantity;
     }
 
-    const deliveryFee = createOrderDto.deliveryLat && createOrderDto.deliveryLng ? 5.0 : 0;
+    const deliveryFee =
+      createOrderDto.deliveryLat && createOrderDto.deliveryLng ? 5.0 : 0;
     const totalAmount = subtotal + deliveryFee;
 
     const orderNumber = this.generateOrderNumber();
 
-    const savedOrder = await this.ordersRepository.manager.transaction(async (tem) => {
-      const order = tem.create(Order, {
-        consumerId: createOrderDto.consumerId,
-        orderNumber,
-        paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
-        paymentStatus: (createOrderDto.paymentStatus as PaymentStatus) || PaymentStatus.UNPAID,
-        paymentRef: createOrderDto.paymentRef,
-        deliveryAddress: createOrderDto.deliveryAddress,
-        deliveryLat: createOrderDto.deliveryLat,
-        deliveryLng: createOrderDto.deliveryLng,
-        note: createOrderDto.note,
-        subtotal,
-        deliveryFee,
-        totalAmount,
-      });
+    const savedOrder = await this.ordersRepository.manager.transaction(
+      async (tem) => {
+        const order = tem.create(Order, {
+          consumerId: createOrderDto.consumerId,
+          orderNumber,
+          paymentMethod: createOrderDto.paymentMethod as PaymentMethod,
+          paymentStatus:
+            (createOrderDto.paymentStatus as PaymentStatus) ||
+            PaymentStatus.UNPAID,
+          paymentRef: createOrderDto.paymentRef,
+          deliveryAddress: createOrderDto.deliveryAddress,
+          deliveryLat: createOrderDto.deliveryLat,
+          deliveryLng: createOrderDto.deliveryLng,
+          note: createOrderDto.note,
+          subtotal,
+          deliveryFee,
+          totalAmount,
+        });
 
-      const saved = await tem.save(Order, order);
+        const saved = await tem.save(Order, order);
 
-      const items: OrderItem[] = [];
-      for (const item of createOrderDto.items) {
-        const prod = await tem.findOne(Product, { where: { id: item.productId } });
-        if (!prod) {
-          throw new NotFoundException(`Product with ID ${item.productId} not found`);
+        const items: OrderItem[] = [];
+        for (const item of createOrderDto.items) {
+          const prod = await tem.findOne(Product, {
+            where: { id: item.productId },
+          });
+          if (!prod) {
+            throw new NotFoundException(
+              `Product with ID ${item.productId} not found`,
+            );
+          }
+
+          if (prod.stockQuantity < item.quantity) {
+            throw new BadRequestException(
+              `Insufficient stock for product ${prod.nameEn}. Available: ${prod.stockQuantity}`,
+            );
+          }
+
+          // Deduct stock and increase totalSold
+          prod.stockQuantity -= item.quantity;
+          prod.totalSold = (Number(prod.totalSold) || 0) + item.quantity;
+          await tem.save(Product, prod);
+
+          let farmerId = item.farmerId;
+          if (
+            !farmerId ||
+            farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111'
+          ) {
+            farmerId = prod.farmerId;
+          }
+
+          items.push(
+            tem.create(OrderItem, {
+              orderId: saved.id,
+              productId: item.productId,
+              farmerId: farmerId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotal: item.unitPrice * item.quantity,
+            }),
+          );
         }
 
-        if (prod.stockQuantity < item.quantity) {
-          throw new BadRequestException(`Insufficient stock for product ${prod.nameEn}. Available: ${prod.stockQuantity}`);
-        }
-
-        // Deduct stock and increase totalSold
-        prod.stockQuantity -= item.quantity;
-        prod.totalSold = (Number(prod.totalSold) || 0) + item.quantity;
-        await tem.save(Product, prod);
-
-        let farmerId = item.farmerId;
-        if (!farmerId || farmerId === 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
-          farmerId = prod.farmerId;
-        }
-
-        items.push(
-          tem.create(OrderItem, {
-            orderId: saved.id,
-            productId: item.productId,
-            farmerId: farmerId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            subtotal: item.unitPrice * item.quantity,
-          }),
-        );
-      }
-
-      await tem.save(OrderItem, items);
-      return saved;
-    });
+        await tem.save(OrderItem, items);
+        return saved;
+      },
+    );
 
     return this.getOrderById(savedOrder.id);
   }
@@ -189,8 +217,13 @@ export class OrdersService {
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: string, status: string): Promise<OrderResponseDto> {
-    const order = await this.ordersRepository.findOne({ where: { id: orderId } });
+  async updateOrderStatus(
+    orderId: string,
+    status: string,
+  ): Promise<OrderResponseDto> {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+    });
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
@@ -213,18 +246,26 @@ export class OrdersService {
   /**
    * Cancel order
    */
-  async cancelOrder(orderId: string, reason?: string): Promise<OrderResponseDto> {
-    const order = await this.ordersRepository.findOne({ 
+  async cancelOrder(
+    orderId: string,
+    reason?: string,
+  ): Promise<OrderResponseDto> {
+    const order = await this.ordersRepository.findOne({
       where: { id: orderId },
-      relations: ['items', 'items.product']
+      relations: ['items', 'items.product'],
     });
 
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found`);
     }
 
-    if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
-      throw new BadRequestException(`Cannot cancel order with status ${order.status}`);
+    if (
+      order.status === OrderStatus.COMPLETED ||
+      order.status === OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        `Cannot cancel order with status ${order.status}`,
+      );
     }
 
     // Restore stock and adjust totalSold for each item
@@ -232,7 +273,10 @@ export class OrdersService {
       for (const item of order.items) {
         if (item.product) {
           item.product.stockQuantity += item.quantity;
-          item.product.totalSold = Math.max(0, (Number(item.product.totalSold) || 0) - item.quantity);
+          item.product.totalSold = Math.max(
+            0,
+            (Number(item.product.totalSold) || 0) - item.quantity,
+          );
           await this.productsRepository.save(item.product);
         }
       }
@@ -269,7 +313,8 @@ export class OrdersService {
       where: { status: 'CANCELLED' as any },
     });
 
-    const avgOrderValue = totalOrders > 0 ? (parseFloat(totalRevenue?.sum || 0) / totalOrders) : 0;
+    const avgOrderValue =
+      totalOrders > 0 ? parseFloat(totalRevenue?.sum || 0) / totalOrders : 0;
 
     return {
       totalOrders,
@@ -296,8 +341,12 @@ export class OrdersService {
       deliveryFee: parseFloat(order.deliveryFee.toString()),
       totalAmount: parseFloat(order.totalAmount.toString()),
       deliveryAddress: order.deliveryAddress,
-      deliveryLat: order.deliveryLat ? parseFloat(order.deliveryLat.toString()) : undefined,
-      deliveryLng: order.deliveryLng ? parseFloat(order.deliveryLng.toString()) : undefined,
+      deliveryLat: order.deliveryLat
+        ? parseFloat(order.deliveryLat.toString())
+        : undefined,
+      deliveryLng: order.deliveryLng
+        ? parseFloat(order.deliveryLng.toString())
+        : undefined,
       note: order.note,
       disputeReason: order.disputeReason,
       confirmedAt: order.confirmedAt,
@@ -306,12 +355,14 @@ export class OrdersService {
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       consumerId: order.consumerId,
-      consumer: order.consumer ? {
-        id: order.consumer.id,
-        email: order.consumer.email,
-        firstName: (order.consumer as any).firstName,
-        lastName: (order.consumer as any).lastName,
-      } : undefined,
+      consumer: order.consumer
+        ? {
+            id: order.consumer.id,
+            email: order.consumer.email,
+            firstName: (order.consumer as any).firstName,
+            lastName: (order.consumer as any).lastName,
+          }
+        : undefined,
       items: order.items?.map((item) => ({
         id: item.id ?? '',
         productId: item.productId,
@@ -320,16 +371,20 @@ export class OrdersService {
         unitPrice: parseFloat(item.unitPrice.toString()),
         subtotal: parseFloat(item.subtotal.toString()),
         farmerStatus: item.farmerStatus,
-        product: item.product ? {
-          id: item.product.id,
-          nameEn: item.product.nameEn,
-          unit: item.product.unit,
-          thumbnailUrl: item.product.thumbnailUrl ?? undefined,
-        } : undefined,
-        farmer: item.farmer ? {
-          id: item.farmer.id,
-          farmName: item.farmer.farmName,
-        } : undefined,
+        product: item.product
+          ? {
+              id: item.product.id,
+              nameEn: item.product.nameEn,
+              unit: item.product.unit,
+              thumbnailUrl: item.product.thumbnailUrl ?? undefined,
+            }
+          : undefined,
+        farmer: item.farmer
+          ? {
+              id: item.farmer.id,
+              farmName: item.farmer.farmName,
+            }
+          : undefined,
       })),
     };
   }
@@ -344,7 +399,9 @@ export class OrdersService {
   }
 
   private async markOrderPaidByReference(paymentRef: string) {
-    const order = await this.ordersRepository.findOne({ where: { paymentRef } });
+    const order = await this.ordersRepository.findOne({
+      where: { paymentRef },
+    });
     if (!order) return;
     if (order.paymentStatus !== PaymentStatus.PAID) {
       order.paymentStatus = PaymentStatus.PAID;
@@ -362,10 +419,15 @@ export class OrdersService {
   /**
    * Create a demo dynamic PayWay QR using ABA PayWay sandbox API
    */
-  async createDemoDynamicQr(body: { amount: number; lifetimeMinutes?: number }): Promise<any> {
+  async createDemoDynamicQr(body: {
+    amount: number;
+    lifetimeMinutes?: number;
+  }): Promise<any> {
     const merchantId = process.env.PAYWAY_MERCHANT_ID ?? '';
     const apiKey = process.env.PAYWAY_PUBLIC_KEY ?? '';
-    const apiUrl = process.env.PAYWAY_QR_API_URL ?? 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/generate-qr';
+    const apiUrl =
+      process.env.PAYWAY_QR_API_URL ??
+      'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/generate-qr';
 
     if (!merchantId || !apiKey) {
       throw new BadRequestException('PayWay configuration missing');
@@ -373,7 +435,7 @@ export class OrdersService {
 
     // Native JS date formatting (YYYYMMDDHHmmss)
     const now = new Date();
-    const reqTime = 
+    const reqTime =
       now.getFullYear().toString() +
       (now.getMonth() + 1).toString().padStart(2, '0') +
       now.getDate().toString().padStart(2, '0') +
@@ -381,10 +443,14 @@ export class OrdersService {
       now.getMinutes().toString().padStart(2, '0') +
       now.getSeconds().toString().padStart(2, '0');
 
-    const tranId = `FL${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 9999).toString().padStart(4, '0')}`;
+    const tranId = `FL${Date.now().toString().slice(-10)}${Math.floor(
+      Math.random() * 9999,
+    )
+      .toString()
+      .padStart(4, '0')}`;
     const amount = Number(body.amount ?? 1).toFixed(2);
     const lifetime = Number(body.lifetimeMinutes ?? 15);
-    
+
     const firstName = 'Farm';
     const lastName = 'Link';
     const email = 'info@farmlink.com';
@@ -392,20 +458,23 @@ export class OrdersService {
     const purchaseType = 'purchase';
     const paymentOption = 'abapay_khqr';
     const currency = 'USD';
-    const imageTemplate = process.env.PAYWAY_QR_IMAGE_TEMPLATE ?? 'template3_color';
-    
+    const imageTemplate =
+      process.env.PAYWAY_QR_IMAGE_TEMPLATE ?? 'template3_color';
+
     const itemsList = [{ name: 'Order Payment', quantity: 1, price: amount }];
     const items = Buffer.from(JSON.stringify(itemsList)).toString('base64');
-    
+
     const rawCallbackUrl = process.env.PAYWAY_CALLBACK_URL || '';
-    const callbackUrlBase64 = rawCallbackUrl ? Buffer.from(rawCallbackUrl).toString('base64') : '';
+    const callbackUrlBase64 = rawCallbackUrl
+      ? Buffer.from(rawCallbackUrl).toString('base64')
+      : '';
 
     const returnDeeplink = '';
     const customFields = '';
     const returnParams = '';
     const payout = '';
 
-    const hashInput = 
+    const hashInput =
       reqTime +
       merchantId +
       tranId +
@@ -426,7 +495,10 @@ export class OrdersService {
       lifetime +
       imageTemplate;
 
-    const hash = crypto.createHmac('sha512', apiKey).update(hashInput).digest('base64');
+    const hash = crypto
+      .createHmac('sha512', apiKey)
+      .update(hashInput)
+      .digest('base64');
 
     const payload = {
       req_time: reqTime,
@@ -454,23 +526,32 @@ export class OrdersService {
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify(payload),
       });
 
       const result = (await response.json()) as Record<string, any>;
       console.log('[ABA PayWay] Generate QR Response:', JSON.stringify(result));
 
-      const statusCode = (result['status'] as Record<string, any> | undefined)?.['code'];
+      const statusCode = (
+        result['status'] as Record<string, any> | undefined
+      )?.['code'];
       if (statusCode !== '0' && statusCode !== '00') {
-        const message = (result['status'] as Record<string, any> | undefined)?.['message'] || 'Failed to generate QR';
+        const message =
+          (result['status'] as Record<string, any> | undefined)?.['message'] ||
+          'Failed to generate QR';
         throw new BadRequestException(message);
       }
 
       const qrString = result['qrString'];
       const qrImage = result['qrImage'] || '';
       const abapayDeeplink = result['abapay_deeplink'] || '';
-      const expiresAt = new Date(Date.now() + lifetime * 60 * 1000).toISOString();
+      const expiresAt = new Date(
+        Date.now() + lifetime * 60 * 1000,
+      ).toISOString();
 
       return {
         tranId,
@@ -483,7 +564,8 @@ export class OrdersService {
       };
     } catch (err: unknown) {
       if (err instanceof BadRequestException) throw err;
-      const message = err instanceof Error ? err.message : 'Failed to reach ABA PayWay API';
+      const message =
+        err instanceof Error ? err.message : 'Failed to reach ABA PayWay API';
       throw new BadRequestException(message);
     }
   }
@@ -492,14 +574,18 @@ export class OrdersService {
    * Check payment status by transaction ID
    */
   async checkPaymentStatus(tranId: string): Promise<any> {
-    const order = await this.ordersRepository.findOne({ where: { paymentRef: tranId } });
+    const order = await this.ordersRepository.findOne({
+      where: { paymentRef: tranId },
+    });
 
     const merchantId = process.env.PAYWAY_MERCHANT_ID ?? '';
     const apiKey = process.env.PAYWAY_PUBLIC_KEY ?? '';
-    const checkUrl = process.env.PAYWAY_CHECK_TRANSACTION_URL ?? 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2';
+    const checkUrl =
+      process.env.PAYWAY_CHECK_TRANSACTION_URL ??
+      'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2';
 
     const now = new Date();
-    const reqTime = 
+    const reqTime =
       now.getFullYear().toString() +
       (now.getMonth() + 1).toString().padStart(2, '0') +
       now.getDate().toString().padStart(2, '0') +
@@ -509,7 +595,10 @@ export class OrdersService {
 
     // Hash for check transaction: HMAC-SHA512(req_time + merchant_id + tran_id)
     const hashInput = `${reqTime}${merchantId}${tranId}`;
-    const hash = crypto.createHmac('sha512', apiKey).update(hashInput).digest('base64');
+    const hash = crypto
+      .createHmac('sha512', apiKey)
+      .update(hashInput)
+      .digest('base64');
 
     const payload = {
       merchant_id: merchantId,
@@ -521,7 +610,10 @@ export class OrdersService {
     try {
       const response = await fetch(checkUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify(payload),
       });
 
@@ -530,7 +622,7 @@ export class OrdersService {
 
       const data = result['data'] as Record<string, any> | undefined;
       const paymentStatusCode = data?.['payment_status_code'];
-      
+
       let paymentStatus: 'unpaid' | 'paid' | 'failed' | 'refunded' = 'unpaid';
       const providerStatus = data?.['payment_status'] ?? 'PENDING';
 
@@ -566,7 +658,9 @@ export class OrdersService {
           tranId,
         };
       }
-      throw new NotFoundException(`Unable to check status for transaction ${tranId}`);
+      throw new NotFoundException(
+        `Unable to check status for transaction ${tranId}`,
+      );
     }
   }
 
@@ -582,9 +676,9 @@ export class OrdersService {
   }
 
   private async triggerPaymentSuccessNotifications(orderId: string) {
-    const order = await this.ordersRepository.findOne({ 
+    const order = await this.ordersRepository.findOne({
       where: { id: orderId },
-      relations: ['items', 'items.farmer']
+      relations: ['items', 'items.farmer'],
     });
 
     if (!order) return;
@@ -595,20 +689,23 @@ export class OrdersService {
       NotificationType.ORDER_CONFIRMED,
       'Payment Successful',
       `Your payment for order #${order.orderNumber} was successful.`,
-      { orderId: order.id }
+      { orderId: order.id },
     );
 
     // Notify Farmers
     if (order.items && order.items.length > 0) {
-      const farmerIds = new Set(order.items.map(item => item.farmerId).filter(Boolean));
+      const farmerIds = new Set(
+        order.items.map((item) => item.farmerId).filter(Boolean),
+      );
       for (const farmerId of farmerIds) {
-        if (farmerId && farmerId !== 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') { // Ignore mock/admin dummy if any
+        if (farmerId && farmerId !== 'e1cb5bd7-98b7-4c75-ba7e-36c5332f1111') {
+          // Ignore mock/admin dummy if any
           await this.notificationsService.createNotification(
             farmerId,
             NotificationType.ORDER_PLACED,
             'New Order Received',
             `You have received a new order: #${order.orderNumber}.`,
-            { orderId: order.id }
+            { orderId: order.id },
           );
         }
       }

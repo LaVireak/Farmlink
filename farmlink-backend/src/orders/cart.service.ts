@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cart } from './cart.entity';
@@ -16,7 +20,10 @@ export class CartService {
   ) {}
 
   async getOrCreateCart(consumerId: string): Promise<Cart> {
-    let cart = await this.cartRepo.findOne({ where: { consumerId }, relations: ['items', 'items.product'] });
+    let cart = await this.cartRepo.findOne({
+      where: { consumerId },
+      relations: ['items', 'items.product'],
+    });
     if (!cart) {
       cart = this.cartRepo.create({ consumerId });
       cart = await this.cartRepo.save(cart);
@@ -25,18 +32,25 @@ export class CartService {
   }
 
   async getCart(consumerId: string): Promise<Cart> {
-    const cart = await this.cartRepo.findOne({ where: { consumerId }, relations: ['items', 'items.product'] });
+    const cart = await this.cartRepo.findOne({
+      where: { consumerId },
+      relations: ['items', 'items.product'],
+    });
     if (!cart) throw new NotFoundException('Cart not found');
     return cart;
   }
 
   async addItem(consumerId: string, productId: string, quantity = 1) {
-    const product = await this.productRepo.findOne({ where: { id: productId } });
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+    });
     if (!product) throw new NotFoundException('Product not found');
 
     const cart = await this.getOrCreateCart(consumerId);
 
-    let item = await this.cartItemRepo.findOne({ where: { cartId: cart.id, productId } });
+    let item = await this.cartItemRepo.findOne({
+      where: { cartId: cart.id, productId },
+    });
     if (item) {
       item.quantity += quantity;
       item = await this.cartItemRepo.save(item);
@@ -47,9 +61,15 @@ export class CartService {
     return this.cartItemRepo.save(item);
   }
 
-  async updateItemQuantity(consumerId: string, itemId: string, quantity: number) {
+  async updateItemQuantity(
+    consumerId: string,
+    itemId: string,
+    quantity: number,
+  ) {
     const cart = await this.getOrCreateCart(consumerId);
-    const item = await this.cartItemRepo.findOne({ where: { id: itemId, cartId: cart.id } });
+    const item = await this.cartItemRepo.findOne({
+      where: { id: itemId, cartId: cart.id },
+    });
     if (!item) throw new NotFoundException('Cart item not found');
     if (quantity <= 0) return this.removeItem(consumerId, itemId);
     item.quantity = quantity;
@@ -58,7 +78,9 @@ export class CartService {
 
   async removeItem(consumerId: string, itemId: string) {
     const cart = await this.getOrCreateCart(consumerId);
-    const item = await this.cartItemRepo.findOne({ where: { id: itemId, cartId: cart.id } });
+    const item = await this.cartItemRepo.findOne({
+      where: { id: itemId, cartId: cart.id },
+    });
     if (!item) throw new NotFoundException('Cart item not found');
     await this.cartItemRepo.remove(item);
     return { success: true };
@@ -71,14 +93,27 @@ export class CartService {
   }
 
   // Checkout: convert cart items into order via OrdersService
-  async checkout(consumerId: string, checkoutPayload: { paymentMethod?: any; deliveryAddress?: string; deliveryLat?: number; deliveryLng?: number; note?: string }) {
+  async checkout(
+    consumerId: string,
+    checkoutPayload: {
+      paymentMethod?: any;
+      deliveryAddress?: string;
+      deliveryLat?: number;
+      deliveryLng?: number;
+      note?: string;
+    },
+  ) {
     const cart = await this.getCart(consumerId);
-    if (!cart.items || cart.items.length === 0) throw new BadRequestException('Cart is empty');
+    if (!cart.items || cart.items.length === 0)
+      throw new BadRequestException('Cart is empty');
 
     const items = await Promise.all(
       cart.items.map(async (ci) => {
-        const product = await this.productRepo.findOne({ where: { id: ci.productId } });
-        if (!product) throw new NotFoundException(`Product ${ci.productId} not found`);
+        const product = await this.productRepo.findOne({
+          where: { id: ci.productId },
+        });
+        if (!product)
+          throw new NotFoundException(`Product ${ci.productId} not found`);
         return {
           productId: ci.productId,
           farmerId: product.farmerId,

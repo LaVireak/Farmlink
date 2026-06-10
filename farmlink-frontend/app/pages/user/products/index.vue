@@ -29,25 +29,6 @@
       <!-- Sidebar -->
       <aside class="filter-sidebar">
         <!-- Category -->
-        <div class="filter-section">
-          <h3 class="filter-title">Search</h3>
-          <div class="relative">
-            <input
-              type="text"
-              v-model="searchQuery"
-              placeholder="Search products..."
-              class="filter-input"
-            />
-            <button 
-              v-if="searchQuery" 
-              @click="searchQuery = ''" 
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-              type="button"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
 
         <div class="filter-section">
           <h3 class="filter-title">Category</h3>
@@ -463,22 +444,6 @@ const handleAddToCart = (product, event) => {
   padding-right: 36px;
 }
 
-.filter-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid #c2c9bb;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  color: #1b1c1a;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.filter-input:focus {
-  border-color: #2e7e3f;
-}
 
 .filter-select:focus {
   border-color: #2e7e3f;

@@ -7,13 +7,9 @@ import { RewardTransaction } from './reward-transaction.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    AuthModule,
-    TypeOrmModule.forFeature([Reward, RewardTransaction]),
-  ],
+  imports: [AuthModule, TypeOrmModule.forFeature([Reward, RewardTransaction])],
   providers: [RewardsService],
   controllers: [RewardsController],
   exports: [RewardsService],
 })
 export class RewardsModule {}
-

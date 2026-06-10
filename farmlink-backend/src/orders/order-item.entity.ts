@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from '../products/product.entity';
 import { FarmerProfile } from '../farmers/farmer.entity';
@@ -9,7 +15,7 @@ export class OrderItem {
   @PrimaryGeneratedColumn('uuid')
   id?: string;
 
-  @ManyToOne(() => Order, order => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order?: Order;
 

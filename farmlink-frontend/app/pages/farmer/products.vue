@@ -549,7 +549,7 @@
                   <h2 class="text-xl font-bold text-white leading-tight">{{ viewingProduct?.name }}</h2>
                 </div>
                 <div class="text-right">
-                  <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-0.5">Registry ID</span>
+                  <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-0.5">Product ID</span>
                   <span class="text-xs font-bold text-white/90 font-mono block">#{{ String(viewingProduct.id)?.slice(0, 10) }}</span>
                 </div>
               </div>

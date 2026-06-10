@@ -2,194 +2,15 @@
     <div class="p-10 space-y-6 bg-[#f7fdf4]">
         <AdminProfileDropdown title="Product Management" />
 
-        <div class="flex items-end justify-end">
-            <div class="flex items-center gap-2">
-                <button
-                    @click="exportCSV"
-                    class="flex items-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors duration-150"
-                >
-                    <Download class="w-4 h-4" />
-                    Export
-                </button>
-                <button
-                    @click="filterStatus = 'Pending'"
-                    class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors duration-150 shadow-sm relative"
-                >
-                    <Clock class="w-4 h-4" />
-                    Review Queue
-                    <span v-if="pendingCount > 0" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                        {{ pendingCount }}
-                    </span>
-                </button>
-            </div>
-        </div>
 
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <AdminStatsCard title="Total Products" :value="String(products.length)"           :percent="8"  :icon="Package" />
-            <AdminStatsCard title="Approved"       :value="String(countByStatus('Approved'))" :percent="12" :icon="PackageCheck" />
-            <AdminStatsCard title="Pending"        :value="String(countByStatus('Pending'))"  :percent="0"  :icon="Clock" />
-            <AdminStatsCard title="Rejected"       :value="String(countByStatus('Rejected'))" :percent="-3" :icon="PackageX" />
+            <AdminStatsCard title="Total Products"    :value="String(products.length)"                    :percent="totalProductsGrowth"     :icon="Package" />
+            <AdminStatsCard title="Total Categories"  :value="String(categories.length)"                  :percent="categoryGrowth"          :icon="Layers" />
+            <AdminStatsCard title="Low Stock"         :value="String(lowStockCount)"                      :percent="lowStockProductsGrowth"  :icon="AlertTriangle" />
+            <AdminStatsCard title="Featured Products" :value="String(products.filter(p => p.featured).length)" :percent="featuredProductsGrowth"  :icon="PackageCheck" />
         </section>
 
-        <section class="grid grid-cols-5 gap-6">
-
-            <div class="col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-                        <h3 class="text-sm font-semibold text-gray-900">Pending Approval Queue</h3>
-                    </div>
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                        {{ pendingCount }} awaiting
-                    </span>
-                </div>
-
-                <div v-if="loading" class="flex flex-col items-center gap-3 py-12">
-                    <div class="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-sm text-gray-400">Loading products…</p>
-                </div>
-
-                <div v-else-if="pendingProducts.length === 0" class="flex flex-col items-center gap-3 py-12">
-                    <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center">
-                        <CheckCircle2 class="w-6 h-6 text-green-500" />
-                    </div>
-                    <p class="text-sm font-medium text-gray-500">All caught up!</p>
-                    <p class="text-xs text-gray-400">No products waiting for review</p>
-                </div>
-
-                <div v-else class="divide-y divide-gray-50">
-                    <div
-                        v-for="p in pendingProducts.slice(0, 5)" :key="p.id"
-                        class="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition group"
-                    >
-                        <div class="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                            <img :src="p.image" :alt="p.name" class="w-full h-full object-cover" @error="e => e.target.src = fallbackImage" />
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <p class="text-sm font-semibold text-gray-800 truncate">{{ p.name }}</p>
-                                <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0" :class="categoryClass(p.category)">{{ p.category }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <div class="w-4 h-4 rounded-full overflow-hidden bg-green-100 flex items-center justify-center flex-shrink-0">
-                                    <span class="text-[8px] font-bold text-green-700">{{ p.farmer.split(' ').map(n => n[0]).join('') }}</span>
-                                </div>
-                                <p class="text-xs text-gray-400">{{ p.farmer }} · submitted {{ p.submittedAt }}</p>
-                            </div>
-                        </div>
-                        <p class="text-sm font-bold text-gray-800 flex-shrink-0">${{ p.price }}</p>
-                        <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                                @click="openRejectModal(p)"
-                                class="text-xs font-medium px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition"
-                            >Reject</button>
-                            <button
-                                @click="approveProduct(p.id)"
-                                class="text-xs font-medium px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition"
-                            >Approve</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="pendingProducts.length > 5" class="px-5 py-3 border-t border-gray-100">
-                    <button
-                        @click="filterStatus = 'Pending'"
-                        class="text-xs text-green-600 hover:underline font-medium"
-                    >View all {{ pendingProducts.length }} pending products →</button>
-                </div>
-            </div>
-
-            <div class="col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h3 class="text-sm font-semibold text-gray-900 mb-4">Product Activity</h3>
-                <div class="space-y-0">
-                    <div
-                        v-for="act in productActivity" :key="act.id"
-                        class="flex gap-3 py-3 border-b border-gray-50 last:border-0"
-                    >
-                        <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :class="act.dotColor"></div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs text-gray-700 leading-snug">{{ act.text }}</p>
-                            <p class="text-[11px] text-gray-400 mt-0.5">{{ act.time }}</p>
-                        </div>
-                    </div>
-                    <div v-if="productActivity.length === 0" class="py-6 text-center text-xs text-gray-400">No activity yet</div>
-                </div>
-            </div>
-
-        </section>
-
-        <section class="grid grid-cols-2 gap-6">
-
-            <div class="border border-gray-100 rounded-2xl p-5 shadow-sm bg-white">
-                <div class="flex items-start justify-between gap-4 mb-4">
-                    <h2 class="text-sm font-semibold text-gray-900">
-                        Submission Trend
-                        <span class="text-gray-400 font-normal">({{ trendRangeLabel }})</span>
-                    </h2>
-                    <div class="flex items-center gap-1 bg-gray-100 rounded-xl p-1 flex-shrink-0">
-                        <button
-                            v-for="r in trendRanges" :key="r.key"
-                            @click="setTrendRange(r.key)"
-                            class="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all duration-150"
-                            :class="trendRange === r.key
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-400 hover:text-gray-600'"
-                        >{{ r.label }}</button>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 mb-4 text-xs text-gray-400">
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Approved</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Pending</span>
-                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span> Rejected</span>
-                </div>
-                <div class="relative h-40">
-                    <svg class="w-full h-full overflow-visible" :viewBox="`0 0 ${TW} ${TH}`" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="approvedGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#22c55e" stop-opacity="0.25" />
-                                <stop offset="100%" stop-color="#22c55e" stop-opacity="0.02" />
-                            </linearGradient>
-                            <linearGradient id="pendingGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#f59e0b" stop-opacity="0.20" />
-                                <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.02" />
-                            </linearGradient>
-                            <linearGradient id="rejectedGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%"   stop-color="#f87171" stop-opacity="0.18" />
-                                <stop offset="100%" stop-color="#f87171" stop-opacity="0.02" />
-                            </linearGradient>
-                        </defs>
-
-                        <line v-for="t in [0,5,10,15,20]" :key="'tg'+t"
-                            x1="0" :y1="trendYs(t)" :x2="TW" :y2="trendYs(t)"
-                            stroke="#f3f4f6" stroke-width="1" />
-
-                        <path :d="trendAreaPath('rejected')" fill="url(#rejectedGrad)" />
-                        <path :d="trendAreaPath('pending')"  fill="url(#pendingGrad)" />
-                        <path :d="trendAreaPath('approved')" fill="url(#approvedGrad)" />
-
-                        <path :d="trendLinePath('rejected')" fill="none" stroke="#f87171" stroke-width="2"   stroke-linecap="round" stroke-linejoin="round" />
-                        <path :d="trendLinePath('pending')"  fill="none" stroke="#f59e0b" stroke-width="2"   stroke-linecap="round" stroke-linejoin="round" />
-                        <path :d="trendLinePath('approved')" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-
-                        <template v-if="trendRange === '7d' || trendRange === '30d'">
-                            <template v-for="(key, ki) in ['rejected', 'pending', 'approved']" :key="key">
-                                <circle
-                                    v-for="(v, i) in trendData[key]" :key="key + i"
-                                    :cx="(i / (trendData[key].length - 1)) * TW"
-                                    :cy="trendYs(v)"
-                                    r="3.5"
-                                    :fill="['#f87171', '#f59e0b', '#16a34a'][ki]"
-                                    stroke="white"
-                                    stroke-width="1.5"
-                                />
-                            </template>
-                        </template>
-                    </svg>
-                </div>
-                <div class="flex justify-between mt-2">
-                    <span v-for="d in activeTrendDays" :key="d" class="text-[10px] text-gray-300 font-medium">{{ d }}</span>
-                </div>
-            </div>
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">Products by Category</h3>
@@ -227,165 +48,214 @@
                 </div>
             </div>
 
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">Product Activity</h3>
+                <div class="space-y-0">
+                    <div
+                        v-for="act in productActivity" :key="act.id"
+                        class="flex gap-3 py-3 border-b border-gray-50 last:border-0"
+                    >
+                        <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" :class="act.dotColor"></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs text-gray-700 leading-snug">{{ act.text }}</p>
+                            <p class="text-[11px] text-gray-400 mt-0.5">{{ act.time }}</p>
+                        </div>
+                    </div>
+                    <div v-if="productActivity.length === 0" class="py-6 text-center text-xs text-gray-400">No activity yet</div>
+                </div>
+            </div>
+
         </section>
 
         <AdminProductTable
             :products="filteredProducts"
             :categories="categories"
             :search-query="searchQuery"
-            :filter-status="filterStatus"
             :filter-category="filterCategory"
-            :status-tabs="statusTabs"
             :category-class="categoryClass"
-            :status-class="statusClass"
             :initials="initials"
             @update:search-query="searchQuery = $event"
-            @update:filter-status="filterStatus = $event"
             @update:filter-category="filterCategory = $event"
-            @toggle-featured="toggleFeatured"
             @view-product="openViewModal"
-            @approve-product="approveProduct"
-            @reject-product="openRejectModal"
         />
 
-        <section class="grid grid-cols-3 gap-6">
-            <div v-for="goal in moderationGoals" :key="goal.label" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-sm font-medium text-gray-700">{{ goal.label }}</p>
-                    <span class="text-xs font-semibold" :style="{ color: goal.stroke }">{{ goal.percent }}%</span>
-                </div>
-                <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
-                    <div class="h-2 rounded-full transition-all duration-700" :style="{ width: goal.percent + '%', background: goal.stroke }"></div>
-                </div>
-                <div class="flex justify-between text-xs text-gray-400">
-                    <span>{{ goal.current }}</span>
-                    <span>Goal: {{ goal.target }}</span>
-                </div>
-            </div>
-        </section>
+        <teleport to="body">
+            <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+                leave-active-class="transition-all duration-100 ease-in" leave-to-class="opacity-0 scale-95">
+                <div v-if="viewModal.visible" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm p-4"
+                    @click.self="viewModal.visible = false">
+                    <div class="bg-white/95 backdrop-blur-md rounded-3xl max-w-2xl w-full border border-white/50 shadow-2xl relative overflow-hidden flex flex-col transition-all duration-150">
+                        
+                        <!-- Header visual / Image banner (Forest green gradient, full width, no white gap) -->
+                        <div class="w-full h-56 md:h-64 overflow-hidden relative text-white p-5 flex flex-col bg-gradient-to-br from-[#0c2317] to-[#1c4b35]">
+                            
+                            <!-- Product Image (No padding, beautiful overlay shadow) -->
+                            <div v-if="viewModal.product?.image" class="absolute inset-0 z-0 overflow-hidden">
+                                <img :src="getProductImage(viewModal.product.image)" @error="viewModal.product.image = ''" class="w-full h-full object-cover transition-transform duration-700 ease-out" alt="Produce Image" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/40 z-10"></div>
+                            </div>
 
-        <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0"
-            leave-active-class="transition-all duration-150 ease-in" leave-to-class="opacity-0">
-            <div v-if="rejectModal.visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                @click.self="rejectModal.visible = false">
-                <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-                    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center">
-                                <XCircle class="w-4 h-4 text-red-500" />
+                            <!-- Fallback / No Photo -->
+                            <div v-else class="absolute inset-0 bg-gradient-to-br from-[#0c2317] via-[#122e1f] to-[#1c4b35] z-0">
+                                <div class="absolute inset-2 rounded-xl bg-[radial-gradient(#2d6a4f_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+                                <div class="absolute inset-2 rounded-xl flex flex-col items-center justify-center text-7xl select-none opacity-90">
+                                    <span class="animate-bounce duration-[3000ms]">{{ getCategoryEmoji(viewModal.product?.category) }}</span>
+                                    <span class="text-[9px] font-bold text-emerald-500/50 tracking-widest uppercase mt-4">NO PHOTO UPLOADED</span>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">Reject Product</p>
-                                <p class="text-xs text-gray-400">{{ rejectModal.product?.name }}</p>
-                            </div>
-                        </div>
-                        <button @click="rejectModal.visible = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 transition">
-                            <X class="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div class="p-5 space-y-4">
-                        <div>
-                            <label class="text-xs font-semibold text-gray-700 block mb-2">Rejection Reason</label>
-                            <div class="grid grid-cols-2 gap-2 mb-3">
-                                <button
-                                    v-for="reason in rejectionReasons" :key="reason"
-                                    @click="rejectModal.reason = reason"
-                                    class="text-xs font-medium px-3 py-2 rounded-xl border transition text-left"
-                                    :class="rejectModal.reason === reason ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'"
-                                >{{ reason }}</button>
-                            </div>
-                            <textarea
-                                v-model="rejectModal.note"
-                                rows="3"
-                                placeholder="Add additional notes for the farmer (optional)…"
-                                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition placeholder:text-gray-300 resize-none"
-                            ></textarea>
-                        </div>
-                        <div class="flex items-center gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                            <AlertCircle class="w-4 h-4 text-amber-500 flex-shrink-0" />
-                            <p class="text-xs text-amber-700">The farmer will be notified with the reason you provide.</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <button @click="rejectModal.visible = false" class="flex-1 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Cancel</button>
-                            <button @click="executeReject" :disabled="!rejectModal.reason"
-                                class="flex-1 text-sm font-medium px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
-                            >Send Rejection</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Transition>
 
-        <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0"
-            leave-active-class="transition-all duration-150 ease-in" leave-to-class="opacity-0">
-            <div v-if="viewModal.visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                @click.self="viewModal.visible = false">
-                <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
-                    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <h3 class="text-sm font-semibold text-gray-900">Product Details</h3>
-                        <button @click="viewModal.visible = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 transition">
-                            <X class="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div v-if="viewModal.product" class="p-5 space-y-4">
-                        <div class="w-full h-44 rounded-xl overflow-hidden bg-gray-100">
-                            <img :src="viewModal.product.image" :alt="viewModal.product.name" class="w-full h-full object-cover" />
-                        </div>
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h2 class="text-base font-bold text-gray-900">{{ viewModal.product.name }}</h2>
-                                <p class="text-xs text-gray-400 mt-0.5">Submitted by {{ viewModal.product.farmer }} · {{ viewModal.product.submittedAt }}</p>
+                            <!-- Header Badges -->
+                            <div class="flex flex-wrap gap-2 z-20 relative">
+                                <span class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 shadow-2xs">
+                                    {{ viewModal.product?.category || 'Fruits' }}
+                                </span>
+                                <span v-if="viewModal.product?.badge === 'Organic' || !!viewModal.product?.isOrganic" class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/40 backdrop-blur-md rounded-lg border border-emerald-500/20 shadow-2xs flex items-center gap-1">
+                                    🌱 Organic
+                                </span>
+                                <span v-if="!!viewModal.product?.isSeasonal" class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-amber-400 bg-amber-950/40 backdrop-blur-md rounded-lg border border-amber-500/20 shadow-2xs flex items-center gap-1">
+                                    ☀️ Seasonal
+                                </span>
                             </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-green-600">${{ viewModal.product.price }}</p>
-                                <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="statusClass(viewModal.product.status)">{{ viewModal.product.status }}</span>
+
+                            <!-- Close Button -->
+                            <button @click="viewModal.visible = false" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center shadow-md border border-white/10 hover:scale-110 active:scale-95 transition-all duration-300 z-20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Form Details Content -->
+                        <div class="w-full p-6 md:p-8 flex flex-col justify-between relative overflow-hidden bg-white rounded-b-3xl">
+                            
+                            <!-- Premium Background Plant Silhouette -->
+                            <svg class="absolute -bottom-16 -right-16 w-52 h-52 text-[#2d6a4f]/5 pointer-events-none transform rotate-45 select-none z-0" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 3C11.5 3 7 7.5 7 17v2h2c9.5 0 12-4.5 12-14zm-4 4.5c-.8.8-2 .8-2.8 0s-.8-2 0-2.8 2-.8 2.8 0 .8 2 0 2.8zM3 13c0 4.4 3.6 8 8 8h2c-4.4 0-10-5.6-10-10z"/>
+                            </svg>
+
+                            <div class="z-10 relative space-y-5 flex-1 flex flex-col justify-between">
+                                <div class="space-y-5">
+                                    
+                                    <!-- Form Row 1: Name and Category -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Product Name (EN)</label>
+                                            <input :value="viewModal.product?.name" type="text" readonly
+                                                class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Category</label>
+                                            <div class="relative">
+                                                <select :value="viewModal.product?.category || 'Fruits'" disabled
+                                                    class="w-full pl-4 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none appearance-none cursor-default">
+                                                    <option>{{ viewModal.product?.category || 'Fruits' }}</option>
+                                                </select>
+                                                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Row 2: Pricing, Selling Unit, Stock -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Pricing (USD)</label>
+                                            <div class="relative">
+                                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-extrabold text-sm">$</span>
+                                                <input :value="viewModal.product?.price ? Number(viewModal.product.price).toFixed(2) : '0.00'" type="text" readonly
+                                                    class="w-full pl-8 pr-16 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-bold cursor-default select-all" />
+                                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] text-[#2d6a4f] bg-emerald-50 border border-emerald-100/50 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider select-none">
+                                                    / {{ viewModal.product?.unit || 'kg' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Selling Unit</label>
+                                            <div class="relative">
+                                                <select :value="viewModal.product?.unit || 'kg'" disabled
+                                                    class="w-full pl-4 pr-10 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-default appearance-none">
+                                                    <option>{{ viewModal.product?.unit || 'kg' }}</option>
+                                                </select>
+                                                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Stock Quantity</label>
+                                            <input :value="viewModal.product?.stock" type="text" readonly
+                                                class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-bold cursor-default select-all" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Row 3: Description -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Description</label>
+                                        <textarea :value="viewModal.product?.description || 'No specific details provided for this crop batch.'" readonly
+                                            class="w-full h-24 px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 leading-relaxed cursor-default resize-none overflow-y-auto scrollbar-thin"></textarea>
+                                    </div>
+
+                                    <!-- Form Row 4: Quality & Seasonality Badges -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        
+                                        <!-- Pesticide Free -->
+                                        <div :class="viewModal.product?.badge === 'Organic' || !!viewModal.product?.isOrganic ? 'border-emerald-500 bg-emerald-50/30 ring-4 ring-emerald-500/5 shadow-sm' : 'border-gray-200/80 bg-white'"
+                                            class="flex items-center justify-between p-3.5 rounded-2xl border select-none transition duration-300">
+                                            <div class="flex items-center gap-3">
+                                                <span :class="viewModal.product?.badge === 'Organic' || !!viewModal.product?.isOrganic ? 'bg-emerald-500 text-white' : 'bg-gray-50 text-gray-400 border border-gray-100'"
+                                                    class="w-9 h-9 rounded-xl flex items-center justify-center text-base transition duration-300">🌱</span>
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider leading-none mb-1">Pesticide Free</h4>
+                                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Organic / Certified</p>
+                                                </div>
+                                            </div>
+                                            <div :class="viewModal.product?.badge === 'Organic' || !!viewModal.product?.isOrganic ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-200 bg-white'"
+                                                class="w-4.5 h-4.5 rounded-full border flex items-center justify-center transition duration-300 bg-white">
+                                                <svg v-if="viewModal.product?.badge === 'Organic' || !!viewModal.product?.isOrganic" class="w-3 h-3 stroke-[3px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Seasonal Product -->
+                                        <div :class="viewModal.product?.isSeasonal ? 'border-amber-500 bg-amber-50/30 ring-4 ring-amber-500/5 shadow-sm' : 'border-gray-200/80 bg-white'"
+                                            class="flex items-center justify-between p-3.5 rounded-2xl border select-none transition duration-300">
+                                            <div class="flex items-center gap-3">
+                                                <span :class="viewModal.product?.isSeasonal ? 'bg-amber-500 text-white' : 'bg-gray-50 text-gray-400 border border-gray-100'"
+                                                    class="w-9 h-9 rounded-xl flex items-center justify-center text-base transition duration-300">☀️</span>
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider leading-none mb-1">Seasonal Product</h4>
+                                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Harvested / Fresh</p>
+                                                </div>
+                                            </div>
+                                            <div :class="viewModal.product?.isSeasonal ? 'bg-amber-500 border-amber-500 text-white' : 'border-gray-200 bg-white'"
+                                                class="w-4.5 h-4.5 rounded-full border flex items-center justify-center transition duration-300 bg-white">
+                                                <svg v-if="viewModal.product?.isSeasonal" class="w-3 h-3 stroke-[3px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Metadata Footer -->
+                                    <div class="flex items-center justify-between pt-4 border-t border-gray-100 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                        <span>Farmer: <span class="text-gray-700 font-extrabold normal-case">{{ viewModal.product?.farmer }}</span></span>
+                                        <span>Submitted: <span class="text-gray-700 font-extrabold normal-case">{{ viewModal.product?.submittedAt }}</span></span>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-[11px] text-gray-400 mb-1">Category</p>
-                                <span class="text-xs font-semibold" :class="categoryClass(viewModal.product.category)">{{ viewModal.product.category }}</span>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-[11px] text-gray-400 mb-1">Product ID</p>
-                                <p class="text-xs font-mono font-semibold text-gray-700">#PRD-{{ String(viewModal.product.id).padStart(4,'0') }}</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-[11px] text-gray-400 mb-1">Featured</p>
-                                <p class="text-xs font-semibold" :class="viewModal.product.featured ? 'text-amber-600' : 'text-gray-400'">
-                                    {{ viewModal.product.featured ? 'Yes' : 'No' }}
-                                </p>
-                            </div>
-                        </div>
-                        <div v-if="viewModal.product.description" class="bg-gray-50 rounded-xl p-3">
-                            <p class="text-[11px] text-gray-400 mb-1">Description</p>
-                            <p class="text-xs text-gray-700 leading-relaxed">{{ viewModal.product.description }}</p>
-                        </div>
-                        <div v-if="viewModal.product.rejectionReason" class="bg-red-50 border border-red-100 rounded-xl p-3">
-                            <p class="text-[11px] text-red-500 font-semibold mb-1">Rejection Reason</p>
-                            <p class="text-xs text-red-700">{{ viewModal.product.rejectionReason }}</p>
-                        </div>
-                        <div class="flex gap-3 pt-1">
-                            <button
-                                v-if="viewModal.product.status === 'Pending'"
-                                @click="() => { approveProduct(viewModal.product.id); viewModal.visible = false }"
-                                class="flex-1 text-sm font-medium px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white transition flex items-center justify-center gap-2"
-                            ><CheckCircle2 class="w-4 h-4" /> Approve</button>
-                            <button
-                                v-if="viewModal.product.status === 'Pending'"
-                                @click="() => { viewModal.visible = false; openRejectModal(viewModal.product) }"
-                                class="flex-1 text-sm font-medium px-4 py-2.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition flex items-center justify-center gap-2"
-                            ><XCircle class="w-4 h-4" /> Reject</button>
-                            <button
-                                v-if="viewModal.product.status === 'Approved'"
-                                @click="() => { suspendProduct(viewModal.product.id); viewModal.visible = false }"
-                                class="flex-1 text-sm font-medium px-4 py-2.5 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50 transition"
-                            >Suspend</button>
-                        </div>
+
                     </div>
                 </div>
-            </div>
-        </Transition>
+            </Transition>
+        </teleport>
 
         <!-- Toast -->
         <Transition enter-active-class="transition-all duration-300 ease-out" enter-from-class="opacity-0 translate-y-2"
@@ -406,16 +276,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import {
     Package, PackageCheck, PackageX,
-    Clock, Download,
+    Download,
     CheckCircle2, XCircle, X,
     AlertCircle,
+    Layers, AlertTriangle,
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth.store'
 
-definePageMeta({ middleware: 'admin',layout: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 
 const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl
@@ -427,118 +298,111 @@ const loading  = ref(false)
 const products = ref([])
 
 const categories = ref([])
-const statusTabs = ['All', 'Pending', 'Approved', 'Rejected', 'Suspended']
 
-const moderationGoals = ref([])
+
 const productActivity = ref([])
-
-const TW       = 600
-const TH       = 140
-const trendMin = 0
-const trendMax = 20
-
-const rejectionReasons = [
-    'Incomplete description',
-    'Missing certifications',
-    'Incorrect pricing',
-    'Poor image quality',
-    'Prohibited product',
-    'Duplicate listing',
-]
 
 const categoryColors = {
     Grains: '#22c55e', Organic: '#f59e0b',
     Herbs: '#10b981', Supplies: '#3b82f6', Dairy: '#a855f7',
 }
 
-const trendRanges = [
-    { key: '7d',  label: '7D'  },
-    { key: '30d', label: '30D' },
-    { key: '60d', label: '60D' },
-    { key: '90d', label: '90D' },
-    { key: '1y',  label: '1Y'  },
-]
+// Helper functions for Growth calculation
+const calculateGrowth = (items) => {
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
 
-const trendRange = ref('7d')
+    let countThisMonth = 0
+    let countLastMonth = 0
 
-const trendRangeLabel = computed(() => ({
-    '7d':  'Last 7 Days',
-    '30d': 'Last 30 Days',
-    '60d': 'Last 60 Days',
-    '90d': 'Last 90 Days',
-    '1y':  'Last 12 Months',
-}[trendRange.value]))
-
-const trendDayMap = {
-    '7d':  ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    '30d': ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
-    '60d': ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'],
-    '90d': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-    '1y':  ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-}
-
-const activeTrendDays = computed(() => trendDayMap[trendRange.value])
-
-const trendDataMap = ref({
-    '7d':  { approved: [4,7,5,9,6,11,8],   pending: [2,3,4,2,5,3,4],   rejected: [1,1,2,1,2,1,2]   },
-    '30d': { approved: [12,18,15,20,14,17,19,16], pending: [5,8,6,9,7,6,8,7], rejected: [2,3,2,4,3,2,3,2] },
-    '60d': { approved: [10,14,12,16,18,15,13,17,19,14,16,11], pending: [4,6,5,7,6,5,7,6,8,5,6,4], rejected: [1,2,2,3,2,1,2,2,3,1,2,1] },
-    '90d': { approved: [35,42,38,50,44,48,40,52,46], pending: [14,18,16,20,17,19,15,21,18], rejected: [4,6,5,7,6,5,7,6,8] },
-    '1y':  { approved: [40,55,48,62,58,70,65,72,68,75,80,85], pending: [18,22,20,25,23,28,26,30,27,32,29,35], rejected: [5,7,6,8,7,9,8,10,9,11,10,12] },
-})
-
-const trendData = computed(() => trendDataMap.value[trendRange.value])
-
-async function fetchTrendForRange(range) {
-    try {
+    items.forEach(item => {
+        const dateStr = item.rawDate
+        if (!dateStr) return
+        const date = new Date(dateStr)
         
-    } catch (e) {
-        showToast('Failed to load trend data', 'error')
+        if (date >= thisMonthStart && date <= now) {
+            countThisMonth++
+        } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+            countLastMonth++
+        }
+    })
+
+    if (countLastMonth === 0) {
+        return countThisMonth > 0 ? 100 : 0
     }
+    return Math.round(((countThisMonth - countLastMonth) / countLastMonth) * 100)
 }
 
-function setTrendRange(range) {
-    trendRange.value = range
-    fetchTrendForRange(range)
+const calculateStatusGrowth = (statusStr) => {
+    const filtered = statusStr
+        ? products.value.filter(p => p.status === statusStr)
+        : products.value
+    return calculateGrowth(filtered)
 }
 
+const totalProductsGrowth = computed(() => calculateStatusGrowth(null))
+const featuredProductsGrowth = computed(() => {
+    const featured = products.value.filter(p => p.featured)
+    return calculateGrowth(featured)
+})
+const categoryGrowth = computed(() => 0)
+const lowStockCount = computed(() => products.value.filter(p => p.stock < 10).length)
+const lowStockProductsGrowth = computed(() => {
+    const lowStock = products.value.filter(p => p.stock < 10)
+    return calculateGrowth(lowStock)
+})
 
 // Map backend status enum → UI display string
 function mapStatus(s) {
     return {
         active:         'Approved',
-        inactive:       'Rejected',
-        pending_review: 'Pending',
+        inactive:       'Suspended',
+        pending_review: 'Approved',
         out_of_stock:   'Suspended',
-    }[s] ?? 'Pending'
+    }[s] ?? 'Approved'
 }
 
-// Map UI display string → backend status enum (for PATCH calls)
-function reverseStatus(s) {
-    return {
-        Approved:  'active',
-        Rejected:  'inactive',
-        Pending:   'pending_review',
-        Suspended: 'out_of_stock',
-    }[s] ?? 'pending_review'
+function populateInitialActivity() {
+    const sorted = [...products.value]
+        .sort((a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0))
+        .slice(0, 5)
+
+    productActivity.value = sorted.map(p => {
+        const timeStr = p.submittedAt !== '—' ? `on ${p.submittedAt}` : 'recently'
+        return {
+            id: p.id,
+            text: `New product "${p.name}" submitted by ${p.farmer} is now active.`,
+            time: timeStr,
+            dotColor: 'bg-green-500'
+        }
+    })
 }
 
 async function fetchProducts() {
     loading.value = true
     try {
-        // Fetch all products (no pagination) so client-side search/filter works
         const res = await $fetch(`${baseURL}/admin/products`, {
             params: { take: 1000 },
             headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
         })
+        console.log('[DEBUG_RES]:', res)
         const raw = res?.data ?? res ?? []
+        console.log('[DEBUG_RAW]:', raw)
         products.value = raw.map(p => ({
             id:              p.id,
-            name:            p.nameEn ?? p.name_en ?? p.name ?? '—',
+            name:            (p.nameEn ?? p.name_en ?? p.name ?? '—')
+                                 .replace(/\(local\s*(image)?\s*path\s*.*\)/gi, '')
+                                 .replace(/\(\s*[a-zA-Z]:\\[^)]+\)/g, '')
+                                 .replace(/\(\s*\/[^)]+\)/g, '')
+                                 .trim(),
+            nameKm:          p.nameKm ?? p.name_km ?? '',
             price:           parseFloat(p.pricePerUnit ?? p.price_per_unit ?? 0).toFixed(2),
             image:           p.thumbnailUrl ?? p.thumbnail_url ?? '',
             status:          mapStatus(p.status),
-            category:        p.category?.name ?? p.categoryId ?? 'Other',
+            rawStatus:       p.status ?? '',
+            category:        p.category?.nameEn ?? p.category?.name ?? p.categoryId ?? 'Other',
             farmer:          p.farmer?.user
                                  ? `${p.farmer.user.firstName ?? ''} ${p.farmer.user.lastName ?? ''}`.trim()
                                  : (p.farmer?.farmName ?? '—'),
@@ -547,30 +411,28 @@ async function fetchProducts() {
             submittedAt:     p.createdAt
                                  ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                                  : '—',
+            updatedAt:       p.updatedAt
+                                 ? new Date(p.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                 : '—',
+            rawDate:         p.createdAt,
             rejectionReason: p.rejectionReason ?? null,
+            stock:           p.stockQuantity ?? p.stock ?? 0,
+            unit:            p.unit ?? 'kg',
+            minOrderQty:     p.minOrderQty ?? p.min_order_qty ?? 1,
+            isOrganic:       p.isOrganic ?? false,
+            isSeasonal:      p.isSeasonal ?? false,
+            seasonStart:     p.seasonStart ?? p.season_start ?? null,
+            seasonEnd:       p.seasonEnd ?? p.season_end ?? null,
+            totalSold:       p.totalSold ?? p.total_sold ?? 0,
+            avgRating:       p.avgRating ?? p.avg_rating ?? null,
         }))
-        // Derive category list from loaded data
         categories.value = [...new Set(products.value.map(p => p.category).filter(Boolean))]
+        populateInitialActivity()
     } catch (e) {
+        console.error('[PRODUCTS_FETCH_ERROR]:', e)
         showToast('Failed to load products', 'error')
     } finally {
         loading.value = false
-    }
-}
-
-async function fetchGoals() {
-    try {
-        // Goals are derived from products data once loaded
-    } catch (e) {
-        showToast('Failed to load goals', 'error')
-    }
-}
-
-async function fetchActivity() {
-    try {
-        // Activity feed is maintained locally via addActivity()
-    } catch (e) {
-        showToast('Failed to load activity', 'error')
     }
 }
 
@@ -582,28 +444,20 @@ onMounted(async () => {
         return
     }
 
-    fetchProducts()
-    fetchTrendForRange('7d')
-    fetchGoals()
-    fetchActivity()
+    await fetchProducts()
 })
 
-
 const countByStatus   = (s) => products.value.filter(p => p.status === s).length
-const pendingCount    = computed(() => countByStatus('Pending'))
-const pendingProducts = computed(() => products.value.filter(p => p.status === 'Pending'))
 
 const searchQuery    = ref('')
 const filterCategory = ref('')
-const filterStatus   = ref('All')
 
 const filteredProducts = computed(() =>
     products.value.filter(p => {
         const q  = searchQuery.value.toLowerCase()
         const ms = p.name.toLowerCase().includes(q) || p.farmer.toLowerCase().includes(q)
         const mc = !filterCategory.value || p.category === filterCategory.value
-        const mv = filterStatus.value === 'All' || p.status === filterStatus.value
-        return ms && mc && mv
+        return ms && mc
     })
 )
 
@@ -620,100 +474,26 @@ const categoryBreakdown = computed(() => {
         .sort((a, b) => b.count - a.count)
 })
 
-function trendYs(v) {
-    return 10 + (1 - (v - trendMin) / (trendMax - trendMin)) * (TH - 20)
-}
-
-function trendLinePath(key) {
-    const pts = trendData.value[key].map((v, i) => ({
-        x: (i / (trendData.value[key].length - 1)) * TW,
-        y: trendYs(v),
-    }))
-    let d = `M ${pts[0].x} ${pts[0].y}`
-    for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)]
-        d += ` C ${p1.x + (p2.x - p0.x) / 6} ${p1.y + (p2.y - p0.y) / 6}, ${p2.x - (p3.x - p1.x) / 6} ${p2.y - (p3.y - p1.y) / 6}, ${p2.x} ${p2.y}`
-    }
-    return d
-}
-
-function trendAreaPath(key) {
-    const pts = trendData.value[key].map((v, i) => ({
-        x: (i / (trendData.value[key].length - 1)) * TW,
-        y: trendYs(v),
-    }))
-    return `${trendLinePath(key)} L ${pts[pts.length - 1].x} ${TH} L ${pts[0].x} ${TH} Z`
-}
-
 function addActivity(text, color = 'bg-green-500') {
     productActivity.value.unshift({ id: Date.now(), text, time: 'Just now', dotColor: color })
     if (productActivity.value.length > 8) productActivity.value.pop()
 }
 
-async function approveProduct(id) {
-    const p = products.value.find(x => x.id === id)
-    if (!p) return
-    try {
-        await $fetch(`${baseURL}/admin/products/${id}/approve`, {
-            method: 'PATCH',
-            headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
-        })
-        p.status          = 'Approved'
-        p.rejectionReason = null
-        addActivity(`${p.name} by ${p.farmer} approved`, 'bg-green-500')
-        showToast(`${p.name} has been approved`, 'success')
-    } catch (e) {
-        showToast('Failed to approve product', 'error')
-    }
-}
 
-async function suspendProduct(id) {
-    const p = products.value.find(x => x.id === id)
-    if (!p) return
-    try {
-        p.status = 'Suspended'
-        addActivity(`${p.name} by ${p.farmer} suspended`, 'bg-orange-400')
-        showToast(`${p.name} has been suspended`, 'warning')
-    } catch (e) {
-        showToast('Failed to suspend product', 'error')
-    }
-}
 
 async function toggleFeatured(id) {
     const p = products.value.find(x => x.id === id)
     if (!p) return
     try {
-        p.featured = !p.featured
-        addActivity(p.featured ? `${p.name} marked as featured` : `${p.name} removed from featured`, 'bg-amber-400')
-        showToast(p.featured ? `${p.name} is now featured` : `${p.name} removed from featured`, 'success')
-    } catch (e) {
-        showToast('Failed to update featured status', 'error')
-    }
-}
-
-const rejectModal = ref({ visible: false, product: null, reason: '', note: '' })
-function openRejectModal(product) {
-    rejectModal.value = { visible: true, product, reason: '', note: '' }
-}
-
-async function executeReject() {
-    const p = products.value.find(x => x.id === rejectModal.value.product?.id)
-    if (!p) return
-    try {
-        await $fetch(`${baseURL}/admin/products/${p.id}/reject`, {
+        await $fetch(`${baseURL}/admin/products/${id}/featured`, {
             method: 'PATCH',
             headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : undefined,
-            body: { reason: rejectModal.value.reason, note: rejectModal.value.note },
         })
-        p.status          = 'Rejected'
-        p.rejectionReason = rejectModal.value.note
-            ? `${rejectModal.value.reason} — ${rejectModal.value.note}`
-            : rejectModal.value.reason
-        addActivity(`${p.name} by ${p.farmer} rejected — ${rejectModal.value.reason}`, 'bg-red-500')
-        showToast(`${p.name} rejected. Farmer has been notified.`, 'warning')
-        rejectModal.value.visible = false
+        p.featured = !p.featured
+        addActivity(p.featured ? `Product "${p.name}" marked as featured` : `Product "${p.name}" removed from featured`, 'bg-amber-400')
+        showToast(p.featured ? `"${p.name}" is now featured` : `"${p.name}" removed from featured`, 'success')
     } catch (e) {
-        showToast('Failed to reject product', 'error')
+        showToast('Failed to update featured status', 'error')
     }
 }
 
@@ -721,6 +501,28 @@ const viewModal = ref({ visible: false, product: null })
 function openViewModal(product) {
     viewModal.value = { visible: true, product }
 }
+
+watch(
+    () => viewModal.value.visible,
+    (visible) => {
+        if (typeof document !== 'undefined') {
+            if (visible) {
+                document.body.style.overflow = 'hidden'
+                document.documentElement.style.overflow = 'hidden'
+            } else {
+                document.body.style.overflow = ''
+                document.documentElement.style.overflow = ''
+            }
+        }
+    }
+)
+
+onUnmounted(() => {
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+        document.documentElement.style.overflow = ''
+    }
+})
 
 function exportCSV() {
     showToast('Exporting products to CSV…', 'success')
@@ -744,10 +546,30 @@ const categoryClass = (c) => ({
     Dairy:    'bg-purple-100 text-purple-700',
 }[c] ?? 'bg-gray-100 text-gray-600')
 
-const statusClass = (s) => ({
-    Approved:  'bg-green-100 text-green-700',
-    Pending:   'bg-amber-100 text-amber-700',
-    Rejected:  'bg-red-100 text-red-600',
-    Suspended: 'bg-orange-100 text-orange-700',
-}[s] ?? 'bg-gray-100 text-gray-600')
+
+
+function getProductImage(url) {
+    if (!url) return undefined
+    const lower = url.toLowerCase()
+    if (lower.includes('random-question-but-does-anyone-have-versions-of-this-cat-v0-ya8qikz9kn0f1.webp')) {
+        return '/cat.webp'
+    }
+    if (lower.includes('screenshot 2026-05-27 122353.png') || lower.includes('screenshot%202026-05-27%20122353.png')) {
+        return '/screenshot1.png'
+    }
+    if (lower.includes('screenshot 2026-05-27 005643.png') || lower.includes('screenshot%202026-05-27%20005643.png')) {
+        return '/screenshot2.png'
+    }
+    return url
+}
+
+function getCategoryEmoji(category) {
+    if (!category) return '🌾'
+    const lower = category.toLowerCase()
+    if (lower.includes('fruit')) return '🥭'
+    if (lower.includes('leafy') || lower.includes('greens') || lower.includes('choy')) return '🥬'
+    if (lower.includes('veg')) return '🥕'
+    if (lower.includes('herb')) return '🌿'
+    return '🌾'
+}
 </script>

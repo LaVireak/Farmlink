@@ -9,82 +9,95 @@ type EventPublisher = { publish: (event: string, payload: any) => void };
 
 @Injectable()
 export class NotificationsService {
-    constructor(
-        @Inject(EVENT_PUBLISHER)
-        private readonly publisher: EventPublisher,
-        @InjectRepository(Notification)
-        private readonly notificationRepository: Repository<Notification>,
-    ) { }
+  constructor(
+    @Inject(EVENT_PUBLISHER)
+    private readonly publisher: EventPublisher,
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
+  ) {}
 
-    notify(event: string, payload: any) {
-        this.publisher.publish(event, payload);
-        return { ok: true };
+  notify(event: string, payload: any) {
+    this.publisher.publish(event, payload);
+    return { ok: true };
+  }
+
+  async createNotification(
+    userId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    metadata?: any,
+  ): Promise<Notification> {
+    let refId: string | undefined;
+    let refType: string | undefined;
+
+    if (metadata?.orderId) {
+      refId = metadata.orderId;
+      refType = 'order';
     }
 
-    async createNotification(userId: string, type: NotificationType, title: string, message: string, metadata?: any): Promise<Notification> {
-        let refId: string | undefined;
-        let refType: string | undefined;
+    const notification = this.notificationRepository.create({
+      userId,
+      type,
+      title,
+      body: message,
+      refId,
+      refType,
+    });
 
-        if (metadata?.orderId) {
-            refId = metadata.orderId;
-            refType = 'order';
-        }
+    const saved = await this.notificationRepository.save(notification);
 
-        const notification = this.notificationRepository.create({
-            userId,
-            type,
-            title,
-            body: message,
-            refId,
-            refType,
-        });
+    // Broadcast the real-time event so frontend gets it instantly if connected
+    this.notify(`notification:${userId}`, saved);
 
-        const saved = await this.notificationRepository.save(notification);
-        
-        // Broadcast the real-time event so frontend gets it instantly if connected
-        this.notify(`notification:${userId}`, saved);
+    return saved;
+  }
 
-        return saved;
+  async getUserNotifications(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0,
+  ) {
+    const [notifications, total] =
+      await this.notificationRepository.findAndCount({
+        where: { userId },
+        order: { createdAt: 'DESC' },
+        take: limit,
+        skip: offset,
+      });
+
+    const unreadCount = await this.notificationRepository.count({
+      where: { userId, isRead: false },
+    });
+
+    return {
+      data: notifications,
+      total,
+      unreadCount,
+      limit,
+      offset,
+    };
+  }
+
+  async markAsRead(id: string, userId: string): Promise<Notification> {
+    const notification = await this.notificationRepository.findOne({
+      where: { id, userId },
+    });
+    if (!notification) {
+      throw new NotFoundException(`Notification not found`);
     }
 
-    async getUserNotifications(userId: string, limit: number = 20, offset: number = 0) {
-        const [notifications, total] = await this.notificationRepository.findAndCount({
-            where: { userId },
-            order: { createdAt: 'DESC' },
-            take: limit,
-            skip: offset,
-        });
-
-        const unreadCount = await this.notificationRepository.count({
-            where: { userId, isRead: false },
-        });
-
-        return {
-            data: notifications,
-            total,
-            unreadCount,
-            limit,
-            offset,
-        };
+    if (!notification.isRead) {
+      notification.isRead = true;
+      return this.notificationRepository.save(notification);
     }
+    return notification;
+  }
 
-    async markAsRead(id: string, userId: string): Promise<Notification> {
-        const notification = await this.notificationRepository.findOne({ where: { id, userId } });
-        if (!notification) {
-            throw new NotFoundException(`Notification not found`);
-        }
-        
-        if (!notification.isRead) {
-            notification.isRead = true;
-            return this.notificationRepository.save(notification);
-        }
-        return notification;
-    }
-
-    async markAllAsRead(userId: string): Promise<void> {
-        await this.notificationRepository.update(
-            { userId, isRead: false },
-            { isRead: true }
-        );
-    }
+  async markAllAsRead(userId: string): Promise<void> {
+    await this.notificationRepository.update(
+      { userId, isRead: false },
+      { isRead: true },
+    );
+  }
 }

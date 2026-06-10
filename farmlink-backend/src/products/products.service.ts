@@ -28,7 +28,10 @@ export class ProductsService implements OnModuleInit {
         console.log('[ProductsService] Seeded default crop categories.');
       }
     } catch (err) {
-      console.error('[ProductsService] Failed to seed default categories:', err);
+      console.error(
+        '[ProductsService] Failed to seed default categories:',
+        err,
+      );
     }
   }
 
@@ -47,18 +50,24 @@ export class ProductsService implements OnModuleInit {
       unit: p.unit,
       stock: p.stockQuantity,
       farmerId: p.farmerId,
-      farmer: p.farmer ? {
-        id: p.farmer.id,
-        farmName: p.farmer.farmName,
-        firstName: p.farmer.user?.firstName,
-        lastName: p.farmer.user?.lastName,
-        isVerified: p.farmer.isVerified,
-      } : null,
+      farmer: p.farmer
+        ? {
+            id: p.farmer.id,
+            farmName: p.farmer.farmName,
+            firstName: p.farmer.user?.firstName,
+            lastName: p.farmer.user?.lastName,
+            isVerified: p.farmer.isVerified,
+          }
+        : null,
     };
   }
 
   // GET ALL
-  async findAll(category?: string, maxPrice?: number, farmerId?: string): Promise<any[]> {
+  async findAll(
+    category?: string,
+    maxPrice?: number,
+    farmerId?: string,
+  ): Promise<any[]> {
     const qb = this.productRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.category', 'category')
@@ -104,32 +113,45 @@ export class ProductsService implements OnModuleInit {
     if (category) {
       const searchVal = String(category).toLowerCase().trim();
       let cat = await this.categoryRepo.findOne({
-        where: [
-          { nameEn: category },
-          { nameKm: category }
-        ]
+        where: [{ nameEn: category }, { nameKm: category }],
       });
 
       if (!cat) {
         const allCats = await this.categoryRepo.find();
-        cat = allCats.find(c => {
-          const nameEn = String(c.nameEn || '').toLowerCase().trim();
-          const nameKm = String(c.nameKm || '').toLowerCase().trim();
-          return nameEn === searchVal || 
-                 nameKm === searchVal || 
-                 nameEn.includes(searchVal) || 
-                 searchVal.includes(nameEn) ||
-                 (searchVal === 'leafy greens' && nameEn === 'greens') ||
-                 (searchVal === 'greens' && nameEn === 'leafy greens') ||
-                 (searchVal === 'fruits' && nameEn === 'fruit') ||
-                 (searchVal === 'vegetables' && nameEn === 'vegetable');
-        }) || null;
+        cat =
+          allCats.find((c) => {
+            const nameEn = String(c.nameEn || '')
+              .toLowerCase()
+              .trim();
+            const nameKm = String(c.nameKm || '')
+              .toLowerCase()
+              .trim();
+            return (
+              nameEn === searchVal ||
+              nameKm === searchVal ||
+              nameEn.includes(searchVal) ||
+              searchVal.includes(nameEn) ||
+              (searchVal === 'leafy greens' && nameEn === 'greens') ||
+              (searchVal === 'greens' && nameEn === 'leafy greens') ||
+              (searchVal === 'fruits' && nameEn === 'fruit') ||
+              (searchVal === 'vegetables' && nameEn === 'vegetable')
+            );
+          }) || null;
       }
 
       if (!cat) {
         cat = this.categoryRepo.create({
           nameEn: category,
-          nameKm: category === 'Fruits' ? 'ផ្លែឈើ' : category === 'Vegetables' ? 'បន្លែ' : category === 'Leafy Greens' ? 'បន្លែស្លឹក' : category === 'Herbs' ? 'គ្រឿងទេស' : category
+          nameKm:
+            category === 'Fruits'
+              ? 'ផ្លែឈើ'
+              : category === 'Vegetables'
+                ? 'បន្លែ'
+                : category === 'Leafy Greens'
+                  ? 'បន្លែស្លឹក'
+                  : category === 'Herbs'
+                    ? 'គ្រឿងទេស'
+                    : category,
         });
         await this.categoryRepo.save(cat);
       }
@@ -146,39 +168,52 @@ export class ProductsService implements OnModuleInit {
   async update(id: string, data: any) {
     const product = await this.productRepo.findOne({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    
+
     const { category, ...rest } = data;
     Object.assign(product, rest);
 
     if (category) {
       const searchVal = String(category).toLowerCase().trim();
       let cat = await this.categoryRepo.findOne({
-        where: [
-          { nameEn: category },
-          { nameKm: category }
-        ]
+        where: [{ nameEn: category }, { nameKm: category }],
       });
 
       if (!cat) {
         const allCats = await this.categoryRepo.find();
-        cat = allCats.find(c => {
-          const nameEn = String(c.nameEn || '').toLowerCase().trim();
-          const nameKm = String(c.nameKm || '').toLowerCase().trim();
-          return nameEn === searchVal || 
-                 nameKm === searchVal || 
-                 nameEn.includes(searchVal) || 
-                 searchVal.includes(nameEn) ||
-                 (searchVal === 'leafy greens' && nameEn === 'greens') ||
-                 (searchVal === 'greens' && nameEn === 'leafy greens') ||
-                 (searchVal === 'fruits' && nameEn === 'fruit') ||
-                 (searchVal === 'vegetables' && nameEn === 'vegetable');
-        }) || null;
+        cat =
+          allCats.find((c) => {
+            const nameEn = String(c.nameEn || '')
+              .toLowerCase()
+              .trim();
+            const nameKm = String(c.nameKm || '')
+              .toLowerCase()
+              .trim();
+            return (
+              nameEn === searchVal ||
+              nameKm === searchVal ||
+              nameEn.includes(searchVal) ||
+              searchVal.includes(nameEn) ||
+              (searchVal === 'leafy greens' && nameEn === 'greens') ||
+              (searchVal === 'greens' && nameEn === 'leafy greens') ||
+              (searchVal === 'fruits' && nameEn === 'fruit') ||
+              (searchVal === 'vegetables' && nameEn === 'vegetable')
+            );
+          }) || null;
       }
 
       if (!cat) {
         cat = this.categoryRepo.create({
           nameEn: category,
-          nameKm: category === 'Fruits' ? 'ផ្លែឈើ' : category === 'Vegetables' ? 'បន្លែ' : category === 'Leafy Greens' ? 'បន្លែស្លឹក' : category === 'Herbs' ? 'គ្រឿងទេស' : category
+          nameKm:
+            category === 'Fruits'
+              ? 'ផ្លែឈើ'
+              : category === 'Vegetables'
+                ? 'បន្លែ'
+                : category === 'Leafy Greens'
+                  ? 'បន្លែស្លឹក'
+                  : category === 'Herbs'
+                    ? 'គ្រឿងទេស'
+                    : category,
         });
         await this.categoryRepo.save(cat);
       }

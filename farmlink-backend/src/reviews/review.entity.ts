@@ -14,7 +14,10 @@ import { Order } from '../orders/order.entity';
 
 @Entity('reviews')
 @Check(`"rating" BETWEEN 1 AND 5`)
-@Check('review_target_check', `"product_id" IS NOT NULL OR "farmer_id" IS NOT NULL`)
+@Check(
+  'review_target_check',
+  `"product_id" IS NOT NULL OR "farmer_id" IS NOT NULL`,
+)
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;

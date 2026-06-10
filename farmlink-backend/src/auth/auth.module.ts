@@ -7,12 +7,9 @@ import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
 import { AuthController } from './auth.controller';
 
 @Module({
-  imports: [
-    ConfigModule,
-    TypeOrmModule.forFeature([User]),
-  ],
+  imports: [ConfigModule, TypeOrmModule.forFeature([User])],
   providers: [SupabaseAuthService, SupabaseAuthGuard],
   controllers: [AuthController],
   exports: [SupabaseAuthService, SupabaseAuthGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

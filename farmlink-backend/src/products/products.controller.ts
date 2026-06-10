@@ -13,7 +13,7 @@ import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productService: ProductsService) { }
+  constructor(private readonly productService: ProductsService) {}
 
   @Public()
   @Get()
@@ -44,7 +44,6 @@ export class ProductsController {
   update(@Param('id') id: string, @Body() body: any) {
     return this.productService.update(id, body);
   }
-
 
   @Delete(':id')
   remove(@Param('id') id: string) {

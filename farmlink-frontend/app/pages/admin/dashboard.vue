@@ -13,18 +13,18 @@
                 <div v-if="totalOrders > 0">
                     <Line :data="lineData" :options="lineOptions" />
                 </div>
-                <div v-else class="flex items-center justify-center h-64 text-gray-300">
-                    <p class="text-sm">Waiting for data...</p>
+                <div v-else class="flex items-center justify-center h-64 text-gray-400">
+                    <p class="text-sm">No Sales and Orders Recorded </p>
                 </div>
             </div>
             <div class="bg-white p-5 rounded-2xl shadow w-full min-w-[420px]">
-                <h3 class="text-xl font-semibold mb-4">Order Status Breakdown</h3>
+                <h3 class="text-xl font-semibold mb-4">Revenue by Category</h3>
                 <div class="flex justify-center">
                     <div v-if="totalOrders > 0" class="w-80 h-80">
                         <Doughnut :data="doughnutData" :options="doughnutOptions" :plugins="[ChartDataLabels]" />
                     </div>
-                    <div v-else class="w-80 h-80 flex items-center justify-center text-gray-300">
-                        <p class="text-sm">Waiting for data...</p>
+                    <div v-else class="w-80 h-80 flex items-center justify-center text-gray-400">
+                        <p class="text-sm">No Revenue Recorded </p>
                     </div>
                 </div>
             </div>
@@ -138,70 +138,305 @@ definePageMeta({
     layout: 'admin',
 })
 
-const allUsers = ref([])
-const allOrders = ref([])
-const allProducts = ref([])
-const allFarmers = ref([])
+import { useAdmin } from '~/services/admin.service'
+import { useAuthStore } from '~/stores/auth.store'
+import { onMounted } from 'vue'
 
-const totalUsers = computed(() => allUsers.value.length)
-const totalOrders = computed(() => allOrders.value.length)
-const totalRevenue = computed(() => allOrders.value.filter(o => o.status === 'Completed').reduce((sum, o) => sum + o.amount, 0))
+const auth = useAuthStore()
+const { 
+    loading, 
+    dashboardStats,
+    users: allUsersRaw, 
+    orders: allOrdersRaw, 
+    products: allProductsRaw, 
+    farmers: allFarmersRaw, 
+    fetchDashboard 
+} = useAdmin()
+
+const allUsers = computed(() => allUsersRaw.value)
+
+const allOrders = computed(() => {
+    return allOrdersRaw.value.map(o => ({
+        id: o.id,
+        status: mapOrderStatus(o.status),
+        amount: parseFloat(o.totalAmount ?? o.total_amount ?? 0),
+        items: o.items ?? [],
+        createdAt: o.createdAt ?? o.created_at,
+    }))
+})
+
+const allProducts = computed(() => {
+    return allProductsRaw.value.map(p => ({
+        id: p.id,
+        name: p.nameEn ?? p.name_en ?? p.name ?? '—',
+        category: p.category?.nameEn ?? p.category?.name ?? p.categoryId ?? 'Other',
+        price: parseFloat(p.pricePerUnit ?? p.price_per_unit ?? 0).toFixed(2),
+        image: p.thumbnailUrl ?? p.thumbnail_url ?? 'https://placehold.co/80x80?text=IMG',
+        inStock: (p.stockQuantity ?? p.stock ?? 0) > 0,
+        time: p.createdAt 
+            ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+            : '—'
+    }))
+})
+
+const allFarmers = computed(() => {
+    return allFarmersRaw.value.map(f => ({
+        id: f.id,
+        name: f.user ? `${f.user.firstName ?? ''} ${f.user.lastName ?? ''}`.trim() : '—',
+        farm: f.farmName ?? '—',
+        image: f.user?.avatarUrl ?? 'https://placehold.co/80x80?text=FARMER',
+        revenue: parseFloat(f.totalSales ?? 0),
+        orders: f.totalSales > 0 ? Math.round(parseFloat(f.totalSales) / 15) : 0,
+        rating: f.avgRating ? parseFloat(f.avgRating).toFixed(1) : '5.0',
+    }))
+})
+
+const totalUsers = computed(() => dashboardStats.value?.totalUsers ?? allUsers.value.length)
+const totalOrders = computed(() => dashboardStats.value?.totalOrders ?? allOrders.value.length)
+const totalRevenue = computed(() => dashboardStats.value?.totalRevenue ?? allOrders.value.filter(o => o.status === 'Completed').reduce((sum, o) => sum + o.amount, 0))
 const formattedRevenue = computed(() => `$${totalRevenue.value.toLocaleString()}`)
 const totalProducts = computed(() => allProducts.value.length)
 
-const userGrowth = ref(0)
-const orderGrowth = ref(0)
-const revenueGrowth = ref(0)
-const productGrowth = ref(0)
+const calculateGrowth = (items) => {
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
 
-const orderStatusCounts = computed(() => {
-    const counts = { Completed: 0, Cancelled: 0, Pending: 0, Processing: 0 }
-    allOrders.value.forEach(o => {
-        if (counts.hasOwnProperty(o.status)) counts[o.status]++
+    let countThisMonth = 0
+    let countLastMonth = 0
+
+    items.forEach(item => {
+        const dateStr = item.createdAt ?? item.created_at
+        if (!dateStr) return
+        const date = new Date(dateStr)
+        
+        if (date >= thisMonthStart && date <= now) {
+            countThisMonth++
+        } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+            countLastMonth++
+        }
     })
-    return counts
+
+    if (countLastMonth === 0) {
+        return countThisMonth > 0 ? 100 : 0
+    }
+    return Math.round(((countThisMonth - countLastMonth) / countLastMonth) * 100)
+}
+
+const calculateRevenueGrowth = (orders) => {
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
+
+    let revThisMonth = 0
+    let revLastMonth = 0
+
+    orders.forEach(order => {
+        const lowerStatus = String(order.status).toLowerCase()
+        if (lowerStatus !== 'completed') return
+        const dateStr = order.createdAt ?? order.created_at
+        if (!dateStr) return
+        const date = new Date(dateStr)
+        const amount = parseFloat(order.totalAmount ?? order.total_amount ?? order.amount ?? 0)
+
+        if (date >= thisMonthStart && date <= now) {
+            revThisMonth += amount
+        } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+            revLastMonth += amount
+        }
+    })
+
+    if (revLastMonth === 0) {
+        return revThisMonth > 0 ? 100 : 0
+    }
+    return Math.round(((revThisMonth - revLastMonth) / revLastMonth) * 100)
+}
+
+const userGrowth = computed(() => calculateGrowth(allUsersRaw.value))
+const orderGrowth = computed(() => calculateGrowth(allOrdersRaw.value))
+const revenueGrowth = computed(() => calculateRevenueGrowth(allOrdersRaw.value))
+const productGrowth = computed(() => calculateGrowth(allProductsRaw.value))
+
+function mapOrderStatus(status) {
+    const lower = String(status).toLowerCase();
+    if (lower === 'completed') return 'Completed';
+    if (lower === 'cancelled') return 'Cancelled';
+    if (lower === 'pending') return 'Pending';
+    return 'Processing';
+}
+
+onMounted(async () => {
+    await auth.hydrate()
+    if (!auth.accessToken) {
+        await navigateTo('/auth/signin')
+        return
+    }
+    fetchDashboard()
+})
+
+
+const revenueByCategory = computed(() => {
+    const categories = {}
+    
+    allOrders.value.forEach(order => {
+        if (order.status !== 'Completed') return
+        const items = order.items || []
+        items.forEach(item => {
+            const catName = item.product?.category?.nameEn ?? item.product?.category?.name ?? 'Other'
+            const subtotal = parseFloat(item.subtotal ?? 0)
+            
+            if (!categories[catName]) {
+                categories[catName] = 0
+            }
+            categories[catName] += subtotal
+        })
+    })
+    
+    return categories
 })
 
 const products = computed(() => allProducts.value.slice(0, 4))
 
 const topFarmers = computed(() => 
-    allFarmers.value.sort((a, b) => b.revenue - a.revenue).slice(0, 5)
+    [...allFarmers.value].sort((a, b) => b.revenue - a.revenue).slice(0, 5)
 )
 
+const salesAndOrdersChartData = computed(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const now = new Date()
+    
+    const labels = []
+    const monthlyCounts = {}
+    const monthlySales = {}
+    
+    // Set up the last 6 months dynamically
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const label = months[d.getMonth()]
+        labels.push(label)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        monthlyCounts[key] = 0
+        monthlySales[key] = 0
+    }
+    
+    // Group orders
+    allOrders.value.forEach(order => {
+        const dateStr = order.createdAt
+        if (!dateStr) return
+        const date = new Date(dateStr)
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        if (monthlyCounts.hasOwnProperty(key)) {
+            monthlyCounts[key]++
+            if (order.status === 'Completed') {
+                monthlySales[key] += order.amount
+            }
+        }
+    })
+    
+    const salesData = []
+    const ordersData = []
+    labels.forEach((_, index) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        salesData.push(monthlySales[key])
+        ordersData.push(monthlyCounts[key])
+    })
+    
+    return { labels, salesData, ordersData }
+})
+
 const lineData = computed(() => ({
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [{
-        label: 'Sales',
-        data: [120, 190, 300, 250, 220, totalOrders.value * 10],
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.2)',
-        tension: 0.4,
-        fill: true,
-    }]
+    labels: salesAndOrdersChartData.value.labels,
+    datasets: [
+        {
+            label: 'Sales ($)',
+            data: salesAndOrdersChartData.value.salesData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            tension: 0.4,
+            fill: true,
+            yAxisID: 'y',
+        },
+        {
+            label: 'Orders Placed',
+            data: salesAndOrdersChartData.value.ordersData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            tension: 0.4,
+            fill: true,
+            yAxisID: 'y1',
+        }
+    ]
 }))
 
 const lineOptions = {
     responsive: true,
+    interaction: {
+        mode: 'index',
+        intersect: false,
+    },
     plugins: {
-        legend: { display: false },
+        legend: { display: true, position: 'top' },
+    },
+    scales: {
+        y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+                display: true,
+                text: 'Sales ($)'
+            },
+            grid: {
+                drawOnChartArea: true,
+            }
+        },
+        y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: {
+                display: true,
+                text: 'Orders Count'
+            },
+            grid: {
+                drawOnChartArea: false,
+            }
+        }
     }
 }
 
-const doughnutData = computed(() => ({
-    labels: ['Completed', 'Cancelled', 'Pending', 'Processing'],
-    datasets: [
-        {
-            data: [
-                orderStatusCounts.value.Completed,
-                orderStatusCounts.value.Cancelled,
-                orderStatusCounts.value.Pending,
-                orderStatusCounts.value.Processing
-            ],
-            backgroundColor: ['#22c55e', '#ef4444', '#facc15', '#3b82f6'],
-            borderWidth: 0
+const doughnutData = computed(() => {
+    const dataObj = revenueByCategory.value
+    const labels = Object.keys(dataObj)
+    const data = Object.values(dataObj)
+    
+    if (labels.length === 0) {
+        return {
+            labels: ['Fruits', 'Vegetables', 'Leafy Greens', 'Herbs'],
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                borderWidth: 0
+            }]
         }
-    ]
-}))
+    }
+    
+    const colors = ['#22c55e', '#f59e0b', '#10b981', '#3b82f6', '#a855f7', '#ec4899', '#f43f5e', '#14b8a6']
+    
+    return {
+        labels,
+        datasets: [
+            {
+                data,
+                backgroundColor: labels.map((_, i) => colors[i % colors.length]),
+                borderWidth: 0
+            }
+        ]
+    }
+})
 
 const doughnutOptions = {
     responsive: true,

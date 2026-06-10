@@ -1,7 +1,23 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Query,
+  Body,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { OrdersService } from './orders.service';
-import { OrderResponseDto, OrderPaginationDto, CreateOrderDto, UpdateOrderStatusDto, OrderStatsDto, OrderFilterDto } from './dto/order.dto';
+import {
+  OrderResponseDto,
+  OrderPaginationDto,
+  CreateOrderDto,
+  UpdateOrderStatusDto,
+  OrderStatsDto,
+  OrderFilterDto,
+} from './dto/order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -95,7 +111,9 @@ export class OrdersController {
    * POST /api/orders
    */
   @Post()
-  async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderResponseDto> {
+  async createOrder(
+    @Body() createOrderDto: CreateOrderDto,
+  ): Promise<OrderResponseDto> {
     return this.ordersService.createOrder(createOrderDto);
   }
 
@@ -123,4 +141,3 @@ export class OrdersController {
     return this.ordersService.cancelOrder(id, body?.reason);
   }
 }
-

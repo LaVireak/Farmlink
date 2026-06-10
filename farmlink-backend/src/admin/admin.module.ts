@@ -9,7 +9,10 @@ import { Order } from '../orders/order.entity';
 import { Product } from '../products/product.entity';
 
 @Module({
-  imports: [AuthModule, TypeOrmModule.forFeature([User, FarmerProfile, Order, Product])],
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([User, FarmerProfile, Order, Product]),
+  ],
   controllers: [AdminController],
   providers: [AdminService],
 })

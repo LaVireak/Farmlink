@@ -1,11 +1,20 @@
-import { Controller, Get, Patch, Post, Body, Param, Delete, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
   getProfile(@CurrentUser() user: any) {
@@ -41,12 +50,18 @@ export class UsersController {
   }
 
   @Post(':id/favorites/farms/:farmerId')
-  addFavoriteFarm(@Param('id') id: string, @Param('farmerId') farmerId: string) {
+  addFavoriteFarm(
+    @Param('id') id: string,
+    @Param('farmerId') farmerId: string,
+  ) {
     return this.usersService.addFavoriteFarm(id, farmerId);
   }
 
   @Delete(':id/favorites/farms/:farmerId')
-  removeFavoriteFarm(@Param('id') id: string, @Param('farmerId') farmerId: string) {
+  removeFavoriteFarm(
+    @Param('id') id: string,
+    @Param('farmerId') farmerId: string,
+  ) {
     return this.usersService.removeFavoriteFarm(id, farmerId);
   }
 
@@ -56,12 +71,18 @@ export class UsersController {
   }
 
   @Post(':id/favorites/products/:productId')
-  addFavoriteProduct(@Param('id') id: string, @Param('productId') productId: string) {
+  addFavoriteProduct(
+    @Param('id') id: string,
+    @Param('productId') productId: string,
+  ) {
     return this.usersService.addFavoriteProduct(id, productId);
   }
 
   @Delete(':id/favorites/products/:productId')
-  removeFavoriteProduct(@Param('id') id: string, @Param('productId') productId: string) {
+  removeFavoriteProduct(
+    @Param('id') id: string,
+    @Param('productId') productId: string,
+  ) {
     return this.usersService.removeFavoriteProduct(id, productId);
   }
 

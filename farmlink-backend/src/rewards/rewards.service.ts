@@ -33,7 +33,9 @@ export class RewardsService {
     }
 
     if (reward && reward.transactions) {
-      reward.transactions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      reward.transactions.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      );
     }
 
     return reward;
@@ -72,7 +74,8 @@ export class RewardsService {
       event: RewardEvent.EARNED_PURCHASE,
       points,
       orderId,
-      description: description || `Points earned from purchase: $${amount.toFixed(2)}`,
+      description:
+        description || `Points earned from purchase: $${amount.toFixed(2)}`,
     });
     await this.transactionRepository.save(tx);
 
@@ -80,4 +83,3 @@ export class RewardsService {
     return this.getOrCreateReward(consumerId);
   }
 }
-

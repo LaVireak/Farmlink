@@ -1,11 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './message.entity';
 import { User } from '../users/user.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { MessageResponseDto, ConversationDto, PaginationDto, UserPreviewDto } from './dto/message-response.dto';
+import {
+  MessageResponseDto,
+  ConversationDto,
+  PaginationDto,
+  UserPreviewDto,
+} from './dto/message-response.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../common/enums/notification-type.enum';
 
@@ -19,14 +28,18 @@ export class MessagesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async sendMessage(createMessageDto: CreateMessageDto): Promise<MessageResponseDto> {
+  async sendMessage(
+    createMessageDto: CreateMessageDto,
+  ): Promise<MessageResponseDto> {
     if (createMessageDto.senderId === createMessageDto.receiverId) {
       throw new BadRequestException('Cannot send message to yourself');
     }
 
     const [sender, receiver] = await Promise.all([
       this.userRepository.findOne({ where: { id: createMessageDto.senderId } }),
-      this.userRepository.findOne({ where: { id: createMessageDto.receiverId } }),
+      this.userRepository.findOne({
+        where: { id: createMessageDto.receiverId },
+      }),
     ]);
 
     if (!sender || !receiver) {
@@ -44,15 +57,18 @@ export class MessagesService {
     });
 
     const savedMessage = await this.messageRepository.save(message);
-    
+
     // Trigger notification
-    const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ') || sender.email || 'Someone';
+    const senderName =
+      [sender.firstName, sender.lastName].filter(Boolean).join(' ') ||
+      sender.email ||
+      'Someone';
     await this.notificationsService.createNotification(
       createMessageDto.receiverId,
       NotificationType.NEW_MESSAGE,
       'New Message',
       `New message from ${senderName}`,
-      { messageId: savedMessage.id }
+      { messageId: savedMessage.id },
     );
 
     return this.toMessageResponseDto(savedMessage, sender, receiver);
@@ -83,9 +99,9 @@ export class MessagesService {
       .skip(skip)
       .getManyAndCount();
 
-    const data = messages.reverse().map(msg =>
-      this.toMessageResponseDto(msg, msg.sender, msg.receiver),
-    );
+    const data = messages
+      .reverse()
+      .map((msg) => this.toMessageResponseDto(msg, msg.sender, msg.receiver));
 
     return {
       data,
@@ -96,20 +112,26 @@ export class MessagesService {
     };
   }
 
-  async getConversations(userId: string, page: number = 1, limit: number = 10): Promise<PaginationDto<ConversationDto>> {
+  async getConversations(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginationDto<ConversationDto>> {
     const skip = (page - 1) * limit;
 
     const subquery = this.messageRepository
       .createQueryBuilder('m')
-      .select('CASE WHEN m.sender_id = :userId THEN m.receiver_id ELSE m.sender_id END', 'participant_id')
+      .select(
+        'CASE WHEN m.sender_id = :userId THEN m.receiver_id ELSE m.sender_id END',
+        'participant_id',
+      )
       .addSelect('MAX(m.created_at)', 'last_message_time')
       .where('m.sender_id = :userId OR m.receiver_id = :userId', { userId })
       .groupBy('participant_id')
       .orderBy('last_message_time', 'DESC');
 
-    const conversations = await this.messageRepository
-      .query(
-        `
+    const conversations = await this.messageRepository.query(
+      `
         SELECT DISTINCT
           CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END as participant_id,
           MAX(m.created_at) as last_message_time,
@@ -120,20 +142,19 @@ export class MessagesService {
         ORDER BY last_message_time DESC
         LIMIT $2 OFFSET $3
       `,
-        [userId, limit, skip],
-      );
+      [userId, limit, skip],
+    );
 
-    const total = await this.messageRepository
-      .query(
-        `
+    const total = await this.messageRepository.query(
+      `
         SELECT COUNT(DISTINCT
           CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END
         ) as count
         FROM messages m
         WHERE m.sender_id = $1 OR m.receiver_id = $1
       `,
-        [userId],
-      );
+      [userId],
+    );
 
     const conversationDtos: ConversationDto[] = [];
 
@@ -191,7 +212,10 @@ export class MessagesService {
     return this.toMessageResponseDto(saved, message.sender, message.receiver);
   }
 
-  async markConversationAsRead(userId: string, otherUserId: string): Promise<void> {
+  async markConversationAsRead(
+    userId: string,
+    otherUserId: string,
+  ): Promise<void> {
     await this.messageRepository.update(
       {
         receiverId: userId,

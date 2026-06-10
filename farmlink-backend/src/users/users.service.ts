@@ -32,13 +32,16 @@ export class UsersService {
     // Auto-create/initialize farmer profile if user role is farmer but profile is null
     if (user.role === 'farmer' && !user.farmerProfile) {
       try {
-        const farmerRepo = this.userRepository.manager.getRepository(FarmerProfile);
+        const farmerRepo =
+          this.userRepository.manager.getRepository(FarmerProfile);
         const newProfile = farmerRepo.create({
           userId: user.id,
-          farmName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'My Local Farm',
+          farmName:
+            `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+            'My Local Farm',
           addressDetail: 'Phnom Penh, Cambodia',
           isVerified: true,
-          matchStatus: 'approved'
+          matchStatus: 'approved',
         });
         user.farmerProfile = await farmerRepo.save(newProfile);
       } catch (err) {

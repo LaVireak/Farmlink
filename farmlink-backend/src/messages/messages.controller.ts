@@ -14,7 +14,11 @@ import { MessagesService } from './messages.service';
 import { MessagesSeedService } from './messages.seed.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { MessageResponseDto, ConversationDto, PaginationDto } from './dto/message-response.dto';
+import {
+  MessageResponseDto,
+  ConversationDto,
+  PaginationDto,
+} from './dto/message-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('messages')
@@ -23,15 +27,20 @@ export class MessagesController {
     private readonly messagesService: MessagesService,
     private readonly seedService: MessagesSeedService,
   ) {}
-  
+
   @Post('seed')
   @Public()
-  async seedTestData(@Query('farmerId') farmerId?: string, @Query('consumerId') consumerId?: string) {
+  async seedTestData(
+    @Query('farmerId') farmerId?: string,
+    @Query('consumerId') consumerId?: string,
+  ) {
     return this.seedService.seedTestData(farmerId, consumerId);
   }
 
   @Post()
-  async sendMessage(@Body() createMessageDto: CreateMessageDto): Promise<MessageResponseDto> {
+  async sendMessage(
+    @Body() createMessageDto: CreateMessageDto,
+  ): Promise<MessageResponseDto> {
     return this.messagesService.sendMessage(createMessageDto);
   }
 
@@ -57,7 +66,12 @@ export class MessagesController {
     if (!user || !user.id) {
       throw new Error('User ID not found in request');
     }
-    return this.messagesService.getConversation(user.id, otherUserId, page, limit);
+    return this.messagesService.getConversation(
+      user.id,
+      otherUserId,
+      page,
+      limit,
+    );
   }
 
   @Patch('conversations/:otherUserId/mark-read')

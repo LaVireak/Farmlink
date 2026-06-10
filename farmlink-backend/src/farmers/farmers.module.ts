@@ -18,7 +18,7 @@ import { AuthModule } from 'src/auth/auth.module';
       Notification,
       Product,
     ]),
-    AuthModule
+    AuthModule,
   ],
   controllers: [FarmersController],
   providers: [FarmersService],

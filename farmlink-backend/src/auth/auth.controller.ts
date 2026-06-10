@@ -10,7 +10,7 @@ type FinalizeDto = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly supabaseAuth: SupabaseAuthService) { }
+  constructor(private readonly supabaseAuth: SupabaseAuthService) {}
 
   @Public()
   @Post('finalize-signup')
@@ -20,4 +20,3 @@ export class AuthController {
     return { message: 'Signup finalized' };
   }
 }
-

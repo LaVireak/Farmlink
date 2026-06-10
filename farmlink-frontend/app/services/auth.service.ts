@@ -10,39 +10,39 @@ import type {
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables are missing.');
+    console.warn('Supabase environment variables are missing.');
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-  },
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+    },
 });
 
 export const getAccessToken = async (): Promise<string | null> => {
-  if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined') return null;
 
-  const { data } = await supabase.auth.getSession();
-  if (data.session?.access_token) {
-    return data.session.access_token;
-  }
-  const sessionStr = localStorage.getItem('farmlink.auth.session');
-  if (!sessionStr) return null;
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.access_token) {
+        return data.session.access_token;
+    }
+    const sessionStr = localStorage.getItem('farmlink.auth.session');
+    if (!sessionStr) return null;
 
-  try {
-    const session = JSON.parse(sessionStr);
-    return session.accessToken ?? null;
-  } catch {
-    return null;
-  }
+    try {
+        const session = JSON.parse(sessionStr);
+        return session.accessToken ?? null;
+    } catch {
+        return null;
+    }
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const PENDING_SIGNUP_KEY = 'farmlink.auth.pending-signup';
 
 const normalizeRoleFromSupabase = (role?: string): UserRole => {
@@ -62,15 +62,15 @@ export const mapSupabaseUser = (user: SupabaseUser): AuthUser => {
     const role = typeof metadata.role === 'string' ? metadata.role : undefined;
     const firstName = typeof metadata.firstName === 'string' ? metadata.firstName
         : typeof metadata.full_name === 'string' ? metadata.full_name.split(' ')[0]
-        : typeof metadata.name === 'string' ? metadata.name.split(' ')[0]
-        : undefined;
+            : typeof metadata.name === 'string' ? metadata.name.split(' ')[0]
+                : undefined;
     const lastName = typeof metadata.lastName === 'string' ? metadata.lastName
         : typeof metadata.full_name === 'string' ? metadata.full_name.split(' ').slice(1).join(' ')
-        : typeof metadata.name === 'string' ? metadata.name.split(' ').slice(1).join(' ')
-        : undefined;
+            : typeof metadata.name === 'string' ? metadata.name.split(' ').slice(1).join(' ')
+                : undefined;
     const avatarUrl = typeof metadata.avatar_url === 'string' ? metadata.avatar_url
         : typeof metadata.picture === 'string' ? metadata.picture
-        : undefined;
+            : undefined;
 
     return {
         id: user.id,
@@ -260,6 +260,19 @@ export const authService = {
         // Supabase will redirect the browser — no return value needed.
     },
 
+    async googleSignInWithIdToken(token: string): Promise<SignInResult> {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token,
+        });
+
+        if (error || !data.session) {
+            throw new Error(error?.message || 'Unable to sign in with Google ID token.');
+        }
+
+        return mapSessionToResult(data.session);
+    },
+
     async facebookSignIn(): Promise<void> {
         const redirectTo = `${window.location.origin}/auth/callback`;
         console.log('[Facebook Login] [auth.service] facebookSignIn() called');
@@ -346,8 +359,7 @@ export const authService = {
     },
 
     async fetchProfile(): Promise<{ role: string; firstName?: string; lastName?: string; email?: string }> {
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token ?? null;
+        const token = await getAccessToken();
 
         if (!token) throw new Error('No active session for fetchProfile');
 

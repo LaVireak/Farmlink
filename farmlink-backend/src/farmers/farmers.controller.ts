@@ -78,7 +78,12 @@ export class FarmersController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: string,
   ) {
-    return this.farmersService.getFarmerOrders(req.user.id, page, limit, status);
+    return this.farmersService.getFarmerOrders(
+      req.user.id,
+      page,
+      limit,
+      status,
+    );
   }
 
   @Get('orders/stats')
