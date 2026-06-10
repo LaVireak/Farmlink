@@ -26,12 +26,36 @@
           <span>{{ item.label }}</span>
         </NuxtLink>
       </nav>
+
+      <!-- Admin profile section at the bottom -->
+      <div class="admin-profile">
+        <div class="avatar-wrap">
+          <img
+            v-if="auth.user?.avatarUrl"
+            :src="auth.user.avatarUrl"
+            :alt="adminName"
+            class="avatar-img"
+          />
+          <svg v-else viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="avatar-img">
+            <rect width="100" height="100" fill="#e5e7eb" />
+            <circle cx="50" cy="36" r="18" fill="#9ca3af" />
+            <ellipse cx="50" cy="85" rx="30" ry="22" fill="#9ca3af" />
+          </svg>
+        </div>
+        <div class="admin-info">
+          <p class="admin-name">{{ adminName }}</p>
+          <p class="admin-email">{{ auth.user?.email }}</p>
+        </div>
+        <button class="signout-btn" title="Sign out" @click="handleSignOut">
+          <LogOut class="w-4 h-4" />
+        </button>
+      </div>
     </aside>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import {
   LayoutGrid,
   ShoppingCart,
@@ -40,10 +64,25 @@ import {
   Tractor,
   Settings,
   Menu,
-  X
+  X,
+  LogOut,
 } from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth.store'
 
 const isOpen = ref(false)
+const auth = useAuthStore()
+
+const adminName = computed(() => {
+  const u = auth.user
+  if (!u) return 'Admin'
+  const full = `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim()
+  return full || u.email || 'Admin'
+})
+
+async function handleSignOut() {
+  await auth.signOut()
+  await navigateTo('/auth/signin')
+}
 
 const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutGrid },
@@ -51,9 +90,9 @@ const navItems = [
   { label: 'Product', to: '/admin/products', icon: Box },
   { label: 'User', to: '/admin/users', icon: Users },
   { label: 'Farmer', to: '/admin/farmer', icon: Tractor },
-  //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
 ]
 </script>
+
 
 <style scoped>
 .menu-toggle {
@@ -106,6 +145,7 @@ const navItems = [
 }
 
 nav {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
@@ -169,5 +209,73 @@ nav {
   .sidebar.open {
     transform: translateX(0);
   }
+}
+
+/* Admin profile card pinned at sidebar bottom */
+.admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: auto;
+  padding: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #f3f4f6;
+}
+
+.avatar-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.admin-email {
+  font-size: 0.7rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.signout-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background 0.2s;
+}
+
+.signout-btn:hover {
+  color: #ef4444;
+  background: #fee2e2;
 }
 </style>

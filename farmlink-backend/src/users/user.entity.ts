@@ -47,6 +47,9 @@ export class User {
   @Column('varchar', { name: 'phone_number', length: 30, nullable: true })
   phoneNumber!: string | null;
 
+  @Column('varchar', { name: 'address', length: 500, nullable: true })
+  address!: string | null;
+
   @Column('varchar', { name: 'avatar_url', length: 500, nullable: true })
   avatarUrl!: string | null;
 

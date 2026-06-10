@@ -12,7 +12,7 @@
         />
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label class="text-xs font-semibold text-on-surface-variant block mb-2">Status</label>
           <select
@@ -29,20 +29,6 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-on-surface-variant block mb-2">Trust Score</label>
-          <select
-            :value="filterTrust"
-            @change="$emit('update:filterTrust', ($event.target as HTMLSelectElement).value)"
-            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
-          >
-            <option value="">All Scores</option>
-            <option value="high">High (80+)</option>
-            <option value="mid">Medium (50-79)</option>
-            <option value="low">Low (0-49)</option>
-          </select>
-        </div>
-
-        <div>
           <label class="text-xs font-semibold text-on-surface-variant block mb-2">Sort By</label>
           <select
             :value="sortBy"
@@ -50,8 +36,6 @@
             class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
           >
             <option value="name">Name (A-Z)</option>
-            <option value="trust-desc">Trust Score (High-Low)</option>
-            <option value="trust-asc">Trust Score (Low-High)</option>
             <option value="orders-desc">Orders (Most)</option>
             <option value="rating-desc">Rating (Highest)</option>
           </select>
@@ -69,22 +53,23 @@
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full">
+      <table class="w-full table-fixed">
         <thead>
           <tr class="border-b border-outline-variant bg-surface-container-low">
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">User</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Email</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Status</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Trust</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Orders</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Rating</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Province</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Actions</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">User ID</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Email</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Image</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Status</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-on-surface-variant">Orders</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-on-surface-variant">Rating</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Address</th>
           </tr>
         </thead>
+
         <tbody>
           <tr v-if="users.length === 0">
-            <td colspan="8" class="px-5 py-12">
+            <td colspan="8" class="px-4 py-12">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
                   <UserX class="w-6 h-6 text-on-surface-variant" />
@@ -97,67 +82,60 @@
           <tr
             v-for="user in users"
             :key="user.id"
-            class="border-b border-outline-variant hover:bg-surface-container-low transition-colors"
+            @click="$emit('openUser', user)"
+            class="border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
           >
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  :class="roleAvatarClass(user.role)"
-                >
-                  {{ initials(user.name) }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-on-surface truncate">{{ user.name }}</p>
-                </div>
-              </div>
+            <td class="px-4 py-3 font-mono font-semibold text-xs text-on-surface-variant whitespace-nowrap">
+              #{{ String(user.id).slice(0, 8).toUpperCase() }}
             </td>
 
-            <td class="px-5 py-4">
+            <td class="px-4 py-3">
+              <span class="text-sm font-semibold text-on-surface truncate block">{{ user.name }}</span>
+            </td>
+
+            <td class="px-4 py-3">
               <p class="text-sm text-on-surface-variant truncate">{{ user.email }}</p>
             </td>
 
-            <td class="px-5 py-4">
+            <td class="px-4 py-3">
+              <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+                <img
+                  v-if="user.avatarUrl"
+                  :src="user.avatarUrl"
+                  :alt="user.name"
+                  class="w-full h-full object-cover"
+                />
+                <svg
+                  v-else
+                  viewBox="0 0 100 100"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-full h-full"
+                >
+                  <rect width="100" height="100" fill="#f0f0f0" />
+                  <circle cx="50" cy="36" r="18" fill="#9e9e9e" />
+                  <ellipse cx="50" cy="85" rx="30" ry="22" fill="#9e9e9e" />
+                </svg>
+              </div>
+            </td>
+
+            <td class="px-4 py-3">
               <span class="inline-flex text-xs font-medium px-2.5 py-1 rounded-lg" :class="statusClass(user.status)">
                 {{ user.status }}
               </span>
             </td>
 
-            <td class="px-5 py-4 text-center">
-              <p class="text-sm font-bold" :class="trustScoreColor(user.trustScore)">{{ user.trustScore }}</p>
-            </td>
-
-            <td class="px-5 py-4 text-center">
+            <td class="px-4 py-3 text-center">
               <p class="text-sm font-semibold text-on-surface">{{ user.orders }}</p>
             </td>
 
-            <td class="px-5 py-4 text-center">
+            <td class="px-4 py-3 text-center">
               <p class="text-sm font-semibold">
                 <span class="text-on-surface">{{ user.rating }}</span><span class="text-amber-400">★</span>
               </p>
             </td>
 
-            <td class="px-5 py-4">
-              <p class="text-sm text-on-surface-variant">{{ user.province }}</p>
-            </td>
-
-            <td class="px-5 py-4">
-              <div class="flex items-center justify-center gap-2">
-                <button
-                  @click="$emit('openUser', user)"
-                  class="p-2 rounded-lg bg-secondary-container text-secondary transition-colors hover:bg-secondary hover:text-white"
-                  title="View Profile"
-                >
-                  <Eye class="w-4 h-4" />
-                </button>
-                <button
-                  @click="$emit('banUser', user)"
-                  class="p-2 rounded-lg bg-error-container text-error transition-colors hover:bg-error hover:text-white"
-                  title="Ban User"
-                >
-                  <ShieldX class="w-4 h-4" />
-                </button>
-              </div>
+            <td class="px-4 py-3">
+              <p class="text-sm text-on-surface-variant truncate">{{ user.address }}</p>
             </td>
           </tr>
         </tbody>
@@ -167,16 +145,14 @@
 </template>
 
 <script setup lang="ts">
-import { Eye, Search, ShieldX, UserX } from 'lucide-vue-next'
+import { Search, UserX } from 'lucide-vue-next'
 
 defineProps<{
   users: any[]
   searchQuery: string
   filterStatus: string
-  filterTrust: string
   sortBy: string
   statusClass: (s: string) => string
-  trustScoreColor: (s: number) => string
   roleAvatarClass: (r: string) => string
   initials: (name: string) => string
 }>()
@@ -184,10 +160,9 @@ defineProps<{
 defineEmits([
   'update:searchQuery',
   'update:filterStatus',
-  'update:filterTrust',
   'update:sortBy',
   'resetFilters',
   'openUser',
-  'banUser',
 ])
 </script>
+

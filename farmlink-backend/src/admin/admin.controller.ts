@@ -20,6 +20,7 @@ import {
   UpdateOrderStatusDto,
   RejectProductDto,
   MatchFarmerDto,
+  UpdateFarmerAdminDto,
 } from './dto/update-admin.dto';
 
 @Controller('admin')
@@ -43,6 +44,11 @@ export class AdminController {
   @Get('farmers')
   getAllFarmers() {
     return this.adminService.getAllFarmers();
+  }
+
+  @Patch('farmers/:id')
+  updateFarmer(@Param('id') id: string, @Body() dto: UpdateFarmerAdminDto) {
+    return this.adminService.updateFarmer(id, dto);
   }
 
   @Patch('farmers/:id/approve')

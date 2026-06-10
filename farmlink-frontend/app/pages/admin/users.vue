@@ -13,7 +13,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -52,158 +52,147 @@
                 </div>
                 <p class="text-xs text-gray-400 mt-2">Joined this month</p>
             </div>
-
-            <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-gray-500 font-medium mb-1">Avg Trust Score</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ avgBuyerTrustScore }}/100</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <TrendingUp class="w-6 h-6 text-purple-600"/>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">Community average</p>
-            </div>
         </div>
 
         <AdminUserTable
             :users="filteredUsers"
             :search-query="searchQuery"
             :filter-status="filterStatus"
-            :filter-trust="filterTrust"
             :sort-by="sortBy"
             :status-class="statusClass"
-            :trust-score-color="trustScoreColor"
             :role-avatar-class="roleAvatarClass"
             :initials="initials"
             @update:search-query="searchQuery = $event"
             @update:filter-status="filterStatus = $event"
-            @update:filter-trust="filterTrust = $event"
             @update:sort-by="sortBy = $event"
             @reset-filters="resetFilters"
             @open-user="openUserModal"
-            @ban-user="(user) => { suspendModal.user = user; suspendModal.visible = true; suspendModal.action = 'Banned'; }"
         />
 
-        <Transition enter-active-class="transition-all duration-300 ease-out" enter-from-class="opacity-0 translate-x-full"
-            leave-active-class="transition-all duration-200 ease-in" leave-to-class="opacity-0 translate-x-full">
-            <div v-if="userModal.visible" class="fixed inset-0 z-40 bg-white overflow-y-auto">
-                <div v-if="userModal.user" class="min-h-screen">
-                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-                        <div class="max-w-6xl mx-auto px-6 py-6">
-                            <button @click="userModal.visible = false"
-                                class="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium mb-4 text-sm">
-                                ← Back to Users
-                            </button>
-                            <div class="flex items-center justify-between gap-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold"
-                                        :class="roleAvatarClass(userModal.user.role)">
-                                        {{ initials(userModal.user.name) }}
-                                    </div>
-                                    <div>
-                                        <h1 class="text-3xl font-bold text-gray-900">{{ userModal.user.name }}</h1>
-                                        <p class="text-gray-600 mt-1">{{ userModal.user.email }}</p>
-                                        <div class="flex items-center gap-3 mt-3">
-                                            <span class="text-sm font-medium px-3 py-1 rounded-full" :class="roleClass(userModal.user.role)">{{ userModal.user.role }}</span>
-                                            <span class="text-sm font-medium px-3 py-1 rounded-full" :class="statusClass(userModal.user.status)">{{ userModal.user.status }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-center">
-                                    <svg width="100" height="100" viewBox="0 0 64 64">
-                                        <circle cx="32" cy="32" r="26" fill="none" stroke="#f3f4f6" stroke-width="6"/>
-                                        <circle cx="32" cy="32" r="26" fill="none"
-                                            :stroke="trustScoreBg(userModal.user.trustScore)"
-                                            stroke-width="6" stroke-linecap="round"
-                                            :stroke-dasharray="`${(userModal.user.trustScore/100)*163.4} 163.4`"
-                                            transform="rotate(-90 32 32)"/>
-                                        <text x="32" y="35" text-anchor="middle" font-size="16" font-weight="700"
-                                            :fill="trustScoreBg(userModal.user.trustScore)" font-family="ui-mono,monospace">
-                                            {{ userModal.user.trustScore }}
-                                        </text>
+        <teleport to="body">
+            <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+                leave-active-class="transition-all duration-100 ease-in" leave-to-class="opacity-0 scale-95">
+                <div v-if="userModal.visible" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm p-4"
+                    @click.self="userModal.visible = false">
+                    <div class="bg-white/95 backdrop-blur-md rounded-3xl max-w-2xl w-full border border-white/50 shadow-2xl relative overflow-hidden flex flex-col">
+
+                        <!-- Avatar / Banner Header -->
+                        <div class="w-full h-48 overflow-hidden relative text-white p-5 flex flex-col bg-gradient-to-br from-[#0a1628] to-[#1a3a5c]">
+
+                            <!-- Real avatar as banner bg -->
+                            <div v-if="userModal.user?.avatarUrl" class="absolute inset-0 z-0 overflow-hidden">
+                                <img :src="userModal.user.avatarUrl" class="w-full h-full object-cover" :alt="userModal.user?.name" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/40 z-10"></div>
+                            </div>
+
+                            <!-- Fallback silhouette pattern -->
+                            <div v-else class="absolute inset-0 z-0">
+                                <div class="absolute inset-2 rounded-xl bg-[radial-gradient(#1e3a5f_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+                                <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                                    <svg viewBox="0 0 100 100" class="w-40 h-40" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="32" r="22" fill="white"/>
+                                        <ellipse cx="50" cy="85" rx="38" ry="26" fill="white"/>
                                     </svg>
-                                    <p class="text-xs text-gray-600 mt-2 font-semibold">Trust Score</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="max-w-6xl mx-auto px-6 py-8 space-y-6">
-                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                            <h2 class="text-lg font-bold text-gray-900 mb-6">Basic Information</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Full Name</p>
-                                    <p class="text-base font-semibold text-gray-900">{{ userModal.user.name }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Email Address</p>
-                                    <p class="text-base font-semibold text-gray-900">{{ userModal.user.email }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">User ID</p>
-                                    <p class="text-base font-mono font-semibold text-gray-900">#USR-{{ String(userModal.user.id).padStart(4,'0') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Province</p>
-                                    <p class="text-base font-semibold text-gray-900">{{ userModal.user.province }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Role</p>
-                                    <span class="inline-block text-sm font-medium px-3 py-1 rounded-lg" :class="roleClass(userModal.user.role)">{{ userModal.user.role }}</span>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Status</p>
-                                    <span class="inline-block text-sm font-medium px-3 py-1 rounded-lg" :class="statusClass(userModal.user.status)">{{ userModal.user.status }}</span>
-                                </div>
+                            <!-- Role + Status badges -->
+                            <div class="flex flex-wrap gap-2 z-20 relative">
+                                <span class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-blue-300 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+                                    {{ userModal.user?.role }}
+                                </span>
+                                <span class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest rounded-lg border backdrop-blur-md"
+                                    :class="userModal.user?.status === 'Active' ? 'text-green-400 bg-green-950/40 border-green-500/20' : 'text-red-400 bg-red-950/40 border-red-500/20'">
+                                    {{ userModal.user?.status }}
+                                </span>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                                <p class="text-xs text-gray-500 font-medium mb-2">Total Orders</p>
-                                <p class="text-3xl font-bold text-gray-900">{{ userModal.user.orders }}</p>
+                            <!-- Name + email at bottom -->
+                            <div class="mt-auto z-20 relative">
+                                <h2 class="text-xl font-bold text-white leading-tight">{{ userModal.user?.name }}</h2>
+                                <p class="text-sm text-white/60 mt-0.5">{{ userModal.user?.email }}</p>
                             </div>
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                                <p class="text-xs text-gray-500 font-medium mb-2">Rating</p>
-                                <p class="text-3xl font-bold text-amber-500">{{ userModal.user.rating }}★</p>
-                            </div>
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                                <p class="text-xs text-gray-500 font-medium mb-2">Disputes</p>
-                                <p class="text-3xl font-bold" :class="userModal.user.disputes > 2 ? 'text-red-500' : 'text-green-600'">{{ userModal.user.disputes }}</p>
-                            </div>
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                                <p class="text-xs text-gray-500 font-medium mb-2">Trust Score</p>
-                                <p class="text-3xl font-bold" :class="trustScoreColor(userModal.user.trustScore)">{{ userModal.user.trustScore }}</p>
-                            </div>
-                        </div>
 
-                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                            <h2 class="text-lg font-bold text-gray-900 mb-6">Account Timeline</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Joined Date</p>
-                                    <p class="text-base font-semibold text-gray-900">{{ userModal.user.joinedAt }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-600 mb-2">Last Active</p>
-                                    <p class="text-base font-semibold text-gray-900">{{ userModal.user.lastActiveAt ?? '—' }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3 pb-8">
-                            <button @click="() => { suspendModal.user = userModal.user; suspendModal.visible = true; suspendModal.action = ''; userModal.visible = false }"
-                                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 font-medium transition">
-                                <ShieldOff class="w-5 h-5"/> Suspend/Ban
+                            <!-- Close btn -->
+                            <button @click="userModal.visible = false" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center shadow-md border border-white/10 hover:scale-110 active:scale-95 transition-all duration-200 z-20">
+                                <X class="w-4 h-4" />
                             </button>
                         </div>
+
+                        <!-- Form Body -->
+                        <div class="w-full p-6 md:p-8 flex flex-col gap-5 bg-white rounded-b-3xl overflow-y-auto max-h-[60vh]">
+
+                            <!-- Row 1: User ID + Full Name -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">User ID</label>
+                                    <input :value="'#' + String(userModal.user?.id ?? '').slice(0,8).toUpperCase()" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-mono cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label>
+                                    <input :value="userModal.user?.name" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Email + Phone -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Email Address</label>
+                                    <input :value="userModal.user?.email" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone</label>
+                                    <input :value="userModal.user?.phone" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Address -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Address</label>
+                                <input :value="userModal.user?.address" type="text" readonly
+                                    class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                            </div>
+
+                            <!-- Row 4: Orders + Rating + Disputes -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Orders</label>
+                                    <input :value="userModal.user?.orders" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-bold focus:outline-none cursor-default" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Rating</label>
+                                    <input :value="(userModal.user?.rating ?? 0) + ' ★'" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-amber-500 font-bold focus:outline-none cursor-default" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Disputes</label>
+                                    <input :value="userModal.user?.disputes" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none cursor-default"
+                                        :class="(userModal.user?.disputes ?? 0) > 2 ? 'text-red-500' : 'text-green-600'" />
+                                </div>
+                            </div>
+
+                            <!-- Footer: Joined + Suspend btn -->
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                    Joined: <span class="text-gray-700 font-extrabold normal-case">{{ userModal.user?.joinedAt }}</span>
+                                </span>
+                                <button @click="() => { suspendModal.user = userModal.user; suspendModal.visible = true; suspendModal.action = ''; userModal.visible = false }"
+                                    class="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 transition">
+                                    <ShieldOff class="w-3.5 h-3.5" /> Suspend / Ban
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-            </div>
-        </Transition>
+            </Transition>
+        </teleport>
 
         <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0"
             leave-active-class="transition-all duration-150 ease-in" leave-to-class="opacity-0">
@@ -384,15 +373,16 @@ const mapUser = (user) => {
         name,
         email: user?.email ?? '—',
         phone: user?.phoneNumber ?? '—',
+        address: user?.address ?? '—',
         role: normalizeRole(user?.role),
         status: normalizeStatus(user?.status),
         province: '—',
-        trustScore: 0,
         orders: 0,
         rating: 0,
         disputes: 0,
         joinedAt: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—',
         createdAt: user?.createdAt,
+        avatarUrl: user?.avatarUrl ?? user?.avatar_url ?? null,
     }
 }
 
@@ -413,7 +403,6 @@ const roles      = ['Buyer', 'Admin']
 const statusTabs = ['All', 'Active', 'Suspended', 'Banned']
 
 const countBuyerByStatus = (s) => users.value.filter(u => u.status === s).length
-const avgBuyerTrustScore = computed(() => Math.round(users.value.reduce((a, u) => a + u.trustScore, 0) / (users.value.length || 1)))
 const newThisMonth = computed(() => {
     const now = new Date()
     return users.value.filter(u => {
@@ -425,7 +414,6 @@ const newThisMonth = computed(() => {
 const searchQuery  = ref('')
 const filterStatus = ref('')
 const filterRole   = ref('')
-const filterTrust  = ref('')
 const sortBy       = ref('name')
 
 const filteredUsers = computed(() => {
@@ -434,17 +422,11 @@ const filteredUsers = computed(() => {
         const ms = safeLower(u.name).includes(q) || safeLower(u.email).includes(q)
         const mr = !filterRole.value   || u.role   === filterRole.value
         const mv = !filterStatus.value || u.status === filterStatus.value
-        const mt = !filterTrust.value  ||
-            (filterTrust.value === 'high' && u.trustScore >= 80) ||
-            (filterTrust.value === 'mid'  && u.trustScore >= 50 && u.trustScore < 80) ||
-            (filterTrust.value === 'low'  && u.trustScore < 50)
-        return ms && mr && mv && mt
+        return ms && mr && mv
     })
     result = result.sort((a, b) => {
         switch (sortBy.value) {
             case 'name':        return a.name.localeCompare(b.name)
-            case 'trust-desc':  return b.trustScore - a.trustScore
-            case 'trust-asc':   return a.trustScore - b.trustScore
             case 'orders-desc': return b.orders - a.orders
             case 'rating-desc': return b.rating - a.rating
             default:            return 0
@@ -468,7 +450,6 @@ function resetFilters() {
     searchQuery.value  = ''
     filterStatus.value = ''
     filterRole.value   = ''
-    filterTrust.value  = ''
     sortBy.value       = 'name'
 }
 
@@ -592,9 +573,6 @@ const statusClass = (s) => ({
     Suspended: 'bg-orange-100 text-orange-700',
     Banned:    'bg-red-100 text-red-600',
 }[s] ?? 'bg-gray-100 text-gray-600')
-
-const trustScoreColor = (s) => s >= 80 ? 'text-green-600' : s >= 50 ? 'text-amber-600' : 'text-red-500'
-const trustScoreBg    = (s) => s >= 80 ? '#16a34a'        : s >= 50 ? '#d97706'        : '#dc2626'
 
 const churnRiskClass = (r) => ({
     High:   'bg-red-100 text-red-600',

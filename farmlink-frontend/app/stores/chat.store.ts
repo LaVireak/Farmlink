@@ -23,11 +23,11 @@ export const useChatStore = defineStore('chat', () => {
     messages.value[conversationId].push(message)
   }
 
-  const updateConversation = (conversationId: string, lastMessage: string, lastMessageTime: Date) => {
+  const updateConversation = (conversationId: string, lastMessage: string, lastMessageTime: string | Date) => {
     const conv = conversations.value.find(c => c.id === conversationId)
     if (conv) {
       conv.lastMessage = lastMessage
-      conv.lastMessageTime = lastMessageTime
+      conv.lastMessageTime = typeof lastMessageTime === 'string' ? lastMessageTime : lastMessageTime.toISOString()
       conv.unreadCount = 0
     }
   }

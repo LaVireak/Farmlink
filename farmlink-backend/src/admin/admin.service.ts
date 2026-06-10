@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { randomUUID } from 'crypto';
 import { User } from '../users/user.entity';
 import { FarmerProfile } from '../farmers/farmer.entity';
 import { Order } from '../orders/order.entity';
@@ -10,6 +13,7 @@ import { UserStatus } from '../common/enums/user-status.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { ProductStatus } from '../common/enums/product.enum';
 import { SupabaseAuthService } from '../auth/supabase-auth.service';
+import { UpdateFarmerAdminDto } from './dto/update-admin.dto';
 
 @Injectable()
 export class AdminService {
@@ -76,6 +80,30 @@ export class AdminService {
     return this.farmerRepository.find({
       relations: ['user'],
     });
+  }
+
+  async updateFarmer(farmerId: string, dto: UpdateFarmerAdminDto) {
+    const farmer = await this.farmerRepository.findOne({
+      where: { id: farmerId },
+      relations: ['user'],
+    });
+
+    if (!farmer) {
+      throw new NotFoundException('Farmer profile not found');
+    }
+
+    if (farmer.user && dto.status !== undefined) {
+      farmer.user.status = dto.status as UserStatus;
+      if (dto.status === UserStatus.ACTIVE) {
+        farmer.isVerified = true;
+        farmer.verifiedAt = new Date();
+      } else if (dto.status === UserStatus.SUSPENDED) {
+        farmer.isVerified = false;
+      }
+      await this.userRepository.save(farmer.user);
+    }
+
+    return this.farmerRepository.save(farmer);
   }
 
   async approveFarmer(farmerId: string) {

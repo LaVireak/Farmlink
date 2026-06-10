@@ -12,7 +12,7 @@
         />
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label class="text-xs font-semibold text-on-surface-variant block mb-2">Status</label>
           <select
@@ -28,20 +28,6 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-on-surface-variant block mb-2">Match Status</label>
-          <select
-            :value="filterMatch"
-            @change="$emit('update:filterMatch', ($event.target as HTMLSelectElement).value)"
-            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
-          >
-            <option value="">All Matches</option>
-            <option value="matched">Matched</option>
-            <option value="unmatched">Unmatched</option>
-            <option value="seeking">Seeking Match</option>
-          </select>
-        </div>
-
-        <div>
           <label class="text-xs font-semibold text-on-surface-variant block mb-2">Sort By</label>
           <select
             :value="sortBy"
@@ -49,8 +35,6 @@
             class="w-full px-3 py-2 text-sm border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-surface-container-lowest text-on-surface transition"
           >
             <option value="name">Name (A-Z)</option>
-            <option value="trust-desc">Trust Score (High-Low)</option>
-            <option value="trust-asc">Trust Score (Low-High)</option>
             <option value="yield-desc">Est. Yield (High-Low)</option>
           </select>
         </div>
@@ -67,21 +51,24 @@
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full">
+      <table class="w-full table-fixed">
         <thead>
           <tr class="border-b border-outline-variant bg-surface-container-low">
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Farmer</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Main Crop</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Location</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Trust</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-on-surface-variant">Status</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Match Status</th>
-            <th class="px-5 py-3 text-center text-xs font-semibold text-on-surface-variant">Actions</th>
+            <th class="w-24 px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Farmer ID</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Address</th>
+            <th class="w-32 px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Phone</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Email</th>
+            <th class="w-20 px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Image</th>
+            <th class="w-24 px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">ID Document</th>
+            <th class="w-28 px-4 py-3 text-left text-xs font-semibold text-on-surface-variant">Status</th>
+            <th class="w-20 px-4 py-3 text-center text-xs font-semibold text-on-surface-variant">Rating</th>
+            <th class="w-24 px-4 py-3 text-center text-xs font-semibold text-on-surface-variant">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="farmers.length === 0">
-            <td colspan="7" class="px-5 py-12">
+            <td colspan="10" class="px-5 py-12">
               <div class="flex flex-col items-center gap-3">
                 <div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
                   <UserX class="w-6 h-6 text-on-surface-variant" />
@@ -94,80 +81,88 @@
           <tr
             v-for="farmer in farmers"
             :key="farmer.id"
-            class="border-b border-outline-variant hover:bg-surface-container-low transition-colors"
+            @click="$emit('openFarmer', farmer)"
+            class="border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer"
           >
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  :class="roleAvatarClass('Farmer')"
-                >
-                  {{ initials(farmer.name) }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-on-surface truncate">{{ farmer.name }}</p>
-                  <p class="text-xs text-on-surface-variant truncate">{{ farmer.phone }}</p>
-                </div>
-              </div>
+            <td class="px-4 py-3 font-mono font-semibold text-xs text-on-surface-variant truncate">
+              #{{ String(farmer.id || '').slice(0, 8).toUpperCase() }}
             </td>
 
-            <td class="px-5 py-4">
-              <div class="flex items-center gap-2">
-                <Leaf class="w-4 h-4 text-secondary" />
-                <span class="text-sm text-on-surface font-medium">{{ farmer.mainCrop }}</span>
-              </div>
+            <td class="px-4 py-3">
+              <span class="text-sm font-semibold text-on-surface truncate block">{{ farmer.name }}</span>
             </td>
 
-            <td class="px-5 py-4">
+            <td class="px-4 py-3">
               <p class="text-sm text-on-surface-variant truncate">{{ farmer.location }}</p>
             </td>
 
-            <td class="px-5 py-4 text-center">
-              <p class="text-sm font-bold" :class="trustScoreColor(farmer.trustScore)">{{ farmer.trustScore }}</p>
+            <td class="px-4 py-3">
+              <span class="text-sm text-on-surface truncate block">{{ farmer.phone }}</span>
             </td>
 
-            <td class="px-5 py-4">
+            <td class="px-4 py-3">
+              <span class="text-sm text-on-surface-variant truncate block">{{ farmer.email }}</span>
+            </td>
+
+            <td class="px-4 py-3">
+              <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <img
+                  v-if="farmer.avatarUrl"
+                  :src="resolveUrl(farmer.avatarUrl)"
+                  :alt="farmer.name"
+                  class="w-full h-full object-cover"
+                />
+                <svg
+                  v-else
+                  viewBox="0 0 100 100"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-full h-full"
+                >
+                  <rect width="100" height="100" fill="#f0f0f0" />
+                  <circle cx="50" cy="36" r="18" fill="#9e9e9e" />
+                  <ellipse cx="50" cy="85" rx="30" ry="22" fill="#9e9e9e" />
+                </svg>
+              </div>
+            </td>
+
+            <td class="px-4 py-3">
+              <div class="w-12 h-8 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                <img
+                  v-if="farmer.idDocumentUrl"
+                  :src="resolveUrl(farmer.idDocumentUrl)"
+                  alt="Farmer ID"
+                  class="w-full h-full object-cover"
+                />
+                <svg
+                  v-else
+                  viewBox="0 0 100 66"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-full h-full"
+                >
+                  <rect width="100" height="66" fill="#f5f5f5" rx="4" />
+                  <path d="M30 22h40M30 33h40M30 44h25" stroke="#bdbdbd" stroke-width="4" stroke-linecap="round" />
+                </svg>
+              </div>
+            </td>
+
+            <td class="px-4 py-3">
               <span class="inline-flex text-xs font-medium px-2.5 py-1 rounded-lg" :class="statusClass(farmer.status)">
                 {{ farmer.status }}
               </span>
             </td>
 
-            <td class="px-5 py-4 text-center">
-              <span
-                class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border"
-                :class="farmer.matchStatus === 'Matched'
-                  ? 'bg-secondary-container text-secondary border-outline-variant'
-                  : farmer.matchStatus === 'Seeking'
-                  ? 'bg-surface-container text-on-surface-variant border-outline'
-                  : 'bg-surface-container-low text-on-surface-variant border-outline-variant'"
-              >
-                <Link2 class="w-3.5 h-3.5" v-if="farmer.matchStatus === 'Matched'" />
-                <Search class="w-3.5 h-3.5" v-else-if="farmer.matchStatus === 'Seeking'" />
-                <Unlink class="w-3.5 h-3.5" v-else />
-                {{ farmer.matchStatus }}
-              </span>
+            <td class="px-4 py-3 text-center">
+              <p class="text-sm font-semibold">
+                <span class="text-on-surface">{{ farmer.rating || 0 }}</span><span class="text-amber-500">★</span>
+              </p>
             </td>
 
-            <td class="px-5 py-4">
-              <div class="flex items-center justify-center gap-2">
-                <button
-                  @click="$emit('openFarmer', farmer)"
-                  class="p-2 rounded-lg bg-secondary-container text-secondary transition-colors hover:bg-secondary hover:text-white"
-                  title="View Profile"
-                >
-                  <Eye class="w-4 h-4" />
-                </button>
-                <button
-                  @click="$emit('matchFarmer', farmer)"
-                  class="p-2 rounded-lg bg-surface-container text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-                  title="Match with Buyer"
-                >
-                  <ArrowRightLeft class="w-4 h-4" />
-                </button>
+            <td class="px-4 py-3" @click.stop>
+              <div class="flex items-center justify-center">
                 <button
                   @click="$emit('suspendFarmer', farmer)"
                   class="p-2 rounded-lg bg-error-container text-error transition-colors hover:bg-error hover:text-white"
-                  title="Suspend Farmer"
+                  title="Suspend / Ban Farmer"
                 >
                   <ShieldOff class="w-4 h-4" />
                 </button>
@@ -181,16 +176,14 @@
 </template>
 
 <script setup lang="ts">
-import { Eye, Search, ShieldOff, UserX, Leaf, Link2, Unlink, ArrowRightLeft } from 'lucide-vue-next'
+import { Search, UserX, ShieldOff } from 'lucide-vue-next'
 
 defineProps<{
   farmers: any[]
   searchQuery: string
   filterStatus: string
-  filterMatch: string
   sortBy: string
   statusClass: (s: string) => string
-  trustScoreColor: (s: number) => string
   roleAvatarClass: (r: string) => string
   initials: (name: string) => string
 }>()
@@ -198,11 +191,18 @@ defineProps<{
 defineEmits([
   'update:searchQuery',
   'update:filterStatus',
-  'update:filterMatch',
   'update:sortBy',
   'resetFilters',
   'openFarmer',
-  'matchFarmer',
   'suspendFarmer',
 ])
+
+const config = useRuntimeConfig()
+const STATIC_BASE = (config.public.apiUrl as string).replace('/api', '')
+
+function resolveUrl(url: string | undefined): string {
+  if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('data:')) return url
+  return `${STATIC_BASE}/${url}`
+}
 </script>
