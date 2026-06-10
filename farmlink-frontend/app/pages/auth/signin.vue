@@ -228,8 +228,6 @@ const googleError = ref('')
 const facebookSubmitting = ref(false)
 const facebookError = ref('')
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-
 const form = reactive({
   email: '',
   password: '',
@@ -290,20 +288,12 @@ const onSubmit = async () => {
 
 // ---- Google ----
 
-const handleGoogleCredential = async (credential?: string) => {
-  if (!credential) {
-    googleError.value = 'Google sign-in failed.'
-    return
-  }
-
+const handleGoogleClick = async () => {
   googleSubmitting.value = true
   googleError.value = ''
 
   try {
-    await authStore.signInWithGoogle(credential)
-
-    const role = authStore.user?.role
-    await router.push(authStore.getPostSignInRoute(role ?? 'consumer'))
+    await authStore.signInWithGoogle()
   } catch (error) {
     googleError.value =
       error instanceof Error
@@ -311,32 +301,6 @@ const handleGoogleCredential = async (credential?: string) => {
         : 'Unable to sign in with Google.'
     googleSubmitting.value = false
   }
-}
-
-const googleReady = ref(false)
-
-const initializeGoogle = () => {
-  const google = (window as any).google
-
-  if (!google?.accounts?.id) return false
-
-  google.accounts.id.initialize({
-    client_id: googleClientId,
-    callback: (response: { credential?: string }) =>
-      handleGoogleCredential(response.credential),
-  })
-
-  googleReady.value = true
-  return true
-}
-
-const handleGoogleClick = () => {
-  const google = (window as any).google
-  if (!google?.accounts?.id) {
-    googleError.value = 'Google sign-in is not ready yet.'
-    return
-  }
-  google.accounts.id.prompt()
 }
 
 // ---- Facebook ----
@@ -356,29 +320,6 @@ const handleFacebook = async () => {
     facebookSubmitting.value = false
   }
 }
-
-// ---- Mount ----
-
-onMounted(() => {
-  if (!googleClientId) {
-    googleError.value = 'Google sign-in is not configured.'
-    return
-  }
-
-  let attempts = 0
-
-  const tryInit = () => {
-    attempts++
-    if (initializeGoogle()) return
-    if (attempts >= 20) {
-      googleError.value = 'Google sign-in failed to load.'
-      return
-    }
-    setTimeout(tryInit, 300)
-  }
-
-  tryInit()
-})
 </script>
 
 <style scoped>
