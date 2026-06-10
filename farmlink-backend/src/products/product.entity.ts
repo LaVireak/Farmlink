@@ -65,7 +65,7 @@ export class Product {
   @Column({ name: 'is_organic', default: false })
   isOrganic!: boolean;
 
-  @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.PENDING_REVIEW })
+  @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.ACTIVE })
   status!: ProductStatus;
 
   @Column({ name: 'thumbnail_url', type: 'text', nullable: true })
@@ -74,7 +74,13 @@ export class Product {
   @Column({ name: 'total_sold', default: 0 })
   totalSold!: number;
 
-  @Column({ name: 'avg_rating', type: 'decimal', precision: 3, scale: 2, nullable: true })
+  @Column({
+    name: 'avg_rating',
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+    nullable: true,
+  })
   avgRating?: number;
 
   @OneToMany(() => ProductImage, (image) => image.product)

@@ -29,7 +29,9 @@ export class MessagesSeedService {
     if (farmerId && consumerId) {
       // Use specific IDs if provided
       farmer = await this.userRepository.findOne({ where: { id: farmerId } });
-      consumer = await this.userRepository.findOne({ where: { id: consumerId } });
+      consumer = await this.userRepository.findOne({
+        where: { id: consumerId },
+      });
 
       if (!farmer || !consumer) {
         return {
@@ -54,8 +56,10 @@ export class MessagesSeedService {
       if (!farmers.length || !consumers.length) {
         return {
           success: false,
-          message: 'Please create at least one farmer and one consumer account first via signup',
-          instructions: 'Sign up as a farmer and a consumer, then run this seed again',
+          message:
+            'Please create at least one farmer and one consumer account first via signup',
+          instructions:
+            'Sign up as a farmer and a consumer, then run this seed again',
         };
       }
 
@@ -86,7 +90,8 @@ export class MessagesSeedService {
       {
         sender: consumer,
         receiver: farmer,
-        content: 'Yes! We just harvested premium heirloom tomatoes this morning.',
+        content:
+          'Yes! We just harvested premium heirloom tomatoes this morning.',
         isRead: true,
         createdAt: new Date(now.getTime() - 3600000 * 1.8),
       },
@@ -100,14 +105,15 @@ export class MessagesSeedService {
       {
         sender: consumer,
         receiver: farmer,
-        content: 'Can I get 5kg? And what\'s the price?',
+        content: "Can I get 5kg? And what's the price?",
         isRead: true,
         createdAt: new Date(now.getTime() - 3600000 * 1),
       },
       {
         sender: farmer,
         receiver: consumer,
-        content: '5kg is perfect! That would be $35. Standard delivery fee is $5.',
+        content:
+          '5kg is perfect! That would be $35. Standard delivery fee is $5.',
         isRead: true,
         createdAt: new Date(now.getTime() - 3600000 * 0.8),
       },
@@ -128,7 +134,7 @@ export class MessagesSeedService {
       {
         sender: consumer,
         receiver: farmer,
-        content: 'Perfect! I\'ll be ready. See you tomorrow!',
+        content: "Perfect! I'll be ready. See you tomorrow!",
         isRead: false,
         createdAt: new Date(now.getTime() - 300000),
       },

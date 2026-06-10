@@ -12,7 +12,9 @@ import { Product } from '../products/product.entity';
 @Entity('favorite_products')
 @Unique(['consumerId', 'productId'])
 export class FavoriteProduct {
-  @ManyToOne(() => User, (user) => user.favoriteProducts, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.favoriteProducts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'consumer_id' })
   consumer: User;
 

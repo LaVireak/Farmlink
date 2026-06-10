@@ -68,7 +68,6 @@
 
     <div v-else-if="filteredOrders.length === 0" class="py-16 text-center text-on-surface-variant text-sm">
       <p class="text-base font-medium text-on-surface mb-1">No orders found</p>
-      <p>Try adjusting your filters</p>
     </div>
 
     <table v-else class="w-full text-sm">

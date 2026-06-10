@@ -34,7 +34,12 @@ export class Order {
   @Column({ name: 'payment_method', type: 'enum', enum: PaymentMethod })
   paymentMethod: PaymentMethod;
 
-  @Column({ name: 'payment_status', type: 'enum', enum: PaymentStatus, default: PaymentStatus.UNPAID })
+  @Column({
+    name: 'payment_status',
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.UNPAID,
+  })
   paymentStatus: PaymentStatus;
 
   @Column({ name: 'payment_ref', length: 255, nullable: true })
@@ -43,7 +48,13 @@ export class Order {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   subtotal: number;
 
-  @Column({ name: 'delivery_fee', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'delivery_fee',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   deliveryFee: number;
 
   @Column({ name: 'total_amount', type: 'decimal', precision: 12, scale: 2 })
@@ -52,10 +63,22 @@ export class Order {
   @Column({ name: 'delivery_address', type: 'text', nullable: true })
   deliveryAddress: string;
 
-  @Column({ name: 'delivery_lat', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  @Column({
+    name: 'delivery_lat',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
   deliveryLat: number;
 
-  @Column({ name: 'delivery_lng', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  @Column({
+    name: 'delivery_lng',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
   deliveryLng: number;
 
   @Column({ type: 'text', nullable: true })

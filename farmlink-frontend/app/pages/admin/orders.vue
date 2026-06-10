@@ -122,8 +122,9 @@
 
                     <div class="flex justify-between mt-2 pl-9 sm:pl-11">
                         <span
-                            v-for="label in chartXLabels" :key="label"
+                            v-for="(label, idx) in chartXLabels" :key="label"
                             class="text-[10px] sm:text-xs text-gray-300 font-medium"
+                            v-show="shouldShowLabel(idx)"
                         >{{ label }}</span>
                     </div>
                 </template>
@@ -200,7 +201,6 @@
 
         </section>
 
-        <!-- ── Recent Orders ──────────────────────────────────────────────────── -->
         <AdminOrderTable
             :loading="loadingOrders"
             :orders="orders"
@@ -217,7 +217,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { DollarSign, Package, ShoppingCart, Users, Search } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
 import {
@@ -228,6 +228,7 @@ import {
     CategoryScale, LinearScale,
     ArcElement,
 } from 'chart.js'
+import { useAdmin } from '~/services/admin.service'
 
 ChartJS.register(
     ArcElement,
@@ -239,48 +240,110 @@ ChartJS.register(
 
 definePageMeta({ middleware: 'admin', layout: 'admin' })
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
+const {
+    loading,
+    users: allUsersRaw,
+    orders: allOrdersRaw,
+    products: allProductsRaw,
+    farmers: allFarmersRaw,
+    fetchDashboard
+} = useAdmin()
 
-async function apiFetch(path) {
-    const res = await fetch(`${API_BASE}${path}`, {
-        headers: {
-            'Content-Type': 'application/json',
-        },
+const loadingStats    = computed(() => loading.value)
+const loadingChart    = computed(() => loading.value)
+const loadingRevenue  = computed(() => loading.value)
+const loadingGoals    = computed(() => loading.value)
+const loadingActivity = computed(() => loading.value)
+const loadingOrders   = computed(() => loading.value)
+
+// Helper functions for Growth calculation
+const calculateGrowth = (items) => {
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
+
+    let countThisMonth = 0
+    let countLastMonth = 0
+
+    items.forEach(item => {
+        const dateStr = item.createdAt ?? item.created_at
+        if (!dateStr) return
+        const date = new Date(dateStr)
+        
+        if (date >= thisMonthStart && date <= now) {
+            countThisMonth++
+        } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+            countLastMonth++
+        }
     })
-    if (!res.ok) throw new Error(`API error: ${res.status}`)
-    return res.json()
+
+    if (countLastMonth === 0) {
+        return countThisMonth > 0 ? 100 : 0
+    }
+    return Math.round(((countThisMonth - countLastMonth) / countLastMonth) * 100)
 }
 
-const loadingStats    = ref(true)
-const loadingChart    = ref(true)
-const loadingRevenue  = ref(true)
-const loadingGoals    = ref(true)
-const loadingActivity = ref(true)
-const loadingOrders   = ref(true)
+const calculateRevenueGrowth = (orders) => {
+    const now = new Date()
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
 
+    let revThisMonth = 0
+    let revLastMonth = 0
 
-const mockStats = [
-    { title: 'Users', value: '0', percent: 0, icon: 'users' },
-    { title: 'Orders', value: '0', percent: 0, icon: 'cart' },
-    { title: 'Revenue', value: '$0', percent: 0, icon: 'revenue' },
-    { title: 'Products', value: '0', percent: 0, icon: 'products' },
-]
+    orders.forEach(order => {
+        const lowerStatus = String(order.status).toLowerCase()
+        if (lowerStatus !== 'completed' && lowerStatus !== 'delivered') return
+        const dateStr = order.createdAt ?? order.created_at
+        if (!dateStr) return
+        const date = new Date(dateStr)
+        const amount = parseFloat(order.totalAmount ?? order.total_amount ?? order.amount ?? 0)
 
-const stats = ref(mockStats)
+        if (date >= thisMonthStart && date <= now) {
+            revThisMonth += amount
+        } else if (date >= lastMonthStart && date <= lastMonthEnd) {
+            revLastMonth += amount
+        }
+    })
 
-const iconMap = { users: Users, cart: ShoppingCart, revenue: DollarSign, products: Package }
-
-async function fetchStats() {
-    loadingStats.value = true
-    try {
-        const data = await apiFetch('/admin/stats')
-        stats.value = data.map(s => ({ ...s, icon: iconMap[s.icon] ?? Package }))
-    } catch (e) {
-        console.error('fetchStats:', e)
-        stats.value = mockStats.map(s => ({ ...s, icon: iconMap[s.icon] ?? Package }))
-    } finally {
-        loadingStats.value = false
+    if (revLastMonth === 0) {
+        return revThisMonth > 0 ? 100 : 0
     }
+    return Math.round(((revThisMonth - revLastMonth) / revLastMonth) * 100)
+}
+
+// Stats computed property
+const stats = computed(() => {
+    const totalUsers = allUsersRaw.value.length
+    const totalOrders = allOrdersRaw.value.length
+    
+    const totalRev = allOrdersRaw.value
+        .filter(o => String(o.status).toLowerCase() === 'completed' || String(o.status).toLowerCase() === 'delivered')
+        .reduce((sum, o) => sum + parseFloat(o.totalAmount ?? o.total_amount ?? 0), 0)
+        
+    const totalProds = allProductsRaw.value.length
+
+    const userGrowth = calculateGrowth(allUsersRaw.value)
+    const orderGrowth = calculateGrowth(allOrdersRaw.value)
+    const revenueGrowth = calculateRevenueGrowth(allOrdersRaw.value)
+    const productGrowth = calculateGrowth(allProductsRaw.value)
+
+    return [
+        { title: 'Users', value: totalUsers.toLocaleString(), percent: userGrowth, icon: Users },
+        { title: 'Orders', value: totalOrders.toLocaleString(), percent: orderGrowth, icon: ShoppingCart },
+        { title: 'Revenue', value: '$' + totalRev.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), percent: revenueGrowth, icon: DollarSign },
+        { title: 'Products', value: totalProds.toLocaleString(), percent: productGrowth, icon: Package },
+    ]
+})
+
+function mapOrderStatus(status) {
+    const lower = String(status).toLowerCase();
+    if (lower === 'completed' || lower === 'delivered') return 'Completed';
+    if (lower === 'cancelled') return 'Cancelled';
+    if (lower === 'pending') return 'Pending';
+    return 'Processing';
 }
 
 const periods      = ['7D', '30D', '60D', '90D', '1Y']
@@ -292,12 +355,12 @@ const W     = 800
 const H     = 220
 const PAD_T = 10
 const PAD_B = 10
-const yTicks = [0, 50, 100, 150, 200]
-const yMin = 0
-const yMax = 200
+const yTicks = ref([0, 50, 100, 150, 200])
+const yMin = ref(0)
+const yMax = ref(200)
 
 function ys(val) {
-    return PAD_T + (1 - (val - yMin) / (yMax - yMin)) * (H - PAD_T - PAD_B)
+    return PAD_T + (1 - (val - yMin.value) / (yMax.value - yMin.value)) * (H - PAD_T - PAD_B)
 }
 
 const pts = computed(() =>
@@ -352,20 +415,132 @@ function onLeave() {
     tooltip.value.visible = false
 }
 
-async function fetchOrderVolume() {
-    loadingChart.value = true
-    try {
-        const data = await apiFetch(`/admin/order-volume?period=${activePeriod.value}`)
-        chartXLabels.value = data.labels
-        chartData.value    = data.data
-    } catch (e) {
-        console.error('fetchOrderVolume:', e)
-    } finally {
-        loadingChart.value = false
+// Client-side dynamic order volume computation
+function computeOrderVolume() {
+    const now = new Date()
+    let days = 7
+    let isMonthly = false
+    
+    if (activePeriod.value === '30D') days = 30
+    else if (activePeriod.value === '60D') days = 60
+    else if (activePeriod.value === '90D') days = 90
+    else if (activePeriod.value === '1Y') {
+        days = 365
+        isMonthly = true
     }
+
+    const points = []
+    const labels = []
+
+    if (!isMonthly) {
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            labels.push(dateStr)
+            
+            const count = allOrdersRaw.value.filter(o => {
+                const dateStrRaw = o.createdAt ?? o.created_at
+                if (!dateStrRaw) return false
+                const od = new Date(dateStrRaw)
+                return od.getFullYear() === d.getFullYear() &&
+                       od.getMonth() === d.getMonth() &&
+                       od.getDate() === d.getDate()
+            }).length
+            
+            points.push(count)
+        }
+    } else {
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+            const monthStr = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+            labels.push(monthStr)
+            
+            const count = allOrdersRaw.value.filter(o => {
+                const dateStrRaw = o.createdAt ?? o.created_at
+                if (!dateStrRaw) return false
+                const od = new Date(dateStrRaw)
+                return od.getFullYear() === d.getFullYear() &&
+                       od.getMonth() === d.getMonth()
+            }).length
+            
+            points.push(count)
+        }
+    }
+
+    const maxVal = Math.max(...points, 5)
+    const niceMax = Math.ceil(maxVal * 1.15 / 5) * 5
+    yMax.value = niceMax
+    yMin.value = 0
+    
+    const tickStep = niceMax / 4
+    yTicks.value = Array.from({ length: 5 }, (_, idx) => Math.round(idx * tickStep))
+
+    chartXLabels.value = labels
+    chartData.value = points.map((val, idx) => {
+        const xr = points.length > 1 ? idx / (points.length - 1) : 0
+        return [xr, val]
+    })
 }
 
-const revenueBarData = ref({ labels: [], datasets: [] })
+// Interface compliance for template
+function fetchOrderVolume() {
+    computeOrderVolume()
+}
+
+// Show up to 6 labels on bottom of chart to prevent overlapping
+function shouldShowLabel(idx) {
+    const len = chartXLabels.value.length
+    if (len <= 8) return true
+    const step = Math.ceil(len / 5)
+    return idx % step === 0 || idx === len - 1
+}
+
+// Reactive dynamic calculations
+watch([allOrdersRaw, activePeriod], () => {
+    computeOrderVolume()
+}, { immediate: true })
+
+// Revenue by Category Computed Data
+const revenueBarData = computed(() => {
+    const categoryMap = {}
+    
+    allOrdersRaw.value.forEach(order => {
+        const statusLower = String(order.status).toLowerCase()
+        if (statusLower !== 'completed' && statusLower !== 'delivered') return
+        
+        const items = order.items || []
+        items.forEach(item => {
+            const catName = item.product?.category?.nameEn ?? item.product?.category?.name ?? 'Other'
+            const subtotal = parseFloat(item.subtotal ?? 0)
+            categoryMap[catName] = (categoryMap[catName] || 0) + subtotal
+        })
+    })
+
+    const labels = Object.keys(categoryMap)
+    const dataValues = Object.values(categoryMap)
+
+    if (labels.length === 0) {
+        return {
+            labels: ['No Data'],
+            datasets: [{
+                label: 'Revenue ($)',
+                data: [0],
+                backgroundColor: ['#e5e7eb'],
+                borderRadius: 6,
+            }]
+        }
+    }
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Revenue ($)',
+            data: dataValues,
+            backgroundColor: ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'],
+            borderRadius: 6,
+        }]
+    }
+})
 
 const barOptions = {
     responsive: true,
@@ -379,53 +554,107 @@ const barOptions = {
     },
 }
 
-async function fetchRevenueByCategory() {
-    loadingRevenue.value = true
-    try {
-        const data = await apiFetch('/admin/revenue-by-category')
-        revenueBarData.value = {
-            labels: data.labels,
-            datasets: [{
-                label: 'Revenue ($)',
-                data: data.data,
-                backgroundColor: ['#15803d','#16a34a','#22c55e','#4ade80','#86efac'],
-                borderRadius: 6,
-            }],
+// Monthly Goals computed dynamically
+const monthlyGoals = computed(() => {
+    // 1. Order Clearance
+    const completedOrders = allOrdersRaw.value.filter(o => {
+        const statusLower = String(o.status).toLowerCase()
+        return statusLower === 'completed' || statusLower === 'delivered'
+    }).length
+    const totalOrders = allOrdersRaw.value.length
+    const clearancePercent = totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0
+
+    // 2. Organic Share
+    const organicProducts = allProductsRaw.value.filter(p => p.isOrganic ?? p.is_organic ?? false).length
+    const totalProducts = allProductsRaw.value.length
+    const organicPercent = totalProducts > 0 ? Math.round((organicProducts / totalProducts) * 100) : 0
+
+    // 3. Farmer Verification
+    const activeFarmers = allFarmersRaw.value.filter(f => String(f.status).toLowerCase() === 'active').length
+    const totalFarmers = allFarmersRaw.value.length
+    const verificationPercent = totalFarmers > 0 ? Math.round((activeFarmers / totalFarmers) * 100) : 0
+
+    return [
+        {
+            label: 'Order Clearance',
+            percent: clearancePercent,
+            stroke: '#16a34a',
+            current: `${completedOrders} of ${totalOrders}`,
+            target: '90%'
+        },
+        {
+            label: 'Organic Share',
+            percent: organicPercent,
+            stroke: '#22c55e',
+            current: `${organicProducts} of ${totalProducts}`,
+            target: '40%'
+        },
+        {
+            label: 'Farmer Verify',
+            percent: verificationPercent,
+            stroke: '#3b82f6',
+            current: `${activeFarmers} of ${totalFarmers}`,
+            target: '85%'
         }
-    } catch (e) {
-        console.error('fetchRevenueByCategory:', e)
-    } finally {
-        loadingRevenue.value = false
-    }
-}
+    ]
+})
 
-const monthlyGoals = ref([])
+// Recent Activity computed dynamically
+const activities = computed(() => {
+    const sorted = [...allOrdersRaw.value].sort((a, b) => {
+        const da = new Date(a.createdAt ?? a.created_at ?? 0)
+        const db = new Date(b.createdAt ?? b.created_at ?? 0)
+        return db - da
+    }).slice(0, 5)
 
-async function fetchGoals() {
-    loadingGoals.value = true
-    try {
-        monthlyGoals.value = await apiFetch('/admin/goals')
-    } catch (e) {
-        console.error('fetchGoals:', e)
-    } finally {
-        loadingGoals.value = false
-    }
-}
+    return sorted.map(o => {
+        const orderNum = o.orderNumber ?? o.id.slice(0, 8).toUpperCase()
+        const customerName = o.consumer ? `${o.consumer.firstName ?? ''} ${o.consumer.lastName ?? ''}`.trim() : 'Guest'
+        const dateStr = o.createdAt ?? o.created_at
+        
+        let text = ''
+        let dotColor = 'bg-yellow-500'
 
-const activities = ref([])
+        const statusLower = String(o.status).toLowerCase()
+        if (statusLower === 'completed' || statusLower === 'delivered') {
+            text = `Order #${orderNum} has been completed.`
+            dotColor = 'bg-green-500'
+        } else if (statusLower === 'cancelled') {
+            text = `Order #${orderNum} was cancelled.`
+            dotColor = 'bg-red-500'
+        } else if (statusLower === 'processing') {
+            text = `Order #${orderNum} is being processed.`
+            dotColor = 'bg-blue-500'
+        } else {
+            text = `New order #${orderNum} received from ${customerName}.`
+            dotColor = 'bg-yellow-500'
+        }
 
-async function fetchActivity() {
-    loadingActivity.value = true
-    try {
-        activities.value = await apiFetch('/admin/activity')
-    } catch (e) {
-        console.error('fetchActivity:', e)
-    } finally {
-        loadingActivity.value = false
-    }
-}
+        const timeFormatted = dateStr 
+            ? new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : 'Recently'
 
-const orders = ref([])
+        return {
+            id: o.id,
+            text,
+            dotColor,
+            time: timeFormatted
+        }
+    })
+})
+
+// Table Orders mapped dynamically
+const orders = computed(() => {
+    return allOrdersRaw.value.map(o => ({
+        id: o.id,
+        customer: o.consumer ? `${o.consumer.firstName ?? ''} ${o.consumer.lastName ?? ''}`.trim() : 'Guest',
+        product: o.items && o.items.length ? o.items.map(item => item.product?.nameEn ?? 'Unknown Product').join(', ') : '—',
+        amount: '$' + parseFloat(o.totalAmount ?? o.total_amount ?? 0).toFixed(2),
+        date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—',
+        rawDate: o.createdAt,
+        status: mapOrderStatus(o.status),
+    }))
+})
 
 const orderFilters = ref({
     search:    '',
@@ -466,7 +695,7 @@ const filteredOrders = computed(() => {
         const now = new Date()
         now.setHours(23, 59, 59, 999)
         list = list.filter(o => {
-            const orderDate = new Date(o.date)
+            const orderDate = new Date(o.rawDate || o.date)
             if (dateRange === 'today') {
                 const today = new Date()
                 return orderDate.toDateString() === today.toDateString()
@@ -477,8 +706,8 @@ const filteredOrders = computed(() => {
     }
 
     list.sort((a, b) => {
-        if (sort === 'date_desc')   return new Date(b.date) - new Date(a.date)
-        if (sort === 'date_asc')    return new Date(a.date) - new Date(b.date)
+        if (sort === 'date_desc')   return new Date(b.rawDate || b.date) - new Date(a.rawDate || a.date)
+        if (sort === 'date_asc')    return new Date(a.rawDate || a.date) - new Date(b.rawDate || b.date)
         if (sort === 'amount_desc') return parseFloat(b.amount.replace(/[^0-9.]/g, '')) - parseFloat(a.amount.replace(/[^0-9.]/g, ''))
         if (sort === 'amount_asc')  return parseFloat(a.amount.replace(/[^0-9.]/g, '')) - parseFloat(b.amount.replace(/[^0-9.]/g, ''))
         return 0
@@ -486,17 +715,6 @@ const filteredOrders = computed(() => {
 
     return list
 })
-
-async function fetchOrders() {
-    loadingOrders.value = true
-    try {
-        orders.value = await apiFetch('/admin/orders')
-    } catch (e) {
-        console.error('fetchOrders:', e)
-    } finally {
-        loadingOrders.value = false
-    }
-}
 
 const initials = (name) => name.split(' ').map(n => n[0]).join('')
 const statusClass = (status) => {
@@ -509,13 +727,8 @@ const statusClass = (status) => {
     return map[status] ?? 'bg-gray-100 text-gray-600'
 }
 
-onMounted(() => {
-    fetchStats()
-    fetchOrderVolume()
-    fetchRevenueByCategory()
-    fetchGoals()
-    fetchActivity()
-    fetchOrders()
+onMounted(async () => {
+    await fetchDashboard()
 })
 </script>
 

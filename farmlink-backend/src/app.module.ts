@@ -43,4 +43,4 @@ import { SearchModule } from './search/search.module';
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class AppModule { }
+export class AppModule {}

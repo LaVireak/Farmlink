@@ -1,8 +1,11 @@
 import type { Ref } from 'vue'
 import { getAccessToken } from './auth.service'
 
-// Base API URL - adjust based on your environment
-const API_BASE = '/api'
+let rawBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+if (!rawBase.endsWith('/api')) {
+  rawBase = rawBase.replace(/\/$/, '') + '/api'
+}
+const API_BASE = rawBase
 
 // Generic fetch wrapper with auth headers
 async function apiFetch<T>(
@@ -10,7 +13,7 @@ async function apiFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = await getAccessToken()
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -149,18 +152,19 @@ export interface User {
 }
 
 export async function getUsers(): Promise<User[]> {
-  return apiFetch<User[]>('/users')
+  const res = await apiFetch<any>('/admin/users?take=1000')
+  return res.data ?? res ?? []
 }
 
 export async function getUser(id: string): Promise<User> {
-  return apiFetch<User>(`/users/${id}`)
+  return apiFetch<User>(`/admin/users/${id}`)
 }
 
 export async function updateUser(
   id: string,
   data: Partial<User>
 ): Promise<User> {
-  return apiFetch<User>(`/users/${id}`, {
+  return apiFetch<User>(`/admin/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
@@ -170,23 +174,23 @@ export async function suspendUser(
   id: string,
   reason: string
 ): Promise<User> {
-  return apiFetch<User>(`/users/${id}`, {
+  return apiFetch<User>(`/admin/users/${id}/suspend`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'Suspended', reason }),
+    body: JSON.stringify({ reason }),
   })
 }
 
 export async function banUser(id: string, reason: string): Promise<User> {
-  return apiFetch<User>(`/users/${id}`, {
+  return apiFetch<User>(`/admin/users/${id}/suspend`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'Banned', reason }),
+    body: JSON.stringify({ reason }),
   })
 }
 
 export async function reactivateUser(id: string): Promise<User> {
-  return apiFetch<User>(`/users/${id}`, {
+  return apiFetch<User>(`/admin/users/${id}/reactivate`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'Active' }),
+    body: JSON.stringify({}),
   })
 }
 
@@ -194,7 +198,7 @@ export async function changeUserRole(
   id: string,
   role: 'Buyer' | 'Farmer' | 'Admin'
 ): Promise<User> {
-  return apiFetch<User>(`/users/${id}`, {
+  return apiFetch<User>(`/admin/users/${id}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ role }),
   })
@@ -224,19 +228,21 @@ export interface OrderFilters {
 
 export async function getOrders(filters?: OrderFilters): Promise<Order[]> {
   const params = new URLSearchParams()
+  params.append('take', '1000')
   if (filters?.status) params.append('status', filters.status)
   if (filters?.dateRange) params.append('dateRange', filters.dateRange)
   if (filters?.sort) params.append('sort', filters.sort)
-  
+
   const query = params.toString()
-  return apiFetch<Order[]>(`/orders${query ? `?${query}` : ''}`)
+  const res = await apiFetch<any>(`/admin/orders${query ? `?${query}` : ''}`)
+  return res.data ?? res ?? []
 }
 
 export async function updateOrderStatus(
   id: string,
   status: string
 ): Promise<Order> {
-  return apiFetch<Order>(`/orders/${id}`, {
+  return apiFetch<Order>(`/admin/orders/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   })
@@ -270,15 +276,17 @@ export interface ProductFilters {
 
 export async function getProducts(filters?: ProductFilters): Promise<Product[]> {
   const params = new URLSearchParams()
+  params.append('take', '1000')
   if (filters?.status) params.append('status', filters.status)
   if (filters?.category) params.append('category', filters.category)
-  
+
   const query = params.toString()
-  return apiFetch<Product[]>(`/products${query ? `?${query}` : ''}`)
+  const res = await apiFetch<any>(`/admin/products${query ? `?${query}` : ''}`)
+  return res.data ?? res ?? []
 }
 
 export async function approveProduct(id: string): Promise<Product> {
-  return apiFetch<Product>(`/products/${id}/approve`, {
+  return apiFetch<Product>(`/admin/products/${id}/approve`, {
     method: 'PATCH',
     body: JSON.stringify({}),
   })
@@ -288,14 +296,14 @@ export async function rejectProduct(
   id: string,
   reason: string
 ): Promise<Product> {
-  return apiFetch<Product>(`/products/${id}/reject`, {
+  return apiFetch<Product>(`/admin/products/${id}/reject`, {
     method: 'PATCH',
     body: JSON.stringify({ reason }),
   })
 }
 
 export async function toggleProductFeatured(id: string): Promise<Product> {
-  return apiFetch<Product>(`/products/${id}/featured`, {
+  return apiFetch<Product>(`/admin/products/${id}/featured`, {
     method: 'PATCH',
     body: JSON.stringify({}),
   })
@@ -323,12 +331,12 @@ export function useAdmin() {
   const orders = ref<Order[]>([])
   const products = ref<Product[]>([])
 
-// Toast helper
+  // Toast helper
   type ToastType = 'success' | 'error' | 'warning'
-  const toast = ref<{ visible: boolean; message: string; type: ToastType }>({ 
-    visible: false, 
-    message: '', 
-    type: 'success' 
+  const toast = ref<{ visible: boolean; message: string; type: ToastType }>({
+    visible: false,
+    message: '',
+    type: 'success'
   })
   let toastTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -345,12 +353,20 @@ export function useAdmin() {
     loading.value = true
     error.value = null
     try {
-      const [stats, fStats] = await Promise.all([
+      const [stats, fStats, usersRes, ordersRes, productsRes, farmersRes] = await Promise.all([
         getDashboardStats(),
         getFarmerStats(),
+        getUsers(),
+        getOrders(),
+        getProducts(),
+        getFarmers()
       ])
       dashboardStats.value = stats
       farmerStats.value = fStats
+      users.value = usersRes
+      orders.value = ordersRes
+      products.value = productsRes
+      farmers.value = farmersRes
     } catch (e: any) {
       error.value = e.message
       showToast(e.message, 'error')
@@ -609,7 +625,7 @@ export function useAdmin() {
     loading,
     error,
     toast,
-    
+
     // Data
     dashboardStats,
     farmerStats,
@@ -618,38 +634,38 @@ export function useAdmin() {
     users,
     orders,
     products,
-    
+
     // Computed
     farmersByStatus,
     farmersByMatch,
     usersByRole,
     ordersByStatus,
     productsByStatus,
-    
+
     // Dashboard
     fetchDashboard,
-    
+
     // Farmers
     fetchFarmers,
     fetchBuyers,
     approveFarmerById,
     suspendFarmerById,
     matchFarmerToBuyer,
-    
+
     // Users
     fetchUsers,
     suspendUserById,
     banUserById,
-    
+
     // Orders
     fetchOrders,
     updateOrderStatusById,
-    
+
     // Products
     fetchProducts,
     approveProductById,
     rejectProductById,
-    
+
     // Utils
     showToast,
   }

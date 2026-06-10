@@ -23,7 +23,7 @@ export class AdminService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly supabaseAuth: SupabaseAuthService,
-  ) { }
+  ) {}
 
   async getDashboardStats() {
     const totalUsers = await this.userRepository.count();
@@ -235,15 +235,17 @@ export class AdminService {
 
     const query = this.orderRepository
       .createQueryBuilder('order')
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.items', 'items');
+      .leftJoinAndSelect('order.consumer', 'consumer')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('items.product', 'product')
+      .leftJoinAndSelect('product.category', 'category');
 
     if (filters?.status) {
       query.andWhere('order.status = :status', { status: filters.status });
     }
     if (filters?.search) {
       query.andWhere(
-        '(order.id LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+        '(order.id LIKE :search OR consumer.firstName LIKE :search OR consumer.lastName LIKE :search)',
         { search: `%${filters.search}%` },
       );
     }
@@ -324,9 +326,13 @@ export class AdminService {
       }
 
       if (filters?.category) {
-        const categoryName = product.category?.nameEn ?? product.category?.nameKm ?? '';
+        const categoryName =
+          product.category?.nameEn ?? product.category?.nameKm ?? '';
         const categoryId = product.categoryId ?? '';
-        if (categoryName !== filters.category && categoryId !== filters.category) {
+        if (
+          categoryName !== filters.category &&
+          categoryId !== filters.category
+        ) {
           return false;
         }
       }
@@ -334,7 +340,8 @@ export class AdminService {
       if (filters?.search) {
         const search = filters.search.toLowerCase();
         const productName = (product.nameEn ?? '').toLowerCase();
-        const farmerName = `${product.farmer?.user?.firstName ?? ''} ${product.farmer?.user?.lastName ?? ''}`.toLowerCase();
+        const farmerName =
+          `${product.farmer?.user?.firstName ?? ''} ${product.farmer?.user?.lastName ?? ''}`.toLowerCase();
         if (!productName.includes(search) && !farmerName.includes(search)) {
           return false;
         }

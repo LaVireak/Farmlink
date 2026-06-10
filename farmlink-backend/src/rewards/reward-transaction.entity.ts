@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Reward } from './reward.entity';
 import { User } from '../users/user.entity';
 import { Order } from '../orders/order.entity';
@@ -9,7 +16,9 @@ export class RewardTransaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Reward, reward => reward.transactions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Reward, (reward) => reward.transactions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'reward_id' })
   reward: Reward;
 

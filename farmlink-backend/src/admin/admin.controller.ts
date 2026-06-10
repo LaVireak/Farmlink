@@ -14,13 +14,19 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/enums/role.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
-import { SuspendUserDto, UpdateUserRoleDto, UpdateOrderStatusDto, RejectProductDto, MatchFarmerDto } from './dto/update-admin.dto';
+import {
+  SuspendUserDto,
+  UpdateUserRoleDto,
+  UpdateOrderStatusDto,
+  RejectProductDto,
+  MatchFarmerDto,
+} from './dto/update-admin.dto';
 
 @Controller('admin')
 @UseGuards(SupabaseAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) { }
+  constructor(private readonly adminService: AdminService) {}
 
   // ====== DASHBOARD ======
   @Get('dashboard/stats')
@@ -45,18 +51,12 @@ export class AdminController {
   }
 
   @Patch('farmers/:id/suspend')
-  suspendFarmer(
-    @Param('id') id: string,
-    @Body() dto: SuspendUserDto,
-  ) {
+  suspendFarmer(@Param('id') id: string, @Body() dto: SuspendUserDto) {
     return this.adminService.suspendFarmer(id);
   }
 
   @Post('farmers/:id/match')
-  matchFarmer(
-    @Param('id') id: string,
-    @Body() dto: MatchFarmerDto,
-  ) {
+  matchFarmer(@Param('id') id: string, @Body() dto: MatchFarmerDto) {
     return this.adminService.matchFarmer(id, dto.buyerId);
   }
 
@@ -74,14 +74,17 @@ export class AdminController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
   ) {
-    return this.adminService.getAllUsers({ role, status, search, skip: skip ? parseInt(skip.toString()) : 0, take: take ? parseInt(take.toString()) : 10 });
+    return this.adminService.getAllUsers({
+      role,
+      status,
+      search,
+      skip: skip ? parseInt(skip.toString()) : 0,
+      take: take ? parseInt(take.toString()) : 10,
+    });
   }
 
   @Patch('users/:id/suspend')
-  suspendUser(
-    @Param('id') id: string,
-    @Body() dto: SuspendUserDto,
-  ) {
+  suspendUser(@Param('id') id: string, @Body() dto: SuspendUserDto) {
     return this.adminService.suspendUser(id);
   }
 
@@ -91,10 +94,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/role')
-  updateUserRole(
-    @Param('id') id: string,
-    @Body() dto: UpdateUserRoleDto,
-  ) {
+  updateUserRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
     return this.adminService.updateUserRole(id, dto.role);
   }
 
@@ -106,7 +106,12 @@ export class AdminController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
   ) {
-    return this.adminService.getAllOrders({ status, search, skip: skip ? parseInt(skip.toString()) : 0, take: take ? parseInt(take.toString()) : 10 });
+    return this.adminService.getAllOrders({
+      status,
+      search,
+      skip: skip ? parseInt(skip.toString()) : 0,
+      take: take ? parseInt(take.toString()) : 10,
+    });
   }
 
   @Get('orders/stats')
@@ -131,7 +136,13 @@ export class AdminController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
   ) {
-    return this.adminService.getAllProducts({ status, category, search, skip: skip ? parseInt(skip.toString()) : 0, take: take ? parseInt(take.toString()) : 10 });
+    return this.adminService.getAllProducts({
+      status,
+      category,
+      search,
+      skip: skip ? parseInt(skip.toString()) : 0,
+      take: take ? parseInt(take.toString()) : 10,
+    });
   }
 
   @Get('products/stats')
@@ -145,10 +156,7 @@ export class AdminController {
   }
 
   @Patch('products/:id/reject')
-  rejectProduct(
-    @Param('id') id: string,
-    @Body() dto: RejectProductDto,
-  ) {
+  rejectProduct(@Param('id') id: string, @Body() dto: RejectProductDto) {
     return this.adminService.rejectProduct(id);
   }
 }

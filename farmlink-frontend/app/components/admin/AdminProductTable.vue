@@ -12,19 +12,7 @@
         />
       </div>
 
-      <div class="flex items-center gap-0.5 bg-surface-container rounded-xl p-1">
-        <button
-          v-for="s in statusTabs"
-          :key="s"
-          @click="$emit('update:filterStatus', s)"
-          :class="[
-            'text-xs font-medium px-3 py-1.5 rounded-lg transition-all duration-150',
-            filterStatus === s ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'
-          ]"
-        >
-          {{ s }}
-        </button>
-      </div>
+
 
       <select
         :value="filterCategory"
@@ -34,20 +22,28 @@
         <option value="">All Categories</option>
         <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
       </select>
+
+      <button
+        @click="exportCSV"
+        class="flex items-center gap-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low text-sm font-medium px-4 py-2 rounded-xl transition-colors duration-150 flex-shrink-0"
+      >
+        <Download class="w-4 h-4" />
+        Export CSV
+      </button>
     </div>
 
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs text-on-surface-variant border-b border-outline-variant">
-            <th class="px-5 py-3 font-medium">Product</th>
+            <th class="px-5 py-3 font-medium">Product ID</th>
+            <th class="px-4 py-3 font-medium">Image</th>
+            <th class="px-4 py-3 font-medium">Product Name</th>
             <th class="px-4 py-3 font-medium">Farmer</th>
             <th class="px-4 py-3 font-medium">Category</th>
             <th class="px-4 py-3 font-medium">Price</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium">Featured</th>
+            <th class="px-4 py-3 font-medium">Organic</th>
             <th class="px-4 py-3 font-medium">Submitted</th>
-            <th class="px-4 py-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -66,25 +62,25 @@
           <tr
             v-for="product in products"
             :key="product.id"
-            class="border-b border-outline-variant hover:bg-surface-container-low/60 transition group"
+            @click="$emit('viewProduct', product)"
+            class="border-b border-outline-variant hover:bg-surface-container-low/60 transition group cursor-pointer"
           >
-            <td class="px-5 py-3.5">
-              <div class="flex items-center gap-3">
-                <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-surface-container flex-shrink-0">
-                  <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p class="font-semibold text-on-surface text-sm">{{ product.name }}</p>
-                  <p class="text-[11px] text-on-surface-variant font-mono">#PRD-{{ String(product.id).padStart(4, '0') }}</p>
-                </div>
+            <td class="px-5 py-3.5 font-mono font-semibold text-xs text-on-surface-variant">
+              #{{ String(product.id).slice(0, 8).toUpperCase() }}
+            </td>
+
+            <td class="px-4 py-3.5">
+              <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-surface-container flex-shrink-0">
+                <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
               </div>
             </td>
 
             <td class="px-4 py-3.5">
+              <p class="font-semibold text-on-surface text-sm">{{ product.name }}</p>
+            </td>
+
+            <td class="px-4 py-3.5">
               <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-secondary-container text-secondary flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                  {{ initials(product.farmer) }}
-                </div>
                 <span class="text-xs text-on-surface font-medium">{{ product.farmer }}</span>
               </div>
             </td>
@@ -95,57 +91,22 @@
               </span>
             </td>
 
-            <td class="px-4 py-3.5 font-semibold text-on-surface">${{ product.price }}</td>
+            <td class="px-4 py-3.5 font-semibold text-on-surface">${{ product.price }} / {{ product.unit || 'kg' }}</td>
+
+
 
             <td class="px-4 py-3.5">
-              <span class="text-xs font-medium px-2.5 py-1 rounded-full" :class="statusClass(product.status)">
-                {{ product.status }}
-              </span>
-            </td>
-
-            <td class="px-4 py-3.5">
-              <button
-                v-if="product.status === 'Approved'"
-                @click="$emit('toggleFeatured', product.id)"
-                class="transition-transform hover:scale-110"
+              <span
+                v-if="product.isOrganic"
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100/50"
               >
-                <Star
-                  class="w-4 h-4 transition-colors"
-                  :class="product.featured ? 'text-amber-400 fill-amber-400' : 'text-on-surface-variant fill-surface-container'"
-                />
-              </button>
+                🌱 Organic
+              </span>
               <span v-else class="text-on-surface-variant text-xs">—</span>
             </td>
 
             <td class="px-4 py-3.5 text-xs text-on-surface-variant">{{ product.submittedAt }}</td>
 
-            <td class="px-4 py-3.5">
-              <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  @click="$emit('viewProduct', product)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition"
-                  title="View details"
-                >
-                  <Eye class="w-3.5 h-3.5" />
-                </button>
-                <button
-                  v-if="product.status === 'Pending' || product.status === 'Rejected'"
-                  @click="$emit('approveProduct', product.id)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-secondary-container hover:text-secondary transition"
-                  title="Approve"
-                >
-                  <CheckCircle2 class="w-3.5 h-3.5" />
-                </button>
-                <button
-                  v-if="product.status === 'Pending' || product.status === 'Approved'"
-                  @click="$emit('rejectProduct', product)"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-error transition"
-                  title="Reject"
-                >
-                  <XCircle class="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </td>
           </tr>
         </tbody>
       </table>
@@ -154,27 +115,86 @@
 </template>
 
 <script setup lang="ts">
-import { CheckCircle2, Eye, PackageSearch, Search, Star, XCircle } from 'lucide-vue-next'
+import { PackageSearch, Search, Download } from 'lucide-vue-next'
 
-defineProps<{
+const props = defineProps<{
   products: any[]
   categories: string[]
   searchQuery: string
-  filterStatus: string
   filterCategory: string
-  statusTabs: string[]
   categoryClass: (c: string) => string
-  statusClass: (s: string) => string
   initials: (name: string) => string
 }>()
 
 defineEmits([
   'update:searchQuery',
-  'update:filterStatus',
   'update:filterCategory',
-  'toggleFeatured',
   'viewProduct',
-  'approveProduct',
-  'rejectProduct',
 ])
+
+function exportCSV() {
+  if (!props.products.length) return
+
+  const headers = [
+    'Product ID',
+    'Name (EN)',
+    'Name (KM)',
+    'Category',
+    'Farmer',
+    'Price (USD)',
+    'Unit',
+    'Min Order Qty',
+    'Stock',
+    'Status',
+    'Organic',
+    'Seasonal',
+    'Season Start',
+    'Season End',
+    'Total Sold',
+    'Avg Rating',
+    'Description',
+    'Submitted',
+    'Last Updated',
+  ]
+
+  const escape = (val: any) => {
+    const str = String(val ?? '—')
+    return str.includes(',') || str.includes('"') || str.includes('\n')
+      ? `"${str.replace(/"/g, '""')}"`
+      : str
+  }
+
+  const rows = props.products.map(p => [
+    String(p.id).slice(0, 8).toUpperCase(),
+    escape(p.name),
+    escape(p.nameKm || ''),
+    escape(p.category),
+    escape(p.farmer),
+    p.price,
+    p.unit || 'kg',
+    p.minOrderQty ?? 1,
+    p.stock ?? 0,
+    escape(p.rawStatus || p.status || ''),
+    p.isOrganic ? 'Yes' : 'No',
+    p.isSeasonal ? 'Yes' : 'No',
+    escape(p.seasonStart || ''),
+    escape(p.seasonEnd || ''),
+    p.totalSold ?? 0,
+    p.avgRating != null ? Number(p.avgRating).toFixed(2) : '',
+    escape(p.description || ''),
+    escape(p.submittedAt),
+    escape(p.updatedAt || ''),
+  ].join(','))
+
+  const csv = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const date = new Date().toISOString().slice(0, 10)
+
+  const link = document.createElement('a')
+  link.href     = url
+  link.download = `farmlink-products-${date}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
 </script>

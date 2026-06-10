@@ -404,7 +404,6 @@ const productOpen = ref(false)
 const userMenuOpen = ref(false)
 const notificationsOpen = ref(false)
 
-// ── Search ──────────────────────────────────────────────
 const searchQuery = ref('')
 const searchResults = ref([])
 const showDropdown = ref(false)
@@ -460,7 +459,6 @@ const triggerSearch = () => {
     navigateTo('/user/products')
   }
 }
-// ────────────────────────────────────────────────────────
 
 const handleProductHover = (status) => {
   productOpen.value = status

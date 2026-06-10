@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { CartService } from './cart.service';
 
 @Controller('api/cart')
@@ -36,7 +45,11 @@ export class CartController {
     @Param('itemId') itemId: string,
     @Body() body: { quantity: number },
   ) {
-    return this.cartService.updateItemQuantity(consumerId, itemId, body.quantity);
+    return this.cartService.updateItemQuantity(
+      consumerId,
+      itemId,
+      body.quantity,
+    );
   }
 
   /**
@@ -67,7 +80,14 @@ export class CartController {
   @Post(':consumerId/checkout')
   async checkout(
     @Param('consumerId') consumerId: string,
-    @Body() body: { paymentMethod?: any; deliveryAddress?: string; deliveryLat?: number; deliveryLng?: number; note?: string },
+    @Body()
+    body: {
+      paymentMethod?: any;
+      deliveryAddress?: string;
+      deliveryLat?: number;
+      deliveryLng?: number;
+      note?: string;
+    },
   ) {
     return this.cartService.checkout(consumerId, body);
   }

@@ -193,7 +193,9 @@ export class FarmersService {
   // ─── Recent Transactions ──────────────────────────────────────────────────
 
   async getRecentTransactions(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) return { data: [] };
     const profileId = profile.id;
 
@@ -290,7 +292,9 @@ export class FarmersService {
   // ─── Inbound Orders ───────────────────────────────────────────────────────
 
   async getInboundOrders(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) return { data: [] };
     const profileId = profile.id;
 
@@ -338,7 +342,9 @@ export class FarmersService {
   // ─── Yields Matrix ────────────────────────────────────────────────────────
 
   async getYieldsMatrix(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) return { data: [] };
     const profileId = profile.id;
 
@@ -382,7 +388,9 @@ export class FarmersService {
     action: 'accept' | 'reject',
     farmerId: string,
   ) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) throw new NotFoundException('Farmer profile not found');
     const profileId = profile.id;
 
@@ -425,7 +433,9 @@ export class FarmersService {
   // ─── Restock Manifest ─────────────────────────────────────────────────────
 
   async triggerRestockManifest(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) throw new NotFoundException('Farmer profile not found');
     const profileId = profile.id;
 
@@ -464,7 +474,9 @@ export class FarmersService {
     limit: number = 10,
     status?: string,
   ) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) return { data: [], total: 0, page, limit, totalPages: 0 };
     const profileId = profile.id;
 
@@ -478,7 +490,9 @@ export class FarmersService {
       .where('product.farmerId = :profileId', { profileId });
 
     if (status && status !== 'All') {
-      query.andWhere('order.status = :status', { status: status.toLowerCase() });
+      query.andWhere('order.status = :status', {
+        status: status.toLowerCase(),
+      });
     }
 
     const orderIdRows = await query
@@ -505,7 +519,11 @@ export class FarmersService {
       const farmerItems = order.items?.filter(
         (item) => item.product?.farmerId === profileId,
       );
-      const subtotal = farmerItems?.reduce((sum, item) => sum + item.quantity * Number(item.unitPrice), 0) ?? 0;
+      const subtotal =
+        farmerItems?.reduce(
+          (sum, item) => sum + item.quantity * Number(item.unitPrice),
+          0,
+        ) ?? 0;
 
       return {
         id: order.id,
@@ -514,17 +532,20 @@ export class FarmersService {
         status: order.status,
         paymentStatus: order.paymentStatus,
         totalAmount: subtotal,
-        consumer: order.consumer ? {
-          firstName: (order.consumer as any).firstName,
-          lastName: (order.consumer as any).lastName,
-          email: order.consumer.email,
-        } : null,
-        items: farmerItems?.map(item => ({
-          nameEn: item.product?.nameEn,
-          quantity: item.quantity,
-          unit: item.product?.unit,
-          unitPrice: Number(item.unitPrice),
-        })) || [],
+        consumer: order.consumer
+          ? {
+              firstName: (order.consumer as any).firstName,
+              lastName: (order.consumer as any).lastName,
+              email: order.consumer.email,
+            }
+          : null,
+        items:
+          farmerItems?.map((item) => ({
+            nameEn: item.product?.nameEn,
+            quantity: item.quantity,
+            unit: item.product?.unit,
+            unitPrice: Number(item.unitPrice),
+          })) || [],
       };
     });
 
@@ -538,8 +559,16 @@ export class FarmersService {
   }
 
   async getFarmerOrdersStats(farmerId: string) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
-    if (!profile) return { totalRevenue: 0, pendingActions: 0, avgFulfillmentDays: 0, activeOrders: 0 };
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
+    if (!profile)
+      return {
+        totalRevenue: 0,
+        pendingActions: 0,
+        avgFulfillmentDays: 0,
+        activeOrders: 0,
+      };
     const profileId = profile.id;
 
     const completedOrders = await this.orders
@@ -574,16 +603,25 @@ export class FarmersService {
       .innerJoin('order.items', 'item')
       .innerJoin('item.product', 'product')
       .where('product.farmerId = :profileId', { profileId })
-      .andWhere('order.status IN (:...statuses)', { statuses: [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.IN_DELIVERY] })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: [
+          OrderStatus.CONFIRMED,
+          OrderStatus.PREPARING,
+          OrderStatus.IN_DELIVERY,
+        ],
+      })
       .groupBy('order.id')
       .getRawMany();
     const activeOrders = activeCount.length;
 
     let avgFulfillmentDays = 1.2;
-    const fulfilledOrders = completedOrders.filter(o => o.confirmedAt && o.deliveredAt);
+    const fulfilledOrders = completedOrders.filter(
+      (o) => o.confirmedAt && o.deliveredAt,
+    );
     if (fulfilledOrders.length > 0) {
       const totalDiffMs = fulfilledOrders.reduce((sum, o) => {
-        const diff = new Date(o.deliveredAt!).getTime() - new Date(o.confirmedAt!).getTime();
+        const diff =
+          new Date(o.deliveredAt).getTime() - new Date(o.confirmedAt).getTime();
         return sum + diff;
       }, 0);
       const avgMs = totalDiffMs / fulfilledOrders.length;
@@ -603,7 +641,9 @@ export class FarmersService {
     status: string,
     farmerId: string,
   ) {
-    const profile = await this.farmerProfiles.findOne({ where: { userId: farmerId } });
+    const profile = await this.farmerProfiles.findOne({
+      where: { userId: farmerId },
+    });
     if (!profile) throw new NotFoundException('Farmer profile not found');
     const profileId = profile.id;
 
@@ -616,7 +656,9 @@ export class FarmersService {
       .getOne();
 
     if (!order) {
-      throw new NotFoundException('Order not found or not associated with this farmer');
+      throw new NotFoundException(
+        'Order not found or not associated with this farmer',
+      );
     }
 
     // Map common string values to order status enum values if needed
@@ -663,7 +705,11 @@ export class FarmersService {
 
     if (dto.coverImageDataUrl) {
       profile.coverImageUrl = await this.saveImage(
-        { dataUrl: dto.coverImageDataUrl, name: 'cover.jpg', type: 'image/jpeg' },
+        {
+          dataUrl: dto.coverImageDataUrl,
+          name: 'cover.jpg',
+          type: 'image/jpeg',
+        },
         'farmers',
       );
     }

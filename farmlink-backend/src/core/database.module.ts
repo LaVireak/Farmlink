@@ -69,10 +69,17 @@ export const ALL_ENTITIES = [
           type: 'postgres',
           host: config.get<string>('DB_HOST', 'localhost'),
           port: config.get<number>('DB_PORT', 5432),
-          username: config.get<string>('DB_USERNAME') || config.get<string>('DB_USER'),
-          password: String(config.get('DB_PASSWORD') || config.get('DB_PASS') || ''),
+          username:
+            config.get<string>('DB_USERNAME') || config.get<string>('DB_USER'),
+          password: String(
+            config.get('DB_PASSWORD') || config.get('DB_PASS') || '',
+          ),
           database: config.get<string>('DB_NAME'),
-          ssl: config.get<string>('DB_HOST') !== 'localhost' && config.get<string>('DB_HOST') !== 'postgres' ? { rejectUnauthorized: false } : false,
+          ssl:
+            config.get<string>('DB_HOST') !== 'localhost' &&
+            config.get<string>('DB_HOST') !== 'postgres'
+              ? { rejectUnauthorized: false }
+              : false,
           entities: ALL_ENTITIES,
           synchronize: config.get<string>('NODE_ENV') !== 'production',
           logging: false,

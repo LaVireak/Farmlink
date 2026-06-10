@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { StripeService } from './stripe.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import {Public} from '../auth/decorators/public.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('stripe')
 export class StripeController {
@@ -19,9 +19,7 @@ export class StripeController {
   // ── Existing charge endpoint (kept public) ──────────────────────────────────
   @Public()
   @Post('charge')
-  async chargeCard(
-    @Body() body: { amount: number; paymentMethodId: string },
-  ) {
+  async chargeCard(@Body() body: { amount: number; paymentMethodId: string }) {
     return this.stripeService.chargeCard(body.amount, body.paymentMethodId);
   }
 
@@ -101,7 +99,10 @@ export class StripeController {
     @Param('paymentMethodId') paymentMethodId: string,
     @Body() body: { name: string },
   ) {
-    return this.stripeService.updatePaymentMethodName(paymentMethodId, body.name);
+    return this.stripeService.updatePaymentMethodName(
+      paymentMethodId,
+      body.name,
+    );
   }
 
   /**

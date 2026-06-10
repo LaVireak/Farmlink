@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common'
-import { SearchService } from './search.service'
-import { Public } from '../auth/decorators/public.decorator'
+import { Controller, Get, Query } from '@nestjs/common';
+import { SearchService } from './search.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('search')
 export class SearchController {
@@ -9,6 +9,6 @@ export class SearchController {
   @Public()
   @Get()
   search(@Query('q') q: string) {
-    return this.searchService.search(q)
+    return this.searchService.search(q);
   }
 }

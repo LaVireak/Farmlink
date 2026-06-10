@@ -11,7 +11,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Message, User, FarmerProfile]),
-    NotificationsModule
+    NotificationsModule,
   ],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesSeedService],

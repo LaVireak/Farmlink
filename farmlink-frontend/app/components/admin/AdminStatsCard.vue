@@ -29,7 +29,7 @@ import { ArrowDownRight, ArrowUpRight } from 'lucide-vue-next'
 
 const props = defineProps({
   title: String,
-  value: String,
+  value: [String, Number],
   percent: Number,
   icon: [Object, Function],
 })
