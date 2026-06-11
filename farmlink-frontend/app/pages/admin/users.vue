@@ -349,7 +349,7 @@ const config = useRuntimeConfig()
 const baseURL = config.public.apiUrl
 const auth = useAuthStore()
 
-const allUsers = ref([])
+const allUsers = useState('admin-users-mapped', () => [])
 
 const normalizeRole = (role) => {
     const normalized = String(role || '').toLowerCase()

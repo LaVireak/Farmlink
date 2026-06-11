@@ -370,9 +370,9 @@ const config  = useRuntimeConfig()
 const baseURL = config.public.apiUrl
 const auth = useAuthStore()
 
-const allFarmers     = ref([])
-const loading        = ref(false)
-const error          = ref(null)
+const allFarmers     = useState('admin-farmers-merged', () => [])
+const loading        = useState('admin-farmers-loading', () => false)
+const error          = useState('admin-farmers-error', () => null)
 const suspendLoading = ref(false)
 
 const normalizeStatus = (status) => ({
@@ -463,7 +463,9 @@ const mapFarmerFromUser = (user) => ({
 })
 
 async function fetchFarmers() {
-    loading.value = true
+    if (allFarmers.value.length === 0) {
+        loading.value = true
+    }
     error.value   = null
     try {
         const res = await $fetch(`${baseURL}/admin/farmers`, {

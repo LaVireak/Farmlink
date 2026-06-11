@@ -211,14 +211,187 @@
             :initials="initials"
             @update:filters="orderFilters = $event"
             @reset-filters="resetOrderFilters"
+            @open-order="openOrderModal"
         />
+
+        <teleport to="body">
+            <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+                leave-active-class="transition-all duration-100 ease-in" leave-to-class="opacity-0 scale-95">
+                <div v-if="orderModal.visible" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-sm p-4"
+                    @click.self="orderModal.visible = false">
+                    <div class="bg-white/95 backdrop-blur-md rounded-3xl max-w-2xl w-full border border-white/50 shadow-2xl relative overflow-hidden flex flex-col">
+
+                        <!-- Banner Header: Deep Green Agricultural Gradient -->
+                        <div class="w-full h-48 overflow-hidden relative text-white p-5 flex flex-col bg-gradient-to-br from-[#1b4332] to-[#2d6a4f]">
+                            <!-- Silhouette Pattern Backdrop -->
+                            <div class="absolute inset-0 z-0">
+                                <div class="absolute inset-2 rounded-xl bg-[radial-gradient(#2d6a4f_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+                                <div class="absolute inset-0 flex items-center justify-center opacity-10">
+                                    <svg viewBox="0 0 100 100" class="w-40 h-40" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="30" y="30" width="40" height="50" rx="4" fill="white" />
+                                        <circle cx="50" cy="50" r="12" fill="white" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Badges -->
+                            <div class="flex flex-wrap gap-2 z-20 relative">
+                                <span class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-green-300 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+                                    Order Record
+                                </span>
+                                <span class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest rounded-lg border backdrop-blur-md"
+                                    :class="statusBadgeClass(orderModal.order?.status)">
+                                    {{ orderModal.order?.status }}
+                                </span>
+                            </div>
+
+                            <!-- Order number + Date at bottom -->
+                            <div class="mt-auto z-20 relative">
+                                <h2 class="text-xl font-bold text-white leading-tight">Order #{{ String(orderModal.order?.orderNumber || orderModal.order?.id).replace(/^ORD-/i, '').slice(0, 8).toUpperCase() }}</h2>
+                                <p v-if="orderModal.order?.date && orderModal.order?.date !== '—'" class="text-sm text-white/60 mt-0.5">Placed on {{ orderModal.order?.date }}</p>
+                            </div>
+
+                            <!-- Close btn -->
+                            <button @click="orderModal.visible = false" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center shadow-md border border-white/10 hover:scale-110 active:scale-95 transition-all duration-200 z-20">
+                                <X class="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <!-- Form Body: Read-only inputs matching User Form Style -->
+                        <div class="w-full p-6 md:p-8 flex flex-col gap-5 bg-white rounded-b-3xl overflow-y-auto max-h-[70vh]">
+
+                            <!-- Row 1: Order ID + Customer Name -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Order ID</label>
+                                    <input :value="'#' + String(orderModal.order?.orderNumber || orderModal.order?.id).replace(/^ORD-/i, '').slice(0, 8).toUpperCase()" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-mono focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Customer Name</label>
+                                    <input :value="orderModal.order?.customer" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Customer Email + Payment Method -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Customer Email</label>
+                                    <input :value="orderModal.order?.consumer?.email ?? '—'" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Payment Method</label>
+                                    <input :value="orderModal.order?.paymentMethod" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Payment Status + Delivery Address -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Payment Status</label>
+                                    <input :value="orderModal.order?.paymentStatus" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Delivery Address</label>
+                                    <input :value="orderModal.order?.deliveryAddress" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Subtotal + Delivery Fee + Total Amount -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Subtotal</label>
+                                    <input :value="'$' + parseFloat(orderModal.order?.subtotal || 0).toFixed(2)" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-semibold focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Delivery Fee</label>
+                                    <input :value="'$' + parseFloat(orderModal.order?.deliveryFee ?? orderModal.order?.delivery_fee ?? 0).toFixed(2)" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 font-semibold focus:outline-none cursor-default select-all" />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Total Amount</label>
+                                    <input :value="'$' + parseFloat(orderModal.order?.totalAmount ?? orderModal.order?.total_amount ?? orderModal.order?.amount?.replace(/[^0-9.]/g, '') ?? 0).toFixed(2)" type="text" readonly
+                                        class="w-full px-4 py-2.5 bg-[#fef3c7]/55 border border-[#f59e0b]/20 rounded-xl text-sm text-amber-900 font-black focus:outline-none cursor-default select-all" />
+                                </div>
+                            </div>
+
+                            <!-- Row 5: Notes / Special Instructions -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Notes / Special Instructions</label>
+                                <textarea readonly rows="2" class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none cursor-default resize-none italic">{{ orderModal.order?.note ?? 'No special instructions.' }}</textarea>
+                            </div>
+
+                            <!-- Row 6: Dispute Reason (if cancelled or disputed) -->
+                            <div v-if="orderModal.order?.disputeReason">
+                                <label class="block text-[11px] font-bold text-red-500 uppercase tracking-widest mb-1.5">Dispute Reason / Cancellation Details</label>
+                                <textarea readonly rows="2" class="w-full px-4 py-2.5 bg-red-50/40 border border-red-200 rounded-xl text-sm text-red-700 font-medium focus:outline-none cursor-default resize-none">{{ orderModal.order.disputeReason }}</textarea>
+                            </div>
+
+                            <!-- Row 7: Products Breakdown Grid/Table -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Purchased Items</label>
+                                <div class="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/30">
+                                    <table class="w-full text-left text-sm border-collapse">
+                                        <thead>
+                                            <tr class="bg-gray-100 border-b border-gray-250 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                <th class="px-4 py-3 w-16">Image</th>
+                                                <th class="px-4 py-3">Crop Name</th>
+                                                <th class="px-4 py-3 w-36">Farmer</th>
+                                                <th class="px-4 py-3 text-center w-24">Qty</th>
+                                                <th class="px-4 py-3 text-right w-28">Price</th>
+                                                <th class="px-4 py-3 text-right w-28">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <tr v-for="item in orderModal.order?.items || []" :key="item.id" class="text-xs text-gray-700 bg-white">
+                                                <td class="px-4 py-2.5">
+                                                    <div class="w-8 h-8 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-white">
+                                                        <img v-if="item.product?.thumbnailUrl" :src="item.product.thumbnailUrl" class="w-full h-full object-cover" />
+                                                        <div v-else class="w-full h-full bg-gray-50 flex items-center justify-center">
+                                                            <Package class="w-3 h-3 text-gray-300" />
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-2.5 font-bold text-gray-800">
+                                                    {{ cleanProductName(item.product?.nameEn) }}
+                                                </td>
+                                                <td class="px-4 py-2.5 text-gray-500 truncate">
+                                                    {{ item.farmer?.farmName ?? 'Local Farm' }}
+                                                </td>
+                                                <td class="px-4 py-2.5 text-center font-bold text-gray-800">
+                                                    {{ item.quantity }}
+                                                </td>
+                                                <td class="px-4 py-2.5 text-right text-gray-500">
+                                                    ${{ parseFloat(item.unitPrice || 0).toFixed(2) }}
+                                                </td>
+                                                <td class="px-4 py-2.5 text-right font-bold text-gray-800">
+                                                    ${{ parseFloat(item.subtotal || 0).toFixed(2) }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </Transition>
+        </teleport>
 
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { DollarSign, Package, ShoppingCart, Users, Search } from 'lucide-vue-next'
+import { DollarSign, Package, ShoppingCart, Users, Search, X } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
 import {
     Chart as ChartJS,
@@ -255,6 +428,40 @@ const loadingRevenue  = computed(() => loading.value)
 const loadingGoals    = computed(() => loading.value)
 const loadingActivity = computed(() => loading.value)
 const loadingOrders   = computed(() => loading.value)
+
+// Order details modal state & handlers
+const orderModal = ref({
+    visible: false,
+    order: null
+})
+
+function openOrderModal(orderSummary) {
+    const rawOrder = allOrdersRaw.value.find(o => o.id === orderSummary.id)
+    orderModal.value = {
+        visible: true,
+        order: rawOrder || orderSummary
+    }
+}
+
+const cleanProductName = (name) => {
+    if (!name) return '—'
+    return name
+        .replace(/^Preview\s+/i, '')
+        .replace(/\(local\s*(image)?\s*path\s*.*\)/gi, '')
+        .replace(/\(\s*[a-zA-Z]:\\[^)]+\)/g, '')
+        .replace(/\(\s*\/[^)]+\)/g, '')
+        .trim()
+}
+
+const statusBadgeClass = (status) => {
+    const map = {
+        Completed: 'text-green-400 bg-green-950/40 border-green-500/20',
+        Pending: 'text-yellow-400 bg-yellow-950/40 border-yellow-500/20',
+        Processing: 'text-blue-400 bg-blue-950/40 border-blue-500/20',
+        Cancelled: 'text-red-400 bg-red-950/40 border-red-500/20',
+    }
+    return map[status] ?? 'text-gray-400 bg-gray-950/40 border-gray-500/20'
+}
 
 // Helper functions for Growth calculation
 const calculateGrowth = (items) => {
@@ -643,13 +850,44 @@ const activities = computed(() => {
     })
 })
 
+// Helper formatting functions for Supabase enums
+const formatPaymentMethod = (method) => {
+    if (!method) return '—'
+    const map = {
+        aba_payway: 'ABA PayWay',
+        wing_money: 'Wing Money',
+        ipay: 'iPay',
+        cash_on_delivery: 'Cash on Delivery',
+    }
+    return map[method] ?? String(method).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+const formatPaymentStatus = (status) => {
+    if (!status) return '—'
+    return String(status).charAt(0).toUpperCase() + String(status).slice(1).toLowerCase()
+}
+
 // Table Orders mapped dynamically
 const orders = computed(() => {
     return allOrdersRaw.value.map(o => ({
         id: o.id,
+        orderNumber: o.orderNumber ?? o.order_number ?? '—',
         customer: o.consumer ? `${o.consumer.firstName ?? ''} ${o.consumer.lastName ?? ''}`.trim() : 'Guest',
-        product: o.items && o.items.length ? o.items.map(item => item.product?.nameEn ?? 'Unknown Product').join(', ') : '—',
+        product: o.items && o.items.length 
+            ? o.items.map(item => {
+                const rawName = item.product?.nameEn ?? item.product?.name ?? 'Unknown Product'
+                return rawName
+                    .replace(/^Preview\s+/i, '')
+                    .replace(/\(local\s*(image)?\s*path\s*.*\)/gi, '')
+                    .replace(/\(\s*[a-zA-Z]:\\[^)]+\)/g, '')
+                    .replace(/\(\s*\/[^)]+\)/g, '')
+                    .trim()
+              }).join(', ') 
+            : '—',
         amount: '$' + parseFloat(o.totalAmount ?? o.total_amount ?? 0).toFixed(2),
+        paymentMethod: formatPaymentMethod(o.paymentMethod ?? o.payment_method),
+        paymentStatus: formatPaymentStatus(o.paymentStatus ?? o.payment_status),
+        deliveryAddress: o.deliveryAddress ?? o.delivery_address ?? '—',
         date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—',
         rawDate: o.createdAt,
         status: mapOrderStatus(o.status),
@@ -681,8 +919,12 @@ const filteredOrders = computed(() => {
         const q = search.toLowerCase()
         list = list.filter(o =>
             o.id.toLowerCase().includes(q) ||
+            o.orderNumber.toLowerCase().includes(q) ||
             o.customer.toLowerCase().includes(q) ||
             o.product.toLowerCase().includes(q) ||
+            o.paymentMethod.toLowerCase().includes(q) ||
+            o.paymentStatus.toLowerCase().includes(q) ||
+            o.deliveryAddress.toLowerCase().includes(q) ||
             o.status.toLowerCase().includes(q)
         )
     }
