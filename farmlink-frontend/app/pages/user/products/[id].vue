@@ -207,6 +207,13 @@
               Add to Cart
             </button>
 
+            <button
+              @click="goToPreorder"
+              class="preorder-btn"
+            >
+              Pre-order
+            </button>
+
           </div>
 
           <div v-else class="action-block">
@@ -216,6 +223,13 @@
               class="add-to-cart-btn opacity-50 cursor-not-allowed"
             >
               Out of Stock
+            </button>
+
+            <button
+              @click="goToPreorder"
+              class="preorder-btn"
+            >
+              Pre-order Harvest
             </button>
 
           </div>
@@ -289,6 +303,76 @@
 
       </div>
 
+      <!-- Product Details & Specs -->
+      <div v-if="product" class="details-section">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Description Card -->
+          <div class="section-card">
+            <h2>Product Description</h2>
+            <p>{{ product.description || 'No detailed description available for this product.' }}</p>
+          </div>
+
+          <!-- Specifications Card -->
+          <div class="section-card">
+            <h2>Product Information</h2>
+            <ul class="feature-list">
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Category</span>
+                  <span class="font-semibold text-gray-800">{{ product.category || 'Fruits' }}</span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Certification</span>
+                  <span class="font-semibold" :class="product.isOrganic ? 'text-green-600' : 'text-gray-800'">
+                    {{ product.isOrganic ? '✓ Certified Organic' : 'Standard' }}
+                  </span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Unit</span>
+                  <span class="font-semibold text-gray-800">per {{ product.unit || 'kg' }}</span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Min. Order Quantity</span>
+                  <span class="font-semibold text-gray-800">{{ product.minOrderQty || 1 }} {{ product.unit || 'kg' }}</span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Seasonal Special</span>
+                  <span class="font-semibold text-gray-800">{{ product.isSeasonal ? 'Yes' : 'No (Available Year-Round)' }}</span>
+                </div>
+              </li>
+              <li v-if="product.isSeasonal && (product.seasonStart || product.seasonEnd)">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Season Duration</span>
+                  <span class="font-semibold text-gray-800">
+                    {{ formatDate(product.seasonStart) }} - {{ formatDate(product.seasonEnd) }}
+                  </span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Available Stock</span>
+                  <span class="font-semibold text-gray-800">{{ product.stockQuantity || 0 }} {{ product.unit || 'units' }}</span>
+                </div>
+              </li>
+              <li>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Total Sold</span>
+                  <span class="font-semibold text-gray-800">{{ product.totalSold || 0 }} {{ product.unit || 'units' }}</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading -->
       <div v-if="loading" class="loading-state">
         <p>Loading product...</p>
@@ -317,12 +401,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 
 const route = useRoute()
+const router = useRouter()
 const config = useRuntimeConfig()
 
 const product = ref(null)
@@ -440,6 +525,23 @@ const addToCart = (event) => {
       'Quantity:',
       quantity.value
     )
+  }
+}
+
+// ================= PRE-ORDER =================
+const goToPreorder = () => {
+  if (product.value) {
+    router.push(`/user/orders/${product.value.id}`)
+  }
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  } catch (e) {
+    return dateStr
   }
 }
 </script>
@@ -744,11 +846,38 @@ const addToCart = (event) => {
   font-size: 16px;
   cursor: pointer;
   transition: .3s;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .add-to-cart-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 25px rgba(46,125,50,.25);
+}
+
+.preorder-btn {
+  flex: 1;
+  border: 2px solid #2e7d32;
+  border-radius: 999px;
+  background: transparent;
+  color: #2e7d32;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: .3s;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preorder-btn:hover {
+  background: #2e7d32;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(46,125,50,.15);
 }
 
 .save-btn {
