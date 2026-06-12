@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
@@ -43,7 +44,11 @@ export class SupabaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid token');
     }
 
-    request.user = await this.supabaseAuth.validateToken(token);
+    const user = await this.supabaseAuth.validateToken(token);
+    if (user.status && user.status.toLowerCase() === 'suspended') {
+      throw new ForbiddenException('Your account has been suspended');
+    }
+    request.user = user;
     return true;
   }
 }

@@ -316,20 +316,20 @@ export async function toggleProductFeatured(id: string): Promise<Product> {
 import { ref, computed } from 'vue'
 
 export function useAdmin() {
-  // Loading states
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  // Loading states using Nuxt-native useState for global, SSR-safe cache
+  const loading = useState<boolean>('admin-loading', () => false)
+  const error = useState<string | null>('admin-error', () => null)
 
   // Dashboard
-  const dashboardStats = ref<DashboardStats | null>(null)
-  const farmerStats = ref<FarmerStats | null>(null)
+  const dashboardStats = useState<DashboardStats | null>('admin-dashboard-stats', () => null)
+  const farmerStats = useState<FarmerStats | null>('admin-farmer-stats', () => null)
 
   // Data collections
-  const farmers = ref<FarmerProfile[]>([])
-  const buyers = ref<Buyer[]>([])
-  const users = ref<User[]>([])
-  const orders = ref<Order[]>([])
-  const products = ref<Product[]>([])
+  const farmers = useState<FarmerProfile[]>('admin-farmers', () => [])
+  const buyers = useState<Buyer[]>('admin-buyers', () => [])
+  const users = useState<User[]>('admin-users', () => [])
+  const orders = useState<Order[]>('admin-orders', () => [])
+  const products = useState<Product[]>('admin-products', () => [])
 
   // Toast helper
   type ToastType = 'success' | 'error' | 'warning'
@@ -350,7 +350,9 @@ export function useAdmin() {
 
   // Fetch all dashboard data
   async function fetchDashboard() {
-    loading.value = true
+    if (!dashboardStats.value) {
+      loading.value = true
+    }
     error.value = null
     try {
       const [stats, fStats, usersRes, ordersRes, productsRes, farmersRes] = await Promise.all([
@@ -377,7 +379,9 @@ export function useAdmin() {
 
   // Fetch farmers
   async function fetchFarmers() {
-    loading.value = true
+    if (farmers.value.length === 0) {
+      loading.value = true
+    }
     error.value = null
     try {
       farmers.value = await getFarmers()
@@ -457,7 +461,9 @@ export function useAdmin() {
 
   // Fetch users
   async function fetchUsers() {
-    loading.value = true
+    if (users.value.length === 0) {
+      loading.value = true
+    }
     try {
       users.value = await getUsers()
     } catch (e: any) {
@@ -508,7 +514,9 @@ export function useAdmin() {
 
   // Fetch orders
   async function fetchOrders(filters?: OrderFilters) {
-    loading.value = true
+    if (orders.value.length === 0) {
+      loading.value = true
+    }
     try {
       orders.value = await getOrders(filters)
     } catch (e: any) {
@@ -540,7 +548,9 @@ export function useAdmin() {
 
   // Fetch products
   async function fetchProducts(filters?: ProductFilters) {
-    loading.value = true
+    if (products.value.length === 0) {
+      loading.value = true
+    }
     try {
       products.value = await getProducts(filters)
     } catch (e: any) {

@@ -393,6 +393,7 @@ async function fetchProducts() {
         products.value = raw.map(p => ({
             id:              p.id,
             name:            (p.nameEn ?? p.name_en ?? p.name ?? '—')
+                                 .replace(/^Preview\s+/i, '')
                                  .replace(/\(local\s*(image)?\s*path\s*.*\)/gi, '')
                                  .replace(/\(\s*[a-zA-Z]:\\[^)]+\)/g, '')
                                  .replace(/\(\s*\/[^)]+\)/g, '')

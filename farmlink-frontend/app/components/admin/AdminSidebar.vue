@@ -13,7 +13,6 @@
       </button>
 
       <nav>
-        <img src="/assets/images/logo.png" alt="FarmLink Logo"/>
         <NuxtLink
           v-for="item in navItems"
           :key="item.label"
@@ -38,9 +37,8 @@ import {
   Box,
   Users,
   Tractor,
-  Settings,
   Menu,
-  X
+  X,
 } from 'lucide-vue-next'
 
 const isOpen = ref(false)
@@ -51,9 +49,9 @@ const navItems = [
   { label: 'Product', to: '/admin/products', icon: Box },
   { label: 'User', to: '/admin/users', icon: Users },
   { label: 'Farmer', to: '/admin/farmer', icon: Tractor },
-  //{ label: 'Setting Profile', to: '/admin/settings/profile', icon: Settings },
 ]
 </script>
+
 
 <style scoped>
 .menu-toggle {
@@ -96,7 +94,7 @@ const navItems = [
 
 .sidebar {
   width: 16rem;
-  min-height: 100vh;
+  min-height: calc(100vh - 75px);
   background: #f9fafb;
   border-right: 1px solid #f3f4f6;
   padding: 1.5rem 1rem;
@@ -106,6 +104,7 @@ const navItems = [
 }
 
 nav {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
@@ -170,4 +169,5 @@ nav {
     transform: translateX(0);
   }
 }
+
 </style>

@@ -62,3 +62,60 @@ export class MatchFarmerDto {
   @IsString()
   notes?: string;
 }
+
+export class UpdateFarmerAdminDto {
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  lastName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  farmName?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  province?: string;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @IsOptional()
+  @IsString()
+  addressDetail?: string;
+
+  @IsOptional()
+  totalSales?: number;
+
+  @IsOptional()
+  @IsString()
+  productTags?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarDataUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  idDocumentDataUrl?: string;
+}
