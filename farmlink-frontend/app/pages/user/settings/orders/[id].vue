@@ -28,7 +28,7 @@ const farmerCoords = ref<{ lat: number; lng: number } | null>(null);
 const customerCoords = ref<{ lat: number; lng: number } | null>(null);
 const etaMinutes = ref<number | null>(null);
 const distanceKm = ref<number | null>(null);
-let leafletMap: any = null;
+let mlMap: any = null;
 
 const fetchOrder = async () => {
   loading.value = true;
@@ -51,53 +51,7 @@ const fetchOrder = async () => {
   }
 };
 
-// ─── Geocode and build real map ───────────────────────────────────────────────
-const buildMap = async () => {
-  if (!order.value || !mapEl.value) return;
-  mapLoading.value = true;
-
-  try {
-    // Farmer location (from farmer profile)
-    const farmer = order.value.items?.[0]?.farmer;
-    const farmerProv = farmer?.province ?? '';
-    const farmerDist = farmer?.district ?? '';
-    
-    // Customer location (from order deliveryAddress or user profile)
-    const consumer = order.value.consumer;
-    const custProv = (consumer as any)?.province ?? (authStore.user as any)?.province ?? '';
-    const custDist = (consumer as any)?.district ?? (authStore.user as any)?.district ?? '';
-    const custComm = (consumer as any)?.commune ?? (authStore.user as any)?.commune ?? '';
-
-    // Geocode in parallel — farmer origin, then customer destination
-    const [fc, cc] = await Promise.all([
-      farmerProv
-        ? geocodeLocation(farmerProv, farmerDist)
-        : Promise.resolve({ lat: 11.5564, lng: 104.9282 }),
-      custProv
-        ? geocodeLocation(custProv, custDist, custComm)
-        : geocodeFromAddress(order.value.deliveryAddress),
-    ]);
-
-    farmerCoords.value = fc ?? { lat: 12.5, lng: 104.0 };
-    customerCoords.value = cc ?? { lat: 11.5564, lng: 104.9282 };
-
-    // Compute distance & ETA (assumed avg speed: 40 km/h for Cambodian roads)
-    const km = haversineDistanceKm(
-      farmerCoords.value.lat, farmerCoords.value.lng,
-      customerCoords.value.lat, customerCoords.value.lng,
-    );
-    distanceKm.value = Math.round(km * 10) / 10;
-    etaMinutes.value = Math.round((km / 40) * 60);
-
-    await nextTick();
-    await initLeafletMap();
-  } finally {
-    mapLoading.value = false;
-    mapReady.value = true;
-  }
-};
-
-// Nominatim geocode from a raw address string (fallback)
+// ─── Geocode from a raw address string (fallback) ────────────────────────────
 async function geocodeFromAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   if (!address) return null;
   try {
@@ -111,116 +65,187 @@ async function geocodeFromAddress(address: string): Promise<{ lat: number; lng: 
   return null;
 }
 
-const initLeafletMap = async () => {
+// ─── Build the OpenFreeMap (MapLibre GL) map ─────────────────────────────────
+const buildMap = async () => {
+  if (!order.value || !mapEl.value) return;
+  mapLoading.value = true;
+
+  try {
+    // Farmer location
+    const farmer = order.value.items?.[0]?.farmer;
+    const farmerProv = farmer?.province ?? '';
+    const farmerDist = farmer?.district ?? '';
+
+    // Customer location
+    const consumer = order.value.consumer;
+    const custProv = (consumer as any)?.province ?? (authStore.user as any)?.province ?? '';
+    const custDist = (consumer as any)?.district ?? (authStore.user as any)?.district ?? '';
+    const custComm = (consumer as any)?.commune ?? (authStore.user as any)?.commune ?? '';
+
+    const [fc, cc] = await Promise.all([
+      farmerProv
+        ? geocodeLocation(farmerProv, farmerDist)
+        : Promise.resolve({ lat: 12.5, lng: 104.0 }),
+      custProv
+        ? geocodeLocation(custProv, custDist, custComm)
+        : geocodeFromAddress(order.value.deliveryAddress),
+    ]);
+
+    farmerCoords.value = fc ?? { lat: 12.5, lng: 104.0 };
+    customerCoords.value = cc ?? { lat: 11.5564, lng: 104.9282 };
+
+    // Straight-line distance & ETA fallback
+    const km = haversineDistanceKm(
+      farmerCoords.value.lat, farmerCoords.value.lng,
+      customerCoords.value.lat, customerCoords.value.lng,
+    );
+    distanceKm.value = Math.round(km * 10) / 10;
+    etaMinutes.value = Math.round((km / 40) * 60);
+
+    await nextTick();
+    await initMapLibreMap();
+  } finally {
+    mapLoading.value = false;
+    mapReady.value = true;
+  }
+};
+
+const initMapLibreMap = async () => {
   if (!mapEl.value || !farmerCoords.value || !customerCoords.value) return;
 
-  // Dynamically import Leaflet so it's only loaded client-side
-  const L = (await import('leaflet')).default;
-
-  // Fix leaflet default icon path issue with bundlers
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  });
-
-  // Destroy existing map if re-rendering
-  if (leafletMap) {
-    leafletMap.remove();
-    leafletMap = null;
+  // Destroy existing map instance if re-rendering
+  if (mlMap) {
+    mlMap.remove();
+    mlMap = null;
   }
 
   const fc = farmerCoords.value;
   const cc = customerCoords.value;
-
-  // Center the view between the two points
-  const midLat = (fc.lat + cc.lat) / 2;
   const midLng = (fc.lng + cc.lng) / 2;
+  const midLat = (fc.lat + cc.lat) / 2;
 
-  leafletMap = L.map(mapEl.value, { zoomControl: true, scrollWheelZoom: false });
+  // Dynamically import maplibre-gl (client-side only)
+  const maplibregl = (await import('maplibre-gl')).default;
 
-  // CartoDB Voyager tiles (modern, fast CDN, free, matches FarmLink palette)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-    maxZoom: 20,
-  }).addTo(leafletMap);
-
-  // Custom farm marker (green)
-  const farmIcon = L.divIcon({
-    className: '',
-    html: `<div class="map-marker map-marker--farm">
-      <span class="material-symbols-outlined">storefront</span>
-    </div>`,
-    iconSize: [44, 44],
-    iconAnchor: [22, 44],
+  mlMap = new maplibregl.Map({
+    container: mapEl.value,
+    // OpenFreeMap "Bright" style — closest look to Google Maps, no API key needed
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [midLng, midLat],
+    zoom: 7,
+    attributionControl: true,
   });
 
-  // Custom home marker (amber)
-  const homeIcon = L.divIcon({
-    className: '',
-    html: `<div class="map-marker map-marker--home">
-      <span class="material-symbols-outlined">home</span>
-    </div>`,
-    iconSize: [44, 44],
-    iconAnchor: [22, 44],
-  });
+  // Wait for the map style to fully load before adding layers
+  mlMap.on('load', async () => {
+    // ─── Try OSRM routing for real road path ──────────────────────────────
+    let routeCoords: [number, number][] = [[fc.lng, fc.lat], [cc.lng, cc.lat]];
+    let isRealRoute = false;
 
-  L.marker([fc.lat, fc.lng], { icon: farmIcon })
-    .bindPopup(`<b>🌾 Farm Origin</b><br>${order.value?.items?.[0]?.farmer?.farmName ?? 'Farmer'}`)
-    .addTo(leafletMap);
-
-  L.marker([cc.lat, cc.lng], { icon: homeIcon })
-    .bindPopup(`<b>🏠 Delivery Destination</b><br>${order.value?.deliveryAddress ?? 'Customer'}`)
-    .addTo(leafletMap);
-
-  // Fetch real road route from OSRM
-  let routeCoords = [[fc.lat, fc.lng], [cc.lat, cc.lng]];
-  let isRealRoute = false;
-
-  try {
-    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fc.lng},${fc.lat};${cc.lng},${cc.lat}?overview=full&geometries=geojson`;
-    const osrmRes = await fetch(osrmUrl);
-    if (osrmRes.ok) {
-      const osrmData = await osrmRes.json();
-      const route = osrmData.routes?.[0];
-      if (route?.geometry?.coordinates) {
-        routeCoords = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-        isRealRoute = true;
-        
-        // Update distance & duration with OSRM values
-        distanceKm.value = Math.round((route.distance / 1000) * 10) / 10;
-        // OSRM duration is in seconds, convert to minutes
-        etaMinutes.value = Math.round(route.duration / 60);
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fc.lng},${fc.lat};${cc.lng},${cc.lat}?overview=full&geometries=geojson`;
+      const osrmRes = await fetch(osrmUrl);
+      if (osrmRes.ok) {
+        const osrmData = await osrmRes.json();
+        const routeObj = osrmData.routes?.[0];
+        if (routeObj?.geometry?.coordinates) {
+          routeCoords = routeObj.geometry.coordinates as [number, number][];
+          isRealRoute = true;
+          // Update distance & ETA with accurate OSRM values
+          distanceKm.value = Math.round((routeObj.distance / 1000) * 10) / 10;
+          etaMinutes.value = Math.round(routeObj.duration / 60);
+        }
       }
+    } catch (e) {
+      console.warn('OSRM routing failed, using straight line:', e);
     }
-  } catch (e) {
-    console.warn('OSRM routing failed, falling back to straight line:', e);
-  }
 
-  // Draw the route line (solid for real road route, dashed for fallback straight line)
-  const routeLine = L.polyline(routeCoords, {
-    color: '#154212',
-    weight: isRealRoute ? 4 : 3,
-    opacity: 0.85,
-    ...(isRealRoute ? {} : { dashArray: '10, 8' }),
-  }).addTo(leafletMap);
+    // ─── Add route line source & layer ────────────────────────────────────
+    mlMap.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: routeCoords },
+      },
+    });
 
-  // Fit map bounds to show both markers with padding
-  leafletMap.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
+    // Route shadow (slightly wider, semi-transparent, for depth)
+    mlMap.addLayer({
+      id: 'route-shadow',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#154212',
+        'line-width': 8,
+        'line-opacity': 0.15,
+      },
+    });
+
+    // Main route line
+    mlMap.addLayer({
+      id: 'route-line',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#154212',
+        'line-width': isRealRoute ? 4 : 3,
+        'line-opacity': 0.9,
+        ...(isRealRoute ? {} : { 'line-dasharray': [3, 2] }),
+      },
+    });
+
+    // ─── Custom HTML markers ───────────────────────────────────────────────
+    // Farm marker (green)
+    const farmEl = document.createElement('div');
+    farmEl.className = 'mgl-marker mgl-marker--farm';
+    farmEl.innerHTML = `<span class="material-symbols-outlined">storefront</span>`;
+
+    new maplibregl.Marker({ element: farmEl, anchor: 'bottom' })
+      .setLngLat([fc.lng, fc.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 20 }).setHTML(
+          `<div class="mgl-popup"><strong>🌾 Farm Origin</strong><br>${order.value?.items?.[0]?.farmer?.farmName ?? 'Farmer'}<br><small>${farmerCoords.value ? `${fc.lat.toFixed(4)}, ${fc.lng.toFixed(4)}` : ''}</small></div>`
+        )
+      )
+      .addTo(mlMap);
+
+    // Customer / delivery marker (amber)
+    const homeEl = document.createElement('div');
+    homeEl.className = 'mgl-marker mgl-marker--home';
+    homeEl.innerHTML = `<span class="material-symbols-outlined">home_pin</span>`;
+
+    new maplibregl.Marker({ element: homeEl, anchor: 'bottom' })
+      .setLngLat([cc.lng, cc.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 20 }).setHTML(
+          `<div class="mgl-popup"><strong>🏠 Delivery Destination</strong><br>${order.value?.deliveryAddress ?? 'Customer Address'}</div>`
+        )
+      )
+      .addTo(mlMap);
+
+    // ─── Fit bounds to show both points ───────────────────────────────────
+    const bounds = [
+      [Math.min(fc.lng, cc.lng) - 0.05, Math.min(fc.lat, cc.lat) - 0.05],
+      [Math.max(fc.lng, cc.lng) + 0.05, Math.max(fc.lat, cc.lat) + 0.05],
+    ] as [[number, number], [number, number]];
+    mlMap.fitBounds(bounds, { padding: { top: 60, bottom: 80, left: 60, right: 60 }, duration: 800 });
+  });
 };
 
 onMounted(async () => {
   await fetchOrder();
-  if (order.value && isTransit.value) {
+  if (order.value) {
     await buildMap();
   }
 });
 
 onUnmounted(() => {
-  if (leafletMap) {
-    leafletMap.remove();
-    leafletMap = null;
+  if (mlMap) {
+    mlMap.remove();
+    mlMap = null;
   }
 });
 
@@ -349,6 +374,81 @@ const etaLabel = computed(() => {
 						</div>
 					</div>
 
+					<!-- ══════════════════════════════════════════════════════════
+					     REAL MAP SECTION — shown for ALL order statuses
+					     ══════════════════════════════════════════════════════════ -->
+					<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100 mb-8">
+						<!-- Map header -->
+						<div class="p-5 border-b border-zinc-50 flex justify-between items-center">
+							<div class="flex items-center gap-3">
+								<h3 class="font-[Manrope,sans-serif] font-black text-lg text-[#154212]">
+									{{ isTransit ? 'Live Tracking' : 'Delivery Route' }}
+								</h3>
+								<span v-if="isTransit" class="inline-flex items-center gap-1.5 bg-[#94f990]/50 text-[#006e1c] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+									<span class="w-1.5 h-1.5 rounded-full bg-[#006e1c] animate-pulse"></span>
+									Live
+								</span>
+								<span v-else-if="!isCancelled" class="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-500 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+									<span class="material-symbols-outlined text-xs">check_circle</span>
+									Delivered
+								</span>
+							</div>
+							<div class="text-right">
+								<p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{{ isTransit ? 'ETA' : 'Distance' }}</p>
+								<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
+							</div>
+						</div>
+
+						<!-- OpenFreeMap MapLibre GL Container -->
+						<div class="relative">
+							<!-- Loading overlay while geocoding -->
+							<div v-if="mapLoading" class="absolute inset-0 z-10 bg-[#f0faf0] flex flex-col items-center justify-center gap-3" style="height: 400px;">
+								<div class="w-10 h-10 border-4 border-[#154212] border-t-transparent rounded-full animate-spin"></div>
+								<p class="text-sm font-bold text-[#154212]">Loading map...</p>
+							</div>
+
+							<!-- MapLibre GL map element -->
+							<div
+								ref="mapEl"
+								class="ofm-map-container"
+								:class="{ 'opacity-0': mapLoading }"
+							></div>
+
+							<!-- ETA / distance badge overlay (bottom-center) -->
+							<div v-if="mapReady && distanceKm" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2 pointer-events-none">
+								<span class="material-symbols-outlined text-[#006e1c] text-base">route</span>
+								<div>
+									<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Farm → Your Door</p>
+									<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
+								</div>
+							</div>
+						</div>
+
+						<!-- Map legend -->
+						<div v-if="mapReady" class="p-4 border-t border-zinc-50 flex flex-wrap items-center gap-6 text-xs font-bold text-zinc-500">
+							<div class="flex items-center gap-2">
+								<div class="w-4 h-4 rounded-full bg-[#154212] flex items-center justify-center">
+									<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">storefront</span>
+								</div>
+								<span>{{ order.items?.[0]?.farmer?.farmName || 'Farm Origin' }}</span>
+							</div>
+							<div class="flex items-center gap-2">
+								<div class="w-8 h-0.5 bg-[#154212] opacity-70 rounded"></div>
+								<span>Route</span>
+							</div>
+							<div class="flex items-center gap-2">
+								<div class="w-4 h-4 rounded-full bg-[#b45309] flex items-center justify-center">
+									<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">home</span>
+								</div>
+								<span>Delivery Destination</span>
+							</div>
+							<div class="ml-auto flex items-center gap-1.5 text-[10px] text-zinc-300 font-medium">
+								<span>Map by</span>
+								<a href="https://openfreemap.org" target="_blank" class="text-zinc-400 hover:text-[#154212] transition-colors font-bold">OpenFreeMap</a>
+							</div>
+						</div>
+					</div>
+
 					<!-- CANCELLED LAYOUT -->
 					<div v-if="isCancelled" class="grid grid-cols-1 xl:grid-cols-12 gap-8">
 						<div class="xl:col-span-8 flex flex-col gap-8">
@@ -447,77 +547,14 @@ const etaLabel = computed(() => {
 
 					<!-- IN-TRANSIT LAYOUT -->
 					<div v-else-if="isTransit" class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-						<!-- Left Column: Real Map Tracking -->
 						<div class="xl:col-span-8 flex flex-col gap-8">
-							<!-- Live Tracking Card with Real Leaflet Map -->
-							<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100">
-								<div class="p-5 border-b border-zinc-50 flex justify-between items-center">
-									<div class="flex items-center gap-3">
-										<h3 class="font-[Manrope,sans-serif] font-black text-lg text-[#154212]">Live Tracking</h3>
-										<span class="inline-flex items-center gap-1.5 bg-[#94f990]/50 text-[#006e1c] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-											<span class="w-1.5 h-1.5 rounded-full bg-[#006e1c] animate-pulse"></span>
-											Live
-										</span>
-									</div>
-									<div class="text-right">
-										<p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ETA</p>
-										<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
-									</div>
-								</div>
-
-								<!-- Real Leaflet Map Container -->
-								<div class="relative">
-									<!-- Loading state while geocoding -->
-									<div v-if="mapLoading" class="absolute inset-0 z-10 bg-[#f0faf0] flex flex-col items-center justify-center gap-3">
-										<div class="w-10 h-10 border-4 border-[#154212] border-t-transparent rounded-full animate-spin"></div>
-										<p class="text-sm font-bold text-[#154212]">Locating farms...</p>
-									</div>
-
-									<!-- Leaflet map element -->
-									<div
-										ref="mapEl"
-										class="leaflet-map-container"
-										:class="{ 'opacity-0': mapLoading }"
-									></div>
-
-									<!-- ETA badge overlay -->
-									<div v-if="mapReady && distanceKm" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2">
-										<span class="material-symbols-outlined text-[#006e1c] text-base">route</span>
-										<div>
-											<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Farm → Your Door</p>
-											<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
-										</div>
-									</div>
-								</div>
-
-								<!-- Map legend -->
-								<div v-if="mapReady" class="p-4 border-t border-zinc-50 flex items-center gap-6 text-xs font-bold text-zinc-500">
-									<div class="flex items-center gap-2">
-										<div class="w-4 h-4 rounded-full bg-[#154212] flex items-center justify-center">
-											<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">storefront</span>
-										</div>
-										<span>{{ order.items?.[0]?.farmer?.farmName || 'Farm Origin' }}</span>
-									</div>
-									<div class="flex items-center gap-2">
-										<div class="w-px h-4 border-l-2 border-dashed border-[#154212] opacity-60"></div>
-										<span>Route</span>
-									</div>
-									<div class="flex items-center gap-2">
-										<div class="w-4 h-4 rounded-full bg-[#b45309] flex items-center justify-center">
-											<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">home</span>
-										</div>
-										<span>Delivery Destination</span>
-									</div>
-								</div>
-							</div>
-
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div class="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
 									<div class="flex items-center gap-3 mb-4">
 										<div class="w-10 h-10 rounded-xl bg-[#94f990] flex items-center justify-center text-[#002204]">
 											<span class="material-symbols-outlined fill-1">package_2</span>
 										</div>
-										<h3 class="font-[Manrope,sans-serif] font-black text-[#154212] uppercase tracking-wide text-sm">Harvested & Packed</h3>
+										<h3 class="font-[Manrope,sans-serif] font-black text-[#154212] uppercase tracking-wide text-sm">Harvested &amp; Packed</h3>
 									</div>
 									<p class="text-xs text-zinc-500 leading-relaxed font-medium">Your produce was hand-picked and temperature-controlled within 2 hours.</p>
 									<div class="mt-4">
@@ -666,45 +703,71 @@ const etaLabel = computed(() => {
 	font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-/* ─── Real Leaflet Map ──────────────────────────────────────────────── */
-.leaflet-map-container {
-  height: 360px;
+/* ─── OpenFreeMap MapLibre GL map container ─────────────────────────── */
+.ofm-map-container {
+  height: 420px;
   width: 100%;
   transition: opacity 0.3s ease;
 }
-
-/* Custom map marker styles (injected via divIcon, so NOT scoped) */
 </style>
 
 <style>
-/* UNSCOPED: Leaflet custom markers need to be global */
-@import 'leaflet/dist/leaflet.css';
+/* UNSCOPED: MapLibre GL CSS + custom marker styles must be global */
+@import 'maplibre-gl/dist/maplibre-gl.css';
 
-.map-marker {
-  width: 44px;
-  height: 44px;
+/* Custom map markers */
+.mgl-marker {
+  width: 40px;
+  height: 40px;
   border-radius: 50% 50% 50% 0;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: rotate(-45deg);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-  border: 2px solid white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  border: 2.5px solid white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.map-marker .material-symbols-outlined {
+.mgl-marker:hover {
+  transform: rotate(-45deg) scale(1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.mgl-marker .material-symbols-outlined {
   transform: rotate(45deg);
-  font-size: 20px;
+  font-size: 18px;
   font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-.map-marker--farm {
+.mgl-marker--farm {
   background: #154212;
   color: white;
 }
 
-.map-marker--home {
+.mgl-marker--home {
   background: #b45309;
   color: white;
+}
+
+/* MapLibre popup style */
+.maplibregl-popup-content {
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+
+.mgl-popup strong {
+  color: #154212;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.mgl-popup small {
+  color: #999;
+  font-size: 11px;
 }
 </style>

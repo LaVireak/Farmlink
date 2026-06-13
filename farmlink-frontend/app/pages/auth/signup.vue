@@ -130,29 +130,64 @@
 
 					<!-- LOCATION DROPDOWNS -->
 					<div class="location-section">
-						<div class="location-label">Delivery Location</div>
-						<div class="location-grid">
-							<div class="field">
-								<label for="province">Province</label>
-								<select id="province" v-model="selectedProvince" class="field-select">
-									<option value="">Select Province</option>
-									<option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
-								</select>
+						<div class="location-header">
+							<div class="location-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
 							</div>
-							<div class="field">
-								<label for="district">District</label>
-								<select id="district" v-model="selectedDistrict" :disabled="!selectedProvince" class="field-select">
-									<option value="">Select District</option>
-									<option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
-								</select>
+							<div>
+								<div class="location-title">Delivery Location</div>
+								<div class="location-subtitle">Used for order tracking &amp; delivery routing</div>
 							</div>
-							<div class="field">
-								<label for="commune">Commune / Sangkat</label>
-								<select id="commune" v-model="selectedCommune" :disabled="!selectedDistrict" class="field-select">
-									<option value="">Select Commune</option>
-									<option v-for="c in communes" :key="c" :value="c">{{ c }}</option>
-								</select>
+						</div>
+
+						<div class="location-steps">
+							<!-- Province -->
+							<div class="loc-step">
+								<div class="loc-step-num">1</div>
+								<div class="loc-step-body">
+									<label for="province" class="loc-label">Province / City</label>
+									<div class="loc-select-wrap">
+										<select id="province" v-model="selectedProvince" class="loc-select">
+											<option value="">Choose your province...</option>
+											<option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
+										</select>
+									</div>
+								</div>
 							</div>
+
+							<!-- District -->
+							<div class="loc-step" :class="{ 'loc-step--locked': !selectedProvince }">
+								<div class="loc-step-num">2</div>
+								<div class="loc-step-body">
+									<label for="district" class="loc-label">District / Khan</label>
+									<div class="loc-select-wrap">
+										<select id="district" v-model="selectedDistrict" :disabled="!selectedProvince" class="loc-select">
+											<option value="">{{ selectedProvince ? 'Choose your district...' : 'Select province first' }}</option>
+											<option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<!-- Commune -->
+							<div class="loc-step" :class="{ 'loc-step--locked': !selectedDistrict }">
+								<div class="loc-step-num">3</div>
+								<div class="loc-step-body">
+									<label for="commune" class="loc-label">Commune / Sangkat</label>
+									<div class="loc-select-wrap">
+										<select id="commune" v-model="selectedCommune" :disabled="!selectedDistrict" class="loc-select">
+											<option value="">{{ selectedDistrict ? 'Choose your commune...' : 'Select district first' }}</option>
+											<option v-for="c in communes" :key="c" :value="c">{{ c }}</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- selected summary chip -->
+						<div v-if="selectedProvince" class="loc-summary">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+							<span>{{ [selectedProvince, selectedDistrict, selectedCommune].filter(Boolean).join(' › ') }}</span>
 						</div>
 					</div>
 		
@@ -895,75 +930,156 @@ const handleFacebook = async () => {
 		font-size: 38px;
 	}
 }
-/* location section */
+/* ── Location section redesign ───────────────────────────────── */
 .location-section {
-	padding: 18px;
-	background: rgba(22, 101, 52, 0.04);
-	border: 1px solid rgba(22, 101, 52, 0.1);
-	border-radius: 20px;
+	padding: 20px;
+	background: linear-gradient(135deg, rgba(22,101,52,0.04), rgba(22,101,52,0.02));
+	border: 1px solid rgba(22, 101, 52, 0.12);
+	border-radius: 22px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
-.location-label {
-	font-size: 11px;
-	font-weight: 700;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--green);
-	margin-bottom: 14px;
+.location-header {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-}
-
-.location-label::before {
-	content: '📍';
-	font-size: 14px;
-}
-
-.location-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
 	gap: 12px;
 }
 
-.field-select {
+.location-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: rgba(22, 101, 52, 0.1);
+	color: var(--green);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.location-title {
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--green);
+	line-height: 1;
+}
+
+.location-subtitle {
+	font-size: 12px;
+	color: #94a3b8;
+	margin-top: 3px;
+	font-weight: 500;
+}
+
+.location-steps {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.loc-step {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	transition: opacity 0.2s ease;
+}
+
+.loc-step--locked {
+	opacity: 0.45;
+}
+
+.loc-step-num {
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: rgba(22, 101, 52, 0.1);
+	color: var(--green);
+	font-size: 11px;
+	font-weight: 800;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border: 1.5px solid rgba(22, 101, 52, 0.18);
+}
+
+.loc-step-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.loc-label {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #475569;
+}
+
+.loc-select-wrap {
+	position: relative;
+}
+
+.loc-select {
 	width: 100%;
-	height: 52px;
-	padding: 0 14px;
-	border-radius: 16px;
+	height: 48px;
+	padding: 0 40px 0 16px;
+	border-radius: 14px;
 	border: 1px solid rgba(15, 23, 42, 0.08);
-	background: rgba(255, 255, 255, 0.85);
+	background: rgba(255, 255, 255, 0.9);
 	font-size: 14px;
 	color: #0f172a;
 	outline: none;
 	cursor: pointer;
-	transition: all 0.25s ease;
+	transition: all 0.22s ease;
 	appearance: none;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	-webkit-appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
-	background-position: right 12px center;
-	padding-right: 36px;
+	background-position: right 14px center;
+	backdrop-filter: blur(8px);
+	font-weight: 500;
 }
 
-.field-select:hover:not(:disabled) {
-	border-color: rgba(22, 101, 52, 0.22);
+.loc-select:hover:not(:disabled) {
+	border-color: rgba(22, 101, 52, 0.25);
+	background-color: white;
 }
 
-.field-select:focus {
+.loc-select:focus {
 	background-color: white;
 	border-color: rgba(22, 101, 52, 0.5);
-	box-shadow: 0 0 0 4px rgba(22, 101, 52, 0.08);
+	box-shadow: 0 0 0 4px rgba(22, 101, 52, 0.08), 0 4px 12px rgba(22,101,52,0.06);
 }
 
-.field-select:disabled {
-	opacity: 0.45;
+.loc-select:disabled {
 	cursor: not-allowed;
-	background-color: rgba(241, 245, 249, 0.7);
+	background-color: rgba(241, 245, 249, 0.6);
+	color: #94a3b8;
 }
 
-@media (max-width: 720px) {
-	.location-grid {
-		grid-template-columns: 1fr;
-	}
+/* summary breadcrumb chip */
+.loc-summary {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border-radius: 999px;
+	background: rgba(22, 101, 52, 0.08);
+	border: 1px solid rgba(22, 101, 52, 0.14);
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--green);
+	align-self: flex-start;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 </style>
