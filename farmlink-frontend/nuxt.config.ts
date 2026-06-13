@@ -4,7 +4,11 @@ export default defineNuxtConfig({
   pages: true,
   ssr: false,
 
-  nitro: {},
+  nitro: {
+    routeRules: {
+      "/api/**": { proxy: "http://localhost:3001/api/**" },
+    },
+  },
 
   vite: {
     build: {
