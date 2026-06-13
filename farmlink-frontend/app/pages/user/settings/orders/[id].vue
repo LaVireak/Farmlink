@@ -140,10 +140,10 @@ const initLeafletMap = async () => {
 
   leafletMap = L.map(mapEl.value, { zoomControl: true, scrollWheelZoom: false });
 
-  // OpenStreetMap tiles (free, no API key)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18,
+  // CartoDB Voyager tiles (modern, fast CDN, free, matches FarmLink palette)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 20,
   }).addTo(leafletMap);
 
   // Custom farm marker (green)
@@ -174,12 +174,36 @@ const initLeafletMap = async () => {
     .bindPopup(`<b>🏠 Delivery Destination</b><br>${order.value?.deliveryAddress ?? 'Customer'}`)
     .addTo(leafletMap);
 
-  // Draw a dashed route line between the two points
-  const routeLine = L.polyline([[fc.lat, fc.lng], [cc.lat, cc.lng]], {
+  // Fetch real road route from OSRM
+  let routeCoords = [[fc.lat, fc.lng], [cc.lat, cc.lng]];
+  let isRealRoute = false;
+
+  try {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fc.lng},${fc.lat};${cc.lng},${cc.lat}?overview=full&geometries=geojson`;
+    const osrmRes = await fetch(osrmUrl);
+    if (osrmRes.ok) {
+      const osrmData = await osrmRes.json();
+      const route = osrmData.routes?.[0];
+      if (route?.geometry?.coordinates) {
+        routeCoords = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        isRealRoute = true;
+        
+        // Update distance & duration with OSRM values
+        distanceKm.value = Math.round((route.distance / 1000) * 10) / 10;
+        // OSRM duration is in seconds, convert to minutes
+        etaMinutes.value = Math.round(route.duration / 60);
+      }
+    }
+  } catch (e) {
+    console.warn('OSRM routing failed, falling back to straight line:', e);
+  }
+
+  // Draw the route line (solid for real road route, dashed for fallback straight line)
+  const routeLine = L.polyline(routeCoords, {
     color: '#154212',
-    weight: 3,
+    weight: isRealRoute ? 4 : 3,
     opacity: 0.85,
-    dashArray: '10, 8',
+    ...(isRealRoute ? {} : { dashArray: '10, 8' }),
   }).addTo(leafletMap);
 
   // Fit map bounds to show both markers with padding
