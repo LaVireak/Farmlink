@@ -51,16 +51,28 @@ const fetchOrder = async () => {
   }
 };
 
+// ─── Cambodia bounding box guard ──────────────────────────────────────────────
+// Rejects any coordinate that falls outside Cambodia's geographic borders.
+function withinCambodia(lat: number, lng: number): boolean {
+  return lat >= 10.4 && lat <= 14.75 && lng >= 102.3 && lng <= 107.7;
+}
+
 // ─── Geocode from a raw address string (fallback) ────────────────────────────
 async function geocodeFromAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   if (!address) return null;
   try {
     const q = encodeURIComponent(address + ', Cambodia');
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=kh`, {
-      headers: { 'Accept-Language': 'en', 'User-Agent': 'FarmLink-App/1.0' },
-    });
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=kh`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'FarmLink-App/1.0' } }
+    );
     const data = await res.json() as Array<{ lat: string; lon: string }>;
-    if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    if (data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      // Only accept the result if it is actually inside Cambodia
+      if (withinCambodia(lat, lng)) return { lat, lng };
+    }
   } catch {}
   return null;
 }
@@ -82,17 +94,21 @@ const buildMap = async () => {
     const custDist = (consumer as any)?.district ?? (authStore.user as any)?.district ?? '';
     const custComm = (consumer as any)?.commune ?? (authStore.user as any)?.commune ?? '';
 
+    // Phnom Penh centre — safe Cambodia default
+    const PHNOM_PENH = { lat: 11.5564, lng: 104.9282 };
+
     const [fc, cc] = await Promise.all([
       farmerProv
         ? geocodeLocation(farmerProv, farmerDist)
-        : Promise.resolve({ lat: 12.5, lng: 104.0 }),
+        : Promise.resolve(PHNOM_PENH),
       custProv
         ? geocodeLocation(custProv, custDist, custComm)
         : geocodeFromAddress(order.value.deliveryAddress),
     ]);
 
-    farmerCoords.value = fc ?? { lat: 12.5, lng: 104.0 };
-    customerCoords.value = cc ?? { lat: 11.5564, lng: 104.9282 };
+    // Clamp both points to Cambodia — never show pins outside the country
+    farmerCoords.value  = (fc && withinCambodia(fc.lat, fc.lng))  ? fc  : PHNOM_PENH;
+    customerCoords.value = (cc && withinCambodia(cc.lat, cc.lng)) ? cc  : PHNOM_PENH;
 
     // Straight-line distance & ETA fallback
     const km = haversineDistanceKm(
