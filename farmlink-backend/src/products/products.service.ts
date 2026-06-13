@@ -50,6 +50,12 @@ export class ProductsService implements OnModuleInit {
       unit: p.unit,
       stock: p.stockQuantity,
       farmerId: p.farmerId,
+      isOrganic: p.isOrganic,
+      isSeasonal: p.isSeasonal,
+      seasonStart: p.seasonStart || null,
+      seasonEnd: p.seasonEnd || null,
+      minOrderQty: p.minOrderQty || 1,
+      totalSold: p.totalSold || 0,
       farmer: p.farmer
         ? {
             id: p.farmer.id,

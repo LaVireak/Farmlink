@@ -38,4 +38,9 @@ export class UpdateUserDto {
   @IsString()
   @Length(2, 5)
   languagePref?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(5, 500)
+  address?: string;
 }
