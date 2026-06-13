@@ -154,7 +154,7 @@
           </div>
 
           <div>
-            <label class="field-label">Farm Deed</label>
+            <label class="field-label">Farm Document</label>
 
             <label class="upload-box">
               <input
@@ -171,13 +171,36 @@
               >
 
               <div v-else class="upload-inner">
-                <div class="upload-title">Upload Deed</div>
+                <div class="upload-title">Upload Document</div>
+                <div class="upload-hint">PNG / JPG</div>
+              </div>
+            </label>
+          </div>
+          <div>
+            <label class="field-label">Farm Photo</label>
+
+            <label class="upload-box">
+              <input
+                class="hidden"
+                type="file"
+                accept="image/*"
+                @change="(event) => onFileChange(event, 'profilePhoto')"
+              >
+
+              <img
+                v-if="previews.profilePhoto"
+                :src="previews.profilePhoto"
+                class="preview-image"
+              >
+
+              <div v-else class="upload-inner">
+                <div class="upload-title">Upload Photo</div>
                 <div class="upload-hint">PNG / JPG</div>
               </div>
             </label>
           </div>
         </div>
-
+          
         <!-- TAGS -->
         <div class="field">
           <label>Product Catalog</label>
@@ -189,6 +212,14 @@
               class="tag"
             >
               {{ tag }}
+              <button
+                type="button"
+                class="tag-remove"
+                @click="removeTag(tag)"
+                aria-label="Remove tag"
+              >
+                &times;
+              </button>
             </span>
           </div>
 
@@ -304,7 +335,7 @@ const previews = reactive<{ idPhoto: string; farmDeed: string; profilePhoto: str
 });
 
 const newTag = ref('');
-const tags = ref(['Rice', 'Poultry']);
+const tags = ref<string[]>([]);
 const errorMessage = ref('');
 
 const addTag = () => {
@@ -317,6 +348,10 @@ const addTag = () => {
     tags.value.push(value);
   }
   newTag.value = '';
+};
+
+const removeTag = (tagToRemove: string) => {
+  tags.value = tags.value.filter(tag => tag !== tagToRemove);
 };
 
 const onSubmit = async () => {
@@ -819,6 +854,29 @@ onBeforeUnmount(() => {
 	color: #166534;
 	font-size: 13px;
 	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tag-remove {
+	background: transparent;
+	border: none;
+	color: #166534;
+	font-size: 18px;
+	line-height: 1;
+	padding: 0;
+	margin-top: -1px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0.6;
+	transition: opacity 0.2s ease;
+}
+
+.tag-remove:hover {
+	opacity: 1;
 }
 
 .tag-input {
