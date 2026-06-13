@@ -139,16 +139,16 @@
         <div class="products-grid">
           <article v-for="p in products" :key="p.id" class="product-card">
             <div class="product-img-wrap">
-              <img :src="p.image" :alt="t(p.keyPrefix + '.name')" loading="lazy" />
+              <img :src="p.image" :alt="p.name" loading="lazy" />
               <span class="popular-badge">{{ t('common.popular') }}</span>
             </div>
             <div class="product-body">
               <div class="product-meta-row">
                 <span class="category-tag">{{ t('common.popular') }}</span>
-                <span class="product-rating"><span class="star-icon">★</span> 4.9</span>
+                <span class="product-rating"><span class="star-icon">★</span> {{ p.rating }}</span>
               </div>
-              <h3>{{ t(p.keyPrefix + '.name') }}</h3>
-              <p class="muted-text">{{ t(p.keyPrefix + '.excerpt') }}</p>
+              <h3>{{ p.name }}</h3>
+              <p class="muted-text">{{ p.excerpt }}</p>
               <div class="product-row">
                 <strong class="price">{{ p.price }}</strong>
                 <NuxtLink :to="`/user/products/${p.id}`" class="view-product-btn">
@@ -175,19 +175,19 @@
         </div>
 
         <div class="province-grid">
-          <article v-for="farm in provinceFarms" :key="farm.keyPrefix || farm.name" class="province-card">
+          <article v-for="farm in provinceFarms" :key="farm.id || farm.name" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name" loading="lazy" />
+              <img :src="farm.image" :alt="farm.name" loading="lazy" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
               <span class="province-badge">{{ farm.province }}</span>
-              <h3>{{ farm.keyPrefix ? t(farm.keyPrefix + '.name') : farm.name }}</h3>
-              <p class="province-desc">{{ farm.keyPrefix ? t(farm.keyPrefix + '.description') : farm.description }}</p>
+              <h3>{{ farm.name }}</h3>
+              <p class="province-desc">{{ farm.description }}</p>
               <div class="province-footer">
                 <span class="farm-products">
                   <span class="material-symbols-outlined">restaurant_menu</span>
-                  {{ farm.keyPrefix ? t(farm.keyPrefix + '.products') : farm.products }}
+                  {{ farm.products }}
                 </span>
                 <span class="rating"><span class="star-icon">★</span> {{ farm.rating }}</span>
               </div>
@@ -304,6 +304,10 @@ const authStore = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
 
+const products = ref([])
+const provinceFarms = ref([])
+const config = useRuntimeConfig()
+
 onMounted(async () => {
   await authStore.hydrate()
   if (authStore.isAuthenticated) {
@@ -313,63 +317,40 @@ onMounted(async () => {
       router.replace('/admin/dashboard')
     }
   }
+
+  try {
+    const res = await $fetch(`${config.public.apiUrl}/products`)
+    if (Array.isArray(res)) {
+      products.value = res.slice(0, 4).map(p => ({
+        id: p.id,
+        name: p.name,
+        excerpt: p.description || 'Fresh organic produce',
+        price: `$${p.price.toFixed(2)}`,
+        image: p.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80',
+        rating: p.rating || 4.9
+      }))
+    }
+  } catch (err) {
+    console.error('Failed to fetch products:', err)
+  }
+
+  try {
+    const farmsRes = await $fetch(`${config.public.apiUrl}/farmer/list`)
+    if (Array.isArray(farmsRes)) {
+      provinceFarms.value = farmsRes.slice(0, 4).map(f => ({
+        id: f.id,
+        name: f.farmName || f.user?.fullName || 'Unknown Farm',
+        province: f.province || 'Cambodia',
+        description: f.description || 'Fresh organic produce',
+        products: f.productTags || 'Vegetables & Herbs',
+        rating: f.avgRating || 4.9,
+        image: f.coverImageUrl || 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
+      }))
+    }
+  } catch (err) {
+    console.error('Failed to fetch farms:', err)
+  }
 })
-
-const products = [
-  {
-    id: '1',
-    keyPrefix: 'productsData.p1',
-    price: '$6.50',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: '2',
-    keyPrefix: 'productsData.p2',
-    price: '$4.20',
-    image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: '3',
-    keyPrefix: 'productsData.p3',
-    price: '$3.20',
-    image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80'
-  },
-  {
-    id: '4',
-    keyPrefix: 'productsData.p4',
-    price: '$8.90',
-    image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80'
-  }
-]
-
-const provinceFarms = [
-  {
-    name: 'Takeo Organic Farm',
-    province: 'Takeo',
-    description: 'Fresh organic vegetables harvested every morning.',
-    products: 'Vegetables & Herbs',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    name: 'Battambang Fruit Garden',
-    province: 'Battambang',
-    rating: '4.8',
-    image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    keyPrefix: 'farmsData.f2',
-    province: 'Kampot',
-    rating: '5.0',
-    image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    keyPrefix: 'farmsData.f3',
-    province: 'Siem Reap',
-    rating: '4.9',
-    image: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=1200&q=80'
-  }
-]
 
 const blogPosts = [
   {
