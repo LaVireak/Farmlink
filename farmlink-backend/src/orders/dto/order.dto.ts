@@ -15,6 +15,8 @@ export class OrderItemDto {
   farmer?: {
     id: string;
     farmName: string;
+    province?: string;
+    district?: string;
   };
 }
 
