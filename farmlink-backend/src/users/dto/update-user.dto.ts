@@ -43,4 +43,19 @@ export class UpdateUserDto {
   @IsString()
   @Length(5, 500)
   address?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  province?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  district?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  commune?: string;
 }

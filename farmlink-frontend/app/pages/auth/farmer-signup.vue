@@ -118,13 +118,32 @@
           </div>
         </div>
 
-        <!-- ADDRESS -->
-        <div class="field">
-          <label>Farm Address</label>
-          <input
-            v-model="form.address"
-            placeholder="Operation HQ or farm location"
-          >
+        <!-- FARM LOCATION -->
+        <div class="location-section">
+          <div class="location-label">Farm Location</div>
+          <div class="location-grid">
+            <div class="field">
+              <label>Province</label>
+              <select v-model="selectedProvince" class="field-select">
+                <option value="">Select Province</option>
+                <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>District</label>
+              <select v-model="selectedDistrict" :disabled="!selectedProvince" class="field-select">
+                <option value="">Select District</option>
+                <option v-for="d in districts" :key="d" :value="d">{{ d }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Commune / Sangkat</label>
+              <select v-model="selectedCommune" :disabled="!selectedDistrict" class="field-select">
+                <option value="">Select Commune</option>
+                <option v-for="c in communes" :key="c" :value="c">{{ c }}</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- FILES -->
@@ -280,9 +299,19 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../../composables/useAuth';
 import { isValidEmail } from '../../utils/validation';
+import { useCambodiaLocations } from '../../composables/useCambodiaLocations';
 
 const router = useRouter();
 const { requestSignupOtp } = useAuth();
+const {
+  selectedProvince,
+  selectedDistrict,
+  selectedCommune,
+  provinces,
+  districts,
+  communes,
+  fullAddress,
+} = useCambodiaLocations();
 const PROFILE_STORAGE_KEY = 'farmlink.farmer.profilePreview';
 const ONBOARDING_STORAGE_KEY = 'farmlink.farmer.onboarding';
 
@@ -315,7 +344,6 @@ const form = reactive({
   lastName: '',
   farmName: '',
   phone: '',
-  address: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -391,7 +419,10 @@ const onSubmit = async () => {
     role: 'farmer',
     phone: form.phone,
     farmName,
-    address: form.address,
+    province: selectedProvince.value || undefined,
+    district: selectedDistrict.value || undefined,
+    commune: selectedCommune.value || undefined,
+    address: fullAddress.value || undefined,
   });
 
   await router.push(`/auth/verify-code?email=${encodeURIComponent(form.email)}`);
@@ -446,7 +477,10 @@ const persistOnboarding = async () => {
   const payload = {
     email: form.email,
     phone: form.phone,
-    address: form.address,
+    province: selectedProvince.value,
+    district: selectedDistrict.value,
+    commune: selectedCommune.value,
+    address: fullAddress.value,
     farmName: form.farmName,
     tags: tags.value,
     idPhoto: await serializeFile(files.idPhoto),
@@ -1001,6 +1035,77 @@ onBeforeUnmount(() => {
 	.hero-overlay h2,
 	.form-panel h1 {
 		font-size: 38px;
+	}
+}
+/* location section */
+.location-section {
+	padding: 18px;
+	background: rgba(22, 101, 52, 0.04);
+	border: 1px solid rgba(22, 101, 52, 0.1);
+	border-radius: 20px;
+}
+
+.location-label {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--green);
+	margin-bottom: 14px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.location-label::before {
+	content: '🌱';
+	font-size: 14px;
+}
+
+.location-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.field-select {
+	width: 100%;
+	height: 56px;
+	padding: 0 14px;
+	border-radius: 18px;
+	border: 1px solid rgba(15, 23, 42, 0.08);
+	background: rgba(255, 255, 255, 0.85);
+	font-size: 15px;
+	color: #0f172a;
+	outline: none;
+	cursor: pointer;
+	transition: all 0.25s ease;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	padding-right: 36px;
+}
+
+.field-select:hover:not(:disabled) {
+	border-color: rgba(22, 101, 52, 0.22);
+}
+
+.field-select:focus {
+	background-color: white;
+	border-color: rgba(22, 101, 52, 0.5);
+	box-shadow: 0 0 0 4px rgba(22, 101, 52, 0.08);
+}
+
+.field-select:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+	background-color: rgba(241, 245, 249, 0.7);
+}
+
+@media (max-width: 720px) {
+	.location-grid {
+		grid-template-columns: 1fr;
 	}
 }
 </style>

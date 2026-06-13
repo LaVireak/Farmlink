@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useRuntimeConfig } from '#app';
 import { useAuthStore } from '~/stores/auth.store';
 import { getAccessToken } from '~/services/auth.service';
+import { geocodeLocation, haversineDistanceKm } from '~/composables/useCambodiaLocations';
 
 definePageMeta({
 	middleware: 'user',
@@ -18,6 +19,16 @@ const orderId = (route.params.id as string);
 const order = ref<any>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+// ─── Map state ───────────────────────────────────────────────────────────────
+const mapEl = ref<HTMLElement | null>(null);
+const mapLoading = ref(false);
+const mapReady = ref(false);
+const farmerCoords = ref<{ lat: number; lng: number } | null>(null);
+const customerCoords = ref<{ lat: number; lng: number } | null>(null);
+const etaMinutes = ref<number | null>(null);
+const distanceKm = ref<number | null>(null);
+let leafletMap: any = null;
 
 const fetchOrder = async () => {
   loading.value = true;
@@ -40,7 +51,178 @@ const fetchOrder = async () => {
   }
 };
 
-onMounted(fetchOrder);
+// ─── Geocode and build real map ───────────────────────────────────────────────
+const buildMap = async () => {
+  if (!order.value || !mapEl.value) return;
+  mapLoading.value = true;
+
+  try {
+    // Farmer location (from farmer profile)
+    const farmer = order.value.items?.[0]?.farmer;
+    const farmerProv = farmer?.province ?? '';
+    const farmerDist = farmer?.district ?? '';
+    
+    // Customer location (from order deliveryAddress or user profile)
+    const consumer = order.value.consumer;
+    const custProv = (consumer as any)?.province ?? (authStore.user as any)?.province ?? '';
+    const custDist = (consumer as any)?.district ?? (authStore.user as any)?.district ?? '';
+    const custComm = (consumer as any)?.commune ?? (authStore.user as any)?.commune ?? '';
+
+    // Geocode in parallel — farmer origin, then customer destination
+    const [fc, cc] = await Promise.all([
+      farmerProv
+        ? geocodeLocation(farmerProv, farmerDist)
+        : Promise.resolve({ lat: 11.5564, lng: 104.9282 }),
+      custProv
+        ? geocodeLocation(custProv, custDist, custComm)
+        : geocodeFromAddress(order.value.deliveryAddress),
+    ]);
+
+    farmerCoords.value = fc ?? { lat: 12.5, lng: 104.0 };
+    customerCoords.value = cc ?? { lat: 11.5564, lng: 104.9282 };
+
+    // Compute distance & ETA (assumed avg speed: 40 km/h for Cambodian roads)
+    const km = haversineDistanceKm(
+      farmerCoords.value.lat, farmerCoords.value.lng,
+      customerCoords.value.lat, customerCoords.value.lng,
+    );
+    distanceKm.value = Math.round(km * 10) / 10;
+    etaMinutes.value = Math.round((km / 40) * 60);
+
+    await nextTick();
+    await initLeafletMap();
+  } finally {
+    mapLoading.value = false;
+    mapReady.value = true;
+  }
+};
+
+// Nominatim geocode from a raw address string (fallback)
+async function geocodeFromAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (!address) return null;
+  try {
+    const q = encodeURIComponent(address + ', Cambodia');
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=kh`, {
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'FarmLink-App/1.0' },
+    });
+    const data = await res.json() as Array<{ lat: string; lon: string }>;
+    if (data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {}
+  return null;
+}
+
+const initLeafletMap = async () => {
+  if (!mapEl.value || !farmerCoords.value || !customerCoords.value) return;
+
+  // Dynamically import Leaflet so it's only loaded client-side
+  const L = (await import('leaflet')).default;
+
+  // Fix leaflet default icon path issue with bundlers
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+
+  // Destroy existing map if re-rendering
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+  }
+
+  const fc = farmerCoords.value;
+  const cc = customerCoords.value;
+
+  // Center the view between the two points
+  const midLat = (fc.lat + cc.lat) / 2;
+  const midLng = (fc.lng + cc.lng) / 2;
+
+  leafletMap = L.map(mapEl.value, { zoomControl: true, scrollWheelZoom: false });
+
+  // CartoDB Voyager tiles (modern, fast CDN, free, matches FarmLink palette)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 20,
+  }).addTo(leafletMap);
+
+  // Custom farm marker (green)
+  const farmIcon = L.divIcon({
+    className: '',
+    html: `<div class="map-marker map-marker--farm">
+      <span class="material-symbols-outlined">storefront</span>
+    </div>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+  });
+
+  // Custom home marker (amber)
+  const homeIcon = L.divIcon({
+    className: '',
+    html: `<div class="map-marker map-marker--home">
+      <span class="material-symbols-outlined">home</span>
+    </div>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+  });
+
+  L.marker([fc.lat, fc.lng], { icon: farmIcon })
+    .bindPopup(`<b>🌾 Farm Origin</b><br>${order.value?.items?.[0]?.farmer?.farmName ?? 'Farmer'}`)
+    .addTo(leafletMap);
+
+  L.marker([cc.lat, cc.lng], { icon: homeIcon })
+    .bindPopup(`<b>🏠 Delivery Destination</b><br>${order.value?.deliveryAddress ?? 'Customer'}`)
+    .addTo(leafletMap);
+
+  // Fetch real road route from OSRM
+  let routeCoords = [[fc.lat, fc.lng], [cc.lat, cc.lng]];
+  let isRealRoute = false;
+
+  try {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fc.lng},${fc.lat};${cc.lng},${cc.lat}?overview=full&geometries=geojson`;
+    const osrmRes = await fetch(osrmUrl);
+    if (osrmRes.ok) {
+      const osrmData = await osrmRes.json();
+      const route = osrmData.routes?.[0];
+      if (route?.geometry?.coordinates) {
+        routeCoords = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        isRealRoute = true;
+        
+        // Update distance & duration with OSRM values
+        distanceKm.value = Math.round((route.distance / 1000) * 10) / 10;
+        // OSRM duration is in seconds, convert to minutes
+        etaMinutes.value = Math.round(route.duration / 60);
+      }
+    }
+  } catch (e) {
+    console.warn('OSRM routing failed, falling back to straight line:', e);
+  }
+
+  // Draw the route line (solid for real road route, dashed for fallback straight line)
+  const routeLine = L.polyline(routeCoords, {
+    color: '#154212',
+    weight: isRealRoute ? 4 : 3,
+    opacity: 0.85,
+    ...(isRealRoute ? {} : { dashArray: '10, 8' }),
+  }).addTo(leafletMap);
+
+  // Fit map bounds to show both markers with padding
+  leafletMap.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
+};
+
+onMounted(async () => {
+  await fetchOrder();
+  if (order.value && isTransit.value) {
+    await buildMap();
+  }
+});
+
+onUnmounted(() => {
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+  }
+});
 
 useHead({
 	title: computed(() => order.value ? `Order #${order.value.orderNumber} | FarmLink Cambodia` : 'Order Details | FarmLink Cambodia'),
@@ -78,34 +260,16 @@ const orderItems = computed(() => {
   }));
 });
 
-// ─── Tracking Animation State ───────────────────────────────────────────────
-const TRACKING_STEPS = [
-  { key: 'pending',     label: 'Order Placed',      icon: 'receipt_long',    desc: 'Your order has been received and is awaiting confirmation.' },
-  { key: 'confirmed',   label: 'Farm Confirmed',     icon: 'agriculture',     desc: 'The farm has accepted your order and is beginning harvest.' },
-  { key: 'preparing',  label: 'Packing Harvest',    icon: 'inventory_2',     desc: 'Your produce is being harvested, cleaned, and packed fresh.' },
-  { key: 'in_delivery',label: 'Out for Delivery',   icon: 'local_shipping',  desc: 'A community driver has picked up your order and is on the way.' },
-  { key: 'completed',  label: 'Delivered',          icon: 'task_alt',        desc: 'Your order has been delivered. Enjoy your fresh harvest!' },
-];
-
-const STATUS_STEP_INDEX: Record<string, number> = {
-  pending: 0,
-  confirmed: 1,
-  preparing: 2,
-  in_delivery: 3,
-  completed: 4,
-};
-
-const currentStepIndex = computed(() => {
-  if (!order.value) return 0;
-  return STATUS_STEP_INDEX[order.value.status] ?? 0;
-});
-
-// Truck progress: % along the road from 0–100
-const truckProgress = ref(5);
-let progressTimer: ReturnType<typeof setInterval>;
-
-// ETA countdown (purely decorative based on status)
+// ─── ETA display ──────────────────────────────────────────────────────────────
 const etaLabel = computed(() => {
+  if (etaMinutes.value !== null && distanceKm.value !== null) {
+    if (etaMinutes.value < 60) {
+      return `~${etaMinutes.value} min (${distanceKm.value} km)`;
+    }
+    const h = Math.floor(etaMinutes.value / 60);
+    const m = etaMinutes.value % 60;
+    return `~${h}h ${m}m (${distanceKm.value} km)`;
+  }
   const s = order.value?.status;
   if (s === 'pending') return 'Estimating ETA...';
   if (s === 'confirmed') return 'ETA ~45 min';
@@ -113,25 +277,6 @@ const etaLabel = computed(() => {
   if (s === 'in_delivery') return 'ETA ~10 min';
   if (s === 'completed') return 'Delivered ✓';
   return '';
-});
-
-// Pulse animation for the truck position dot
-const pulseCount = ref(0);
-let pulseTimer: ReturnType<typeof setInterval>;
-onMounted(() => {
-  pulseTimer = setInterval(() => { pulseCount.value++; }, 1000);
-  
-  progressTimer = setInterval(() => {
-    truckProgress.value += 0.15; // Controls the speed of the truck
-    if (truckProgress.value > 100) {
-      truckProgress.value = 5; // Reset back to start
-    }
-  }, 16); // 60fps
-});
-
-onUnmounted(() => {
-  clearInterval(pulseTimer);
-  clearInterval(progressTimer);
 });
 </script>
 
@@ -302,9 +447,9 @@ onUnmounted(() => {
 
 					<!-- IN-TRANSIT LAYOUT -->
 					<div v-else-if="isTransit" class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-						<!-- Left Column: Animated Tracking -->
+						<!-- Left Column: Real Map Tracking -->
 						<div class="xl:col-span-8 flex flex-col gap-8">
-							<!-- Live Tracking Card with Animated Route -->
+							<!-- Live Tracking Card with Real Leaflet Map -->
 							<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100">
 								<div class="p-5 border-b border-zinc-50 flex justify-between items-center">
 									<div class="flex items-center gap-3">
@@ -320,69 +465,51 @@ onUnmounted(() => {
 									</div>
 								</div>
 
-								<!-- Animated Route Map -->
-								<div class="relative p-6 bg-gradient-to-br from-[#f0faf0] to-[#e8f5e9] min-h-[280px] overflow-hidden">
-									<!-- Decorative grid -->
-									<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#0a4d1e 0.8px, transparent 0.8px); background-size: 24px 24px;"></div>
-
-									<!-- Road SVG path -->
-									<svg class="absolute inset-0 w-full h-full" viewBox="0 0 800 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-										<!-- Road shadow -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="#c8d5c8" stroke-width="28" fill="none" stroke-linecap="round"/>
-										<!-- Road base -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="#d4e8d4" stroke-width="22" fill="none" stroke-linecap="round"/>
-										<!-- Road dashes -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="20 28" opacity="0.6"/>
-									</svg>
-
-									<!-- Farm origin marker -->
-									<div class="absolute bottom-12 left-8 flex flex-col items-center gap-1">
-										<div class="bg-[#154212] text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#154212]/30">
-											<span class="material-symbols-outlined text-base fill-1">storefront</span>
-										</div>
-										<div class="bg-white/90 backdrop-blur-sm text-[9px] font-black text-[#154212] px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide whitespace-nowrap">Farm Origin</div>
+								<!-- Real Leaflet Map Container -->
+								<div class="relative">
+									<!-- Loading state while geocoding -->
+									<div v-if="mapLoading" class="absolute inset-0 z-10 bg-[#f0faf0] flex flex-col items-center justify-center gap-3">
+										<div class="w-10 h-10 border-4 border-[#154212] border-t-transparent rounded-full animate-spin"></div>
+										<p class="text-sm font-bold text-[#154212]">Locating farms...</p>
 									</div>
 
-									<!-- Destination marker -->
-									<div class="absolute top-6 right-8 flex flex-col items-center gap-1">
-										<div class="bg-[#563000] text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#563000]/30" :class="{ 'animate-bounce': truckProgress >= 95 }">
-											<span class="material-symbols-outlined text-base fill-1">home</span>
-										</div>
-										<div class="bg-white/90 backdrop-blur-sm text-[9px] font-black text-[#563000] px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide whitespace-nowrap">Your Door</div>
-									</div>
-
-									<!-- Animated Truck -->
+									<!-- Leaflet map element -->
 									<div
-										class="truck-container absolute"
-										:style="{ '--progress': truckProgress + '%' }"
-									>
-										<div class="truck-bubble bg-[#154212] text-white rounded-2xl px-3 py-2 shadow-xl shadow-[#154212]/30 flex items-center gap-2 relative">
-											<span class="material-symbols-outlined text-xl fill-1">local_shipping</span>
-											<div>
-												<p class="text-[8px] font-black uppercase tracking-widest text-green-300">Driver</p>
-												<p class="text-[11px] font-black leading-tight">Sovan M.</p>
-											</div>
-											<!-- Pointer -->
-											<div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#154212] rotate-45 rounded-sm"></div>
-										</div>
-										<!-- Pulse rings -->
-										<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center">
-											<div class="w-5 h-5 rounded-full bg-[#154212]/20 animate-ping absolute"></div>
-											<div class="w-3 h-3 rounded-full bg-[#154212] relative z-10"></div>
-										</div>
-									</div>
+										ref="mapEl"
+										class="leaflet-map-container"
+										:class="{ 'opacity-0': mapLoading }"
+									></div>
 
-									<!-- ETA badge floating -->
-									<div class="absolute bottom-4 right-1/3 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2">
-										<span class="material-symbols-outlined text-[#006e1c] text-base">timer</span>
+									<!-- ETA badge overlay -->
+									<div v-if="mapReady && distanceKm" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2">
+										<span class="material-symbols-outlined text-[#006e1c] text-base">route</span>
 										<div>
-											<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Estimated Arrival</p>
+											<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Farm → Your Door</p>
 											<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
 										</div>
 									</div>
 								</div>
-							</div>
 
+								<!-- Map legend -->
+								<div v-if="mapReady" class="p-4 border-t border-zinc-50 flex items-center gap-6 text-xs font-bold text-zinc-500">
+									<div class="flex items-center gap-2">
+										<div class="w-4 h-4 rounded-full bg-[#154212] flex items-center justify-center">
+											<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">storefront</span>
+										</div>
+										<span>{{ order.items?.[0]?.farmer?.farmName || 'Farm Origin' }}</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<div class="w-px h-4 border-l-2 border-dashed border-[#154212] opacity-60"></div>
+										<span>Route</span>
+									</div>
+									<div class="flex items-center gap-2">
+										<div class="w-4 h-4 rounded-full bg-[#b45309] flex items-center justify-center">
+											<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">home</span>
+										</div>
+										<span>Delivery Destination</span>
+									</div>
+								</div>
+							</div>
 
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div class="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
@@ -539,29 +666,45 @@ onUnmounted(() => {
 	font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-/* ─── Animated Route Progress ──────────────────────────────────────── */
-.route-progress {
-  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+/* ─── Real Leaflet Map ──────────────────────────────────────────────── */
+.leaflet-map-container {
+  height: 360px;
+  width: 100%;
+  transition: opacity 0.3s ease;
 }
 
-/* ─── Animated Truck Bubble ─────────────────────────────────────────── */
-.truck-container {
-  /* Position along the curved route using CSS trick:
-     We use a mix of left/bottom offsets mapped to truckProgress */
-  bottom: calc(12% + var(--progress, 5%) * 0.6);
-  left: calc(4% + var(--progress, 5%) * 0.86);
-  transform: translate(-50%, -100%);
-  transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1),
-              bottom 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
+/* Custom map marker styles (injected via divIcon, so NOT scoped) */
+</style>
+
+<style>
+/* UNSCOPED: Leaflet custom markers need to be global */
+@import 'leaflet/dist/leaflet.css';
+
+.map-marker {
+  width: 44px;
+  height: 44px;
+  border-radius: 50% 50% 50% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  border: 2px solid white;
 }
 
-.truck-bubble {
-  animation: truckBob 2.5s ease-in-out infinite;
+.map-marker .material-symbols-outlined {
+  transform: rotate(45deg);
+  font-size: 20px;
+  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-@keyframes truckBob {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
+.map-marker--farm {
+  background: #154212;
+  color: white;
+}
+
+.map-marker--home {
+  background: #b45309;
+  color: white;
 }
 </style>
