@@ -217,8 +217,11 @@
         </div>
 
         <div class="flex items-center space-x-5 text-on-surface gap-3">
-          <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center">
+          <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center relative">
             <Heart class="w-6 h-6 text-on-surface" />
+            <span v-if="totalFavorites > 0" class="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center transition-transform duration-300" :class="{ 'scale-110': isFavoriteBouncing }">
+              {{ totalFavorites }}
+            </span>
           </NuxtLink>
           <button aria-label="Shopping Cart" class="flex items-center" id="header-cart-icon">
             <NuxtLink to="/user/checkout/cart" class="flex items-center relative transition-transform duration-300" :class="{ 'badge-bounce': isCartBouncing }">
@@ -231,6 +234,18 @@
 
           <!-- Teleported Container for Fly-to-Cart Particles -->
           <teleport to="body">
+            <div
+              v-for="p in flyingFavoriteParticles"
+              :key="`fav-${p.id}`"
+              class="flying-favorite-particle"
+              :style="{
+                '--start-x': `${p.startX}px`,
+                '--start-y': `${p.startY}px`,
+                '--end-x': `${p.endX}px`,
+                '--end-y': `${p.endY}px`,
+                backgroundImage: `url(${p.image})`
+              }"
+            ></div>
             <div
               v-for="p in flyingParticles"
               :key="p.id"
@@ -394,7 +409,7 @@ import {
   ShoppingCart
 } from 'lucide-vue-next'
 
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '#imports'
 import { useAuthStore } from '../../stores/auth.store'
 import { useRouter } from 'vue-router'
@@ -590,6 +605,7 @@ const goToDashboard = () => {
 }
 
 import { useCart } from '~/composables/useCart'
+import { useFavorites } from '~/composables/useFavorites'
 
 const handleSignOut = async () => {
   userMenuOpen.value = false
@@ -599,6 +615,9 @@ const handleSignOut = async () => {
 
 // ── Cart Flying Animation ──────────────────────────────
 const { totalItems, triggerAnimation } = useCart()
+const { totalFavorites, favoriteAnimationTrigger } = useFavorites()
+const flyingFavoriteParticles = ref([])
+const isFavoriteBouncing = ref(false)
 const flyingParticles = ref([])
 const isCartBouncing = ref(false)
 
@@ -627,6 +646,34 @@ watch(triggerAnimation, (newVal) => {
     isCartBouncing.value = true
     setTimeout(() => {
       isCartBouncing.value = false
+    }, 400)
+  }, 800)
+})
+
+watch(favoriteAnimationTrigger, (newVal) => {
+  if (!newVal) return
+
+  const favLink = document.querySelector('a[href="/user/favorites"]')
+  if (!favLink) return
+
+  const rect = favLink.getBoundingClientRect()
+  const endX = rect.left + rect.width / 2
+  const endY = rect.top + rect.height / 2
+
+  flyingFavoriteParticles.value.push({
+    id: newVal.id,
+    image: newVal.image,
+    startX: newVal.x,
+    startY: newVal.y,
+    endX,
+    endY
+  })
+
+  setTimeout(() => {
+    flyingFavoriteParticles.value = flyingFavoriteParticles.value.filter(p => p.id !== newVal.id)
+    isFavoriteBouncing.value = true
+    setTimeout(() => {
+      isFavoriteBouncing.value = false
     }, 400)
   }, 800)
 })
@@ -665,6 +712,36 @@ watch(triggerAnimation, (newVal) => {
   pointer-events: none;
   z-index: 99999;
   animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.flying-favorite-particle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #16a34a;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.25);
+  pointer-events: none;
+  z-index: 99999;
+  animation: flyToFavorite 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes flyToFavorite {
+  0% {
+    transform: translate(calc(var(--start-x) - 21px), calc(var(--start-y) - 21px)) scale(1);
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--end-x) - 21px), calc(var(--end-y) - 21px)) scale(0.15);
+    opacity: 0;
+  }
 }
 
 .badge-bounce {
