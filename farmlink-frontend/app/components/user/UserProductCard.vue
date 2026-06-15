@@ -56,7 +56,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { useFavorites } from '~/composables/useFavorites'
 
 const props = defineProps({
   product: {
@@ -67,11 +68,12 @@ const props = defineProps({
 
 const emit = defineEmits(['add-to-cart', 'save-product'])
 
-const isSaved = ref(false)
+const { isFavorite, toggleFavorite } = useFavorites()
+const isSaved = computed(() => isFavorite(props.product.id))
 
-const handleSave = () => {
-  isSaved.value = !isSaved.value
-  emit('save-product', props.product)
+const handleSave = (event) => {
+  toggleFavorite(props.product, event)
+  emit('save-product', props.product, event)
 }
 
 const discountedPrice = computed(() => {
@@ -89,7 +91,8 @@ const badgeClass = computed(() => {
   return 'badge-default'
 })
 </script>
-<style scoped>
+
+<style scoped>
 .product-card {
   position: relative;
   display: flex;
