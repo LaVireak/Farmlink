@@ -118,8 +118,8 @@
           <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
                 <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
             <div class="flex gap-4">
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm1.png" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/battambang.jpg" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm1Title') }}</div>
@@ -127,8 +127,8 @@
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm2.png" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/kampongcham.jpg" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm2Title') }}</div>
@@ -136,12 +136,21 @@
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm3.png" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/mondulkiri.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm3Title') }}</div>
                   <div class="text-xs">{{ t('common.farm3Desc') }}</div>
+                </div>
+              </NuxtLink>
+
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/preyveng.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm4Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm4Desc') }}</div>
                 </div>
               </NuxtLink>
             </div>
@@ -299,14 +308,15 @@
           <!-- Avatar button: photo → initials → person icon -->
           <button
             @click.stop="toggleUserMenu"
-            class="bg-[#1f7a2e] text-white px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+            class="bg-[#1f7a2e] text-white ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+            :class="userAvatar ? 'p-0' : 'px-[6px] py-[6px]'"
           >
             <!-- Social login: real profile photo -->
             <img
               v-if="userAvatar"
               :src="userAvatar"
               alt="Profile"
-              class="w-7 h-7 rounded-full object-cover"
+              class="w-10 h-10 rounded-full object-cover block"
               referrerpolicy="no-referrer"
             />
             <!-- Email/password login: initials -->
