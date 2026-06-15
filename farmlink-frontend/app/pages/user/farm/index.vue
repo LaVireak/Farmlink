@@ -268,7 +268,7 @@ const fetchFarms = async () => {
         rating: 5.0, // Default rating for now
         province: f.province || 'Other',
         description: f.user?.bio || 'Local farm providing fresh produce directly to consumers.',
-        image: f.coverImageUrl || '/assets/images/farm1.png'
+        image: f.coverImageUrl || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
       }))
     }
   } catch (err) {
