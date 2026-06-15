@@ -177,7 +177,7 @@
         <div class="province-grid">
           <article v-for="farm in provinceFarms" :key="farm.id || farm.name" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="farm.name" loading="lazy" />
+              <img :src="farm.image" :alt="farm.name" loading="lazy" @error="onFarmImgError($event)" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
@@ -304,8 +304,8 @@ const authStore = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
 
-const products = ref([])
-const provinceFarms = ref([])
+const products = ref<any[]>([])
+const provinceFarms = ref<any[]>([])
 const config = useRuntimeConfig()
 
 onMounted(async () => {
@@ -378,6 +378,15 @@ const blogPosts = [
     date: 'May 15, 2026'
   }
 ]
+
+const FALLBACK_FARM_IMAGE = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
+
+function onFarmImgError(event: Event) {
+  const img = event.target as HTMLImageElement
+  if (img && img.src !== FALLBACK_FARM_IMAGE) {
+    img.src = FALLBACK_FARM_IMAGE
+  }
+}
 
 const reviews = [
   {
@@ -1061,13 +1070,13 @@ const reviews = [
 .product-img-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1/2 / 1;
+  height: 220px;
   overflow: hidden;
 }
 
 .product-img-wrap img {
   width: 100%;
-  height: 100%;
+  height: 220px;
   object-fit: cover;
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }

@@ -104,13 +104,22 @@
                 :key="rec.id"
                 class="min-w-[200px] bg-white rounded-xl shadow-sm p-4"
               >
-                <div class="h-32 bg-gray-200 rounded mb-3"></div>
+                <img
+                  :src="rec.image"
+                  :alt="rec.name"
+                  class="h-32 w-full rounded-lg object-cover bg-gray-200 mb-3"
+                />
                 <h3 class="font-medium">{{ rec.name }}</h3>
                 <p class="text-sm text-gray-500">{{ rec.farm }}</p>
                 <p class="text-green-700 font-semibold">
                   ${{ rec.price.toFixed(2) }}
                 </p>
-                <button class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition">Add to Cart</button>
+                <button
+                  @click="addToCart(rec)"
+                  class="mt-3 w-full border border-green-700 text-green-700 rounded-lg py-1 hover:bg-green-700 hover:text-white transition"
+                >
+                  Add to Cart
+                </button>
               </div>
             </div>
           </div>
@@ -173,7 +182,8 @@ const{
   totalItems,
   increase,
   decrease,
-  removeItem } = useCart();
+  removeItem,
+  addToCart } = useCart();
 
 const getCartImage = (item: { image?: string }) => item.image || CART_PLACEHOLDER
 

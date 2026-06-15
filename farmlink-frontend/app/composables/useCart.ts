@@ -5,10 +5,10 @@ export const useCart = () => {
   const triggerAnimation = useState<{ id: number; image: string; x: number; y: number } | null>('cart-animation-trigger', () => null)
 
   const recommendations = [
-    { id: 1, name: 'Wildflower Honey', farm: 'Busy Bee Apiaries', price: 18 },
-    { id: 2, name: 'Pasture-Raised Eggs', farm: 'Cluck & Coop Farms', price: 8.5 },
-    { id: 3, name: 'Rustic Sourdough', farm: 'The Daily Crumb', price: 9 },
-    { id: 4, name: 'Organic Whole Milk', farm: 'Meadow Brook Dairy', price: 6.5 }
+    { id: 1, name: 'Fresh Strawberries', farm: 'Sunny Berry Farm', price: 5.5, image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=200&h=160&fit=crop' },
+    { id: 2, name: 'Organic Bananas', farm: 'Tropical Harvest Co.', price: 3.2, image: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=200&h=160&fit=crop' },
+    { id: 3, name: 'Green Apples', farm: 'Orchard Valley', price: 4.0, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200&h=160&fit=crop' },
+    { id: 4, name: 'Fresh Broccoli', farm: 'Green Earth Farms', price: 2.8, image: 'https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=200&h=160&fit=crop' }
   ]
 
   const config = useRuntimeConfig()
@@ -66,9 +66,9 @@ export const useCart = () => {
     cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
   )
 
-  const deliveryFee = 5
+  const deliveryFee = computed(() => cart.value.length > 0 ? 5 : 0)
 
-  const total = computed(() => subtotal.value + deliveryFee)
+  const total = computed(() => subtotal.value + deliveryFee.value)
 
   const totalItems = computed(() =>
     cart.value.reduce((sum, item) => sum + item.quantity, 0)
