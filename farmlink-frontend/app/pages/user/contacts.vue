@@ -42,7 +42,7 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <button type="submit" class="bg-[#EFCF4F] border-2 border-black px-6 py-3 font-black uppercase">{{ t('contacts.form.sendMessage') }}</button>
+            <button type="submit" class="bg-[#4ade80] border-2 border-black px-6 py-3  font-black uppercase">{{ t('contacts.form.sendMessage') }}</button>
             <div v-if="submitting" class="text-sm text-gray-600">{{ t('contacts.form.sending') }}</div>
             <div v-if="success" class="text-sm text-green-700">{{ t('contacts.form.sent') }}</div>
           </div>

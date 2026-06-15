@@ -115,68 +115,42 @@
             </button>
           </div>
 
-          <div v-show="farmOpen" class="absolute left-0 mt-2 w-[780px] bg-white rounded-2xl shadow-2xl z-50 p-6 border border-green-100">
-            <div class="flex items-center gap-2 mb-4 px-1">
-              <div class="w-2 h-2 rounded-full bg-green-500"></div>
-              <div class="w-2 h-2 rounded-full bg-green-400"></div>
-              <div class="w-2 h-2 rounded-full bg-green-300"></div>
-              <span class="text-xs font-bold text-green-700 uppercase tracking-wider ml-2">{{ t('common.featuredFarms') }}</span>
-            </div>
-            <div class="flex gap-5">
-              <NuxtLink to="/user/farm/1" class="relative group flex-1 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="relative h-[340px]">
-                  <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=250&h=350&fit=crop" alt="Farm 1" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <div class="flex items-center gap-1 mb-1">
-                      <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                      <span class="text-xs font-medium text-green-300">4.8 ★</span>
-                    </div>
-                    <div class="font-bold text-lg leading-tight">{{ t('common.farm1Title') }}</div>
-                    <div class="text-xs text-gray-200 mt-1 leading-relaxed">{{ t('common.farm1Desc') }}</div>
-                    <div class="mt-3 flex items-center gap-2">
-                      <span class="text-[10px] font-semibold bg-green-600/80 text-white px-2.5 py-1 rounded-full">Organic Farm</span>
-                      <span class="text-[10px] font-semibold bg-white/20 text-white px-2.5 py-1 rounded-full">🌾 Crops</span>
-                    </div>
-                  </div>
+          <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
+                <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
+            <div class="flex gap-4">
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/battambang.jpg" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm1Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm1Desc') }}</div>
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="/user/farm/2" class="relative group flex-1 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="relative h-[340px]">
-                  <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=250&h=350&fit=crop" alt="Farm 2" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <div class="flex items-center gap-1 mb-1">
-                      <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                      <span class="text-xs font-medium text-green-300">4.9 ★</span>
-                    </div>
-                    <div class="font-bold text-lg leading-tight">{{ t('common.farm2Title') }}</div>
-                    <div class="text-xs text-gray-200 mt-1 leading-relaxed">{{ t('common.farm2Desc') }}</div>
-                    <div class="mt-3 flex items-center gap-2">
-                      <span class="text-[10px] font-semibold bg-green-600/80 text-white px-2.5 py-1 rounded-full">Free Range</span>
-                      <span class="text-[10px] font-semibold bg-white/20 text-white px-2.5 py-1 rounded-full">🥚 Eggs</span>
-                    </div>
-                  </div>
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/kampongcham.jpg" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm2Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm2Desc') }}</div>
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="/user/farm/3" class="relative group flex-1 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div class="relative h-[340px]">
-                  <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=250&h=350&fit=crop" alt="Farm 3" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <div class="flex items-center gap-1 mb-1">
-                      <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                      <span class="text-xs font-medium text-green-300">4.7 ★</span>
-                    </div>
-                    <div class="font-bold text-lg leading-tight">{{ t('common.farm3Title') }}</div>
-                    <div class="text-xs text-gray-200 mt-1 leading-relaxed">{{ t('common.farm3Desc') }}</div>
-                    <div class="mt-3 flex items-center gap-2">
-                      <span class="text-[10px] font-semibold bg-green-600/80 text-white px-2.5 py-1 rounded-full">Artisan</span>
-                      <span class="text-[10px] font-semibold bg-white/20 text-white px-2.5 py-1 rounded-full">🍞 Bakery</span>
-                    </div>
-                  </div>
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/mondulkiri.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm3Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm3Desc') }}</div>
+                </div>
+              </NuxtLink>
+
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/preyveng.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm4Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm4Desc') }}</div>
                 </div>
               </NuxtLink>
             </div>
@@ -334,17 +308,15 @@
           <!-- Avatar button: photo → initials → person icon -->
           <button
             @click.stop="toggleUserMenu"
-            :class="[
-              'ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden',
-              userAvatar ? 'p-0 bg-transparent' : 'bg-[#1f7a2e] text-white px-[6px] py-[6px]'
-            ]"
+            class="bg-[#1f7a2e] text-white ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+            :class="userAvatar ? 'p-0' : 'px-[6px] py-[6px]'"
           >
             <!-- Social login: real profile photo -->
             <img
               v-if="userAvatar"
               :src="userAvatar"
               alt="Profile"
-              class="w-9 h-9 rounded-full object-cover"
+              class="w-10 h-10 rounded-full object-cover block"
               referrerpolicy="no-referrer"
             />
             <!-- Email/password login: initials -->

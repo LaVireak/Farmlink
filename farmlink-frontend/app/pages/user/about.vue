@@ -229,7 +229,7 @@ const socials = [
   width: fit-content;
   padding: 10px 14px;
   border: 2px solid #111;
-  background: #efcf4f;
+  background: #4ade80;
   color: #111;
   font-size: 0.72rem;
   font-weight: 900;
@@ -450,7 +450,7 @@ const socials = [
   margin-bottom: 20px;
   border: 2px solid #111;
   border-radius: 999px;
-  background: #efcf4f;
+  background: #4ade80;
   box-shadow: 4px 4px 0 rgba(17, 17, 17, 1);
 }
 
@@ -488,7 +488,7 @@ const socials = [
 }
 
 .insight-card-accent {
-  background: linear-gradient(180deg, rgba(239, 207, 79, 0.88), rgba(255, 255, 255, 0.86));
+  background: linear-gradient(180deg, rgba(79, 239, 124, 0.88), rgba(255, 255, 255, 0.86));
 }
 
 .insight-card h3 {
