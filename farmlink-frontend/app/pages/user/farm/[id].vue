@@ -107,6 +107,10 @@
   <CommonAppFooter />
 </template>
 <script setup>
+definePageMeta({
+  middleware: 'user'
+})
+
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRuntimeConfig } from '#app'

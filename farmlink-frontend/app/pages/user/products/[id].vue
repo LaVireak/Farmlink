@@ -400,6 +400,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'user'
+})
+
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
