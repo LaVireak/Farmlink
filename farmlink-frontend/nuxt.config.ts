@@ -14,6 +14,9 @@ export default defineNuxtConfig({
     build: {
       sourcemap: false,
     },
+    optimizeDeps: {
+      include: ['maplibre-gl'],
+    },
   },
 
   runtimeConfig: {
@@ -77,6 +80,10 @@ export default defineNuxtConfig({
         {
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://unpkg.com/maplibre-gl/dist/maplibre-gl.css",
         },
       ],
     },

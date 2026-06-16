@@ -50,6 +50,15 @@ export class User {
   @Column('varchar', { name: 'address', length: 500, nullable: true })
   address!: string | null;
 
+  @Column('varchar', { name: 'province', length: 100, nullable: true })
+  province!: string | null;
+
+  @Column('varchar', { name: 'district', length: 100, nullable: true })
+  district!: string | null;
+
+  @Column('varchar', { name: 'commune', length: 100, nullable: true })
+  commune!: string | null;
+
   @Column('varchar', { name: 'avatar_url', length: 500, nullable: true })
   avatarUrl!: string | null;
 

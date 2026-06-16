@@ -142,7 +142,7 @@
         <div class="province-grid">
           <article v-for="farm in provinceFarms" :key="farm.id || farm.name" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="farm.name" loading="lazy" />
+              <img :src="farm.image" :alt="farm.name" loading="lazy" @error="onFarmImgError($event)" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
@@ -201,8 +201,8 @@ const authStore = useAuthStore()
 const router = useRouter()
 const { t } = useI18n()
 
-const products = ref([])
-const provinceFarms = ref([])
+const products = ref<any[]>([])
+const provinceFarms = ref<any[]>([])
 const config = useRuntimeConfig()
 
 onMounted(async () => {
@@ -252,6 +252,68 @@ onMounted(async () => {
   }
 })
 
+const blogPosts = [
+  {
+    keyPrefix: 'blogsData.b1',
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=900&q=80',
+    readTime: '3 min read',
+    date: 'May 22, 2026'
+  },
+  {
+    keyPrefix: 'blogsData.b2',
+    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
+    readTime: '5 min read',
+    date: 'May 20, 2026'
+  },
+  {
+    keyPrefix: 'blogsData.b3',
+    image: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80',
+    readTime: '4 min read',
+    date: 'May 18, 2026'
+  },
+  {
+    keyPrefix: 'blogsData.b4',
+    image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=900&q=80',
+    readTime: '6 min read',
+    date: 'May 15, 2026'
+  }
+]
+
+const FALLBACK_FARM_IMAGE = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
+
+function onFarmImgError(event: Event) {
+  const img = event.target as HTMLImageElement
+  if (img && img.src !== FALLBACK_FARM_IMAGE) {
+    img.src = FALLBACK_FARM_IMAGE
+  }
+}
+
+const reviews = [
+  {
+    name: 'Sopheap N.',
+    keyPrefix: 'reviewsData.r1',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80'
+  },
+  {
+    name: 'Vannak R.',
+    role: 'Restaurant Chef',
+    quote: 'The product quality is consistently amazing.',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
+  },
+
+  {
+    name: 'Bona K.',
+    role: 'Healthy Eater',
+    quote: 'I love knowing exactly which Takeo farm my greens came from!',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+  },
+  {
+    name: 'Dara S.',
+    role: 'Family Parent',
+    quote: 'The organic mangoes are sweet, fresh, and kid-approved.',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+  }
+]
 
 </script>
 
@@ -973,7 +1035,7 @@ onMounted(async () => {
 
 .product-img-wrap img {
   width: 100%;
-  height: 100%;
+  height: 220px;
   object-fit: cover;
   transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }

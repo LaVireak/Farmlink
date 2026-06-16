@@ -383,6 +383,8 @@ export class OrdersService {
           ? {
               id: item.farmer.id,
               farmName: item.farmer.farmName,
+              province: item.farmer.province,
+              district: item.farmer.district,
             }
           : undefined,
       })),

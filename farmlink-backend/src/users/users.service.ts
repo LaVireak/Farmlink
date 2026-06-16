@@ -57,6 +57,12 @@ export class UsersService {
     const { avatarDataUrl, avatarUrl, ...profileUpdates } = updateUserDto;
     const updatedUser = this.userRepository.merge(user, profileUpdates);
 
+    // Auto-build address for backward compatibility if province is updated/provided
+    if (updatedUser.province && !updateUserDto.address) {
+      const addrParts = [updatedUser.commune, updatedUser.district, updatedUser.province].filter(Boolean);
+      updatedUser.address = addrParts.join(', ') || null;
+    }
+
     const stagedAvatarDataUrl =
       avatarDataUrl ?? (this.isDataUrl(avatarUrl) ? avatarUrl : undefined);
 

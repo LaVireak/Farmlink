@@ -21,6 +21,9 @@ type SupabaseMetadata = {
   phone?: string;
   farmName?: string;
   address?: string;
+  province?: string;
+  district?: string;
+  commune?: string;
   avatarUrl?: string | null;
   avatar_url?: string | null;
 };
@@ -253,6 +256,17 @@ export class SupabaseAuthService {
       user.lastName = metadata.lastName ?? null;
       user.phoneNumber = metadata.phone ?? null;
       user.avatarUrl = metadata.avatarUrl ?? metadata.avatar_url ?? null;
+      // Structured Cambodia location fields
+      if (metadata.province) user.province = metadata.province;
+      if (metadata.district) user.district = metadata.district;
+      if (metadata.commune) user.commune = metadata.commune;
+      // Build combined address string for backward compat
+      if (metadata.province && !metadata.address) {
+        const addrParts = [metadata.commune, metadata.district, metadata.province].filter(Boolean);
+        user.address = addrParts.join(', ') || null;
+      } else if (metadata.address) {
+        user.address = metadata.address;
+      }
 
       return this.users.save(user);
     }
@@ -287,6 +301,29 @@ export class SupabaseAuthService {
 
     if (!user.avatarUrl && metadata.avatarUrl) {
       user.avatarUrl = metadata.avatarUrl;
+      shouldSave = true;
+    }
+
+    // Sync structured location fields if not yet set
+    if (!user.province && metadata.province) {
+      user.province = metadata.province;
+      shouldSave = true;
+    }
+    if (!user.district && metadata.district) {
+      user.district = metadata.district;
+      shouldSave = true;
+    }
+    if (!user.commune && metadata.commune) {
+      user.commune = metadata.commune;
+      shouldSave = true;
+    }
+    if (!user.address && (metadata.province || metadata.address)) {
+      if (metadata.province) {
+        const addrParts = [metadata.commune, metadata.district, metadata.province].filter(Boolean);
+        user.address = addrParts.join(', ') || null;
+      } else {
+        user.address = metadata.address ?? null;
+      }
       shouldSave = true;
     }
     const incomingRole = this.normalizeRole(metadata.role);
