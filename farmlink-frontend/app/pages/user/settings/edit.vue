@@ -62,6 +62,8 @@ const readResponseError = async (response: Response) => {
   return text || 'Unable to save profile';
 };
 
+const unwrapApiData = <T = any>(payload: any): T => (payload?.data ?? payload) as T;
+
 const loadProfile = async () => {
   await auth.hydrate();
 
@@ -72,7 +74,7 @@ const loadProfile = async () => {
       throw new Error('Unable to load profile');
     }
 
-    const data = await response.json();
+    const data = unwrapApiData(await response.json());
     form.value = {
       firstName: data?.firstName ?? profile.value?.firstName ?? '',
       lastName: data?.lastName ?? profile.value?.lastName ?? '',
@@ -118,7 +120,7 @@ const saveProfile = async () => {
       throw new Error(await readResponseError(response));
     }
 
-    const data = await response.json();
+    const data = unwrapApiData(await response.json());
     message.value = 'Profile saved successfully.';
     auth.updateUserProfile({
       firstName: data.firstName ?? form.value.firstName,
@@ -289,4 +291,3 @@ onMounted(() => {
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 </style>
-

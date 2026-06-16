@@ -306,15 +306,24 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth.store'
 
 const authStore = useAuthStore()
-const API = import.meta.env.VITE_API_BASE_URL
+const config = useRuntimeConfig()
+const API = (import.meta.env.VITE_API_BASE_URL || config.public.apiUrl || 'http://localhost:3001/api') as string
 // Backend serves uploaded files as static assets from /uploads/
-const STATIC_BASE = (import.meta.env.VITE_API_BASE_URL as string).replace('/api', '')
+const STATIC_BASE = API.replace('/api', '')
 
 // Resolve relative upload paths (e.g. "uploads/avatars/xxx.jpg") to full URLs
 function resolveUrl(url: string | undefined): string {
   if (!url) return ''
   if (url.startsWith('http') || url.startsWith('data:')) return url
   return `${STATIC_BASE}/${url}`
+}
+
+function unwrapApiData<T = any>(payload: any): T {
+  return (payload?.data ?? payload) as T
+}
+
+async function parseJsonSafely(res: Response) {
+  return res.json().catch(() => ({}))
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────
@@ -369,6 +378,7 @@ const farm = ref({
 })
 let farmSnapshot = JSON.parse(JSON.stringify(farm.value))
 let descSnapshot = ''
+let photoSnapshot: { url: string; dataUrl?: string; isNew?: boolean }[] = []
 
 // ── Products ───────────────────────────────────────────────────────────────
 const products = ref<any[]>([])
@@ -399,10 +409,21 @@ async function fetchFarmerProfile() {
   try {
     const userRes = await fetch(`${API}/users/profile`, { headers: authHeaders() })
     if (!userRes.ok) return
-    const userData = await userRes.json()
+    const userData = unwrapApiData(await parseJsonSafely(userRes))
 
+    account.value.firstName      = userData.firstName   ?? account.value.firstName
+    account.value.lastName       = userData.lastName    ?? account.value.lastName
+    account.value.email          = userData.email       ?? account.value.email
     account.value.phone          = userData.phoneNumber ?? ''
     account.value.picturePreview = userData.avatarUrl   ?? account.value.picturePreview
+
+    authStore.updateUserProfile({
+      firstName: account.value.firstName,
+      lastName: account.value.lastName,
+      email: account.value.email,
+      phoneNumber: account.value.phone,
+      avatarUrl: account.value.picturePreview,
+    } as any)
 
     const fp = userData.farmerProfile
     if (!fp?.id) return
@@ -410,7 +431,7 @@ async function fetchFarmerProfile() {
 
     const farmRes = await fetch(`${API}/farmer/${fp.id}`, { headers: authHeaders() })
     if (!farmRes.ok) return
-    const fd = await farmRes.json()
+    const fd = unwrapApiData(await parseJsonSafely(farmRes))
 
     farm.value.farmName        = fd.farmName      ?? ''
     farm.value.description     = fd.description   ?? ''
@@ -418,9 +439,9 @@ async function fetchFarmerProfile() {
     farm.value.address.city    = fd.district      ?? ''
     farm.value.address.state   = fd.province      ?? ''
 
-    if (fd.coverImageUrl) {
-      farm.value.pictures = [{ url: fd.coverImageUrl }]
-    }
+    const savedPhotos = Array.isArray(fd.farmPhotoUrls) ? fd.farmPhotoUrls : []
+    const uniquePhotos = [...new Set([...(savedPhotos.length ? savedPhotos : []), fd.coverImageUrl].filter(Boolean))]
+    farm.value.pictures = uniquePhotos.map(url => ({ url }))
   } catch (e) {
     console.error('fetchFarmerProfile error', e)
   } finally {
@@ -474,16 +495,22 @@ async function saveAccount() {
       body: JSON.stringify(body),
     })
     if (!res.ok) throw new Error('Failed')
-    const data = await res.json()
+    const data = unwrapApiData(await parseJsonSafely(res))
 
     // Update auth store so the header avatar updates too
     authStore.updateUserProfile({
       firstName: data.firstName ?? account.value.firstName,
       lastName:  data.lastName  ?? account.value.lastName,
+      email:     data.email     ?? account.value.email,
+      phoneNumber: data.phoneNumber ?? account.value.phone,
       avatarUrl: data.avatarUrl ?? account.value.picturePreview,
-    })
+    } as any)
 
     // Refresh preview from what the server saved
+    account.value.firstName = data.firstName ?? account.value.firstName
+    account.value.lastName = data.lastName ?? account.value.lastName
+    account.value.email = data.email ?? account.value.email
+    account.value.phone = data.phoneNumber ?? account.value.phone
     if (data.avatarUrl) account.value.picturePreview = data.avatarUrl
     account.value.pictureDataUrl = ''
 
@@ -571,8 +598,14 @@ async function saveDescription() {
 
 // ── Photo modal ────────────────────────────────────────────────────────────
 // Saves the first photo as coverImageUrl via PATCH /farmer/profile { coverImageDataUrl }
-function openPhotoModal()  { photoModal.value = true }
-function closePhotoModal() { photoModal.value = false }
+function openPhotoModal()  {
+  photoSnapshot = JSON.parse(JSON.stringify(farm.value.pictures))
+  photoModal.value = true
+}
+function closePhotoModal() {
+  farm.value.pictures = JSON.parse(JSON.stringify(photoSnapshot))
+  photoModal.value = false
+}
 function triggerFarmPhotoInput() { farmPhotoInputRef.value?.click() }
 
 function onPhotosSelected(e: Event) {
@@ -600,25 +633,31 @@ function removePhoto(idx: number) {
   }
 }
 
-// Save photos: send the first new photo as coverImageUrl (the entity only has one cover field).
-// If your backend later supports multiple photo URLs, extend this to loop through all new ones.
 async function savePhotos() {
   saving.value.photos = true
   try {
-    const newPic = farm.value.pictures.find(p => p.isNew && p.dataUrl)
-    if (newPic?.dataUrl) {
-      const res = await fetch(`${API}/farmer/profile`, {
-        method: 'PATCH',
-        headers: authHeaders(true),
-        body: JSON.stringify({ coverImageDataUrl: newPic.dataUrl }),
-      })
-      if (!res.ok) throw new Error('Failed')
-      const data = await res.json()
-      // Replace local state with saved URL so it persists on reload
-      farm.value.pictures = farm.value.pictures.map(p =>
-        p.isNew ? { url: data.coverImageUrl, isNew: false } : p
-      )
-    }
+    const existingUrls = farm.value.pictures
+      .filter(p => !p.isNew && p.url)
+      .map(p => p.url)
+    const newDataUrls = farm.value.pictures
+      .filter(p => p.isNew && p.dataUrl)
+      .map(p => p.dataUrl as string)
+
+    const res = await fetch(`${API}/farmer/profile`, {
+      method: 'PATCH',
+      headers: authHeaders(true),
+      body: JSON.stringify({
+        farmPhotoUrls: existingUrls,
+        farmPhotoDataUrls: newDataUrls,
+      }),
+    })
+    if (!res.ok) throw new Error('Failed')
+    const data = unwrapApiData(await parseJsonSafely(res))
+    const savedPhotos = Array.isArray(data.farmPhotoUrls) ? data.farmPhotoUrls : []
+    const uniquePhotos = [...new Set([...(savedPhotos.length ? savedPhotos : []), data.coverImageUrl].filter(Boolean))]
+    farm.value.pictures = uniquePhotos.map(url => ({ url }))
+    farmSnapshot = JSON.parse(JSON.stringify(farm.value))
+    photoSnapshot = JSON.parse(JSON.stringify(farm.value.pictures))
     photoModal.value = false
     showToast('Photos saved')
   } catch {
