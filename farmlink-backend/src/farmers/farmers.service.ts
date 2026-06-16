@@ -100,6 +100,21 @@ export class FarmersService {
     }
 
     if (dto.address) profile.addressDetail = dto.address;
+    if (dto.province) profile.province = dto.province;
+    if (dto.district) profile.district = dto.district;
+
+    if (dto.province) user.province = dto.province;
+    if (dto.district) user.district = dto.district;
+    if (dto.commune) user.commune = dto.commune;
+    if (dto.province || dto.district || dto.commune || dto.address) {
+      if (dto.province) {
+        const addrParts = [dto.commune, dto.district, dto.province].filter(Boolean);
+        user.address = addrParts.join(', ') || null;
+      } else if (dto.address) {
+        user.address = dto.address;
+      }
+    }
+
     if (dto.tags?.length) profile.productTags = JSON.stringify(dto.tags);
     if (dto.idPhoto)
       profile.idDocumentUrl = await this.saveImage(dto.idPhoto, 'farmers');

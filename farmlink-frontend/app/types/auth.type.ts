@@ -22,6 +22,9 @@ export interface SignUpPayload {
     phone?: string;
     farmName?: string;
     address?: string;
+    province?: string;
+    district?: string;
+    commune?: string;
 }
 
 export interface VerifyOtpPayload {

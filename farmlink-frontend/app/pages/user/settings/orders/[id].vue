@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useRuntimeConfig } from '#app';
 import { useAuthStore } from '~/stores/auth.store';
 import { getAccessToken } from '~/services/auth.service';
+import { geocodeLocation, haversineDistanceKm } from '~/composables/useCambodiaLocations';
 
 definePageMeta({
 	middleware: 'user',
@@ -18,6 +19,16 @@ const orderId = (route.params.id as string);
 const order = ref<any>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+// ─── Map state ───────────────────────────────────────────────────────────────
+const mapEl = ref<HTMLElement | null>(null);
+const mapLoading = ref(false);
+const mapReady = ref(false);
+const farmerCoords = ref<{ lat: number; lng: number } | null>(null);
+const customerCoords = ref<{ lat: number; lng: number } | null>(null);
+const etaMinutes = ref<number | null>(null);
+const distanceKm = ref<number | null>(null);
+let mlMap: any = null;
 
 const fetchOrder = async () => {
   loading.value = true;
@@ -40,7 +51,219 @@ const fetchOrder = async () => {
   }
 };
 
-onMounted(fetchOrder);
+// ─── Cambodia bounding box guard ──────────────────────────────────────────────
+// Rejects any coordinate that falls outside Cambodia's geographic borders.
+function withinCambodia(lat: number, lng: number): boolean {
+  return lat >= 10.4 && lat <= 14.75 && lng >= 102.3 && lng <= 107.7;
+}
+
+// ─── Geocode from a raw address string (fallback) ────────────────────────────
+async function geocodeFromAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (!address) return null;
+  try {
+    const q = encodeURIComponent(address + ', Cambodia');
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=kh`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'FarmLink-App/1.0' } }
+    );
+    const data = await res.json() as Array<{ lat: string; lon: string }>;
+    if (data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      // Only accept the result if it is actually inside Cambodia
+      if (withinCambodia(lat, lng)) return { lat, lng };
+    }
+  } catch {}
+  return null;
+}
+
+// ─── Build the OpenFreeMap (MapLibre GL) map ─────────────────────────────────
+const buildMap = async () => {
+  if (!order.value || !mapEl.value) return;
+  mapLoading.value = true;
+
+  try {
+    // Farmer location
+    const farmer = order.value.items?.[0]?.farmer;
+    const farmerProv = farmer?.province ?? '';
+    const farmerDist = farmer?.district ?? '';
+
+    // Customer location
+    const consumer = order.value.consumer;
+    const custProv = (consumer as any)?.province ?? (authStore.user as any)?.province ?? '';
+    const custDist = (consumer as any)?.district ?? (authStore.user as any)?.district ?? '';
+    const custComm = (consumer as any)?.commune ?? (authStore.user as any)?.commune ?? '';
+
+    // Phnom Penh centre — safe Cambodia default
+    const PHNOM_PENH = { lat: 11.5564, lng: 104.9282 };
+
+    const [fc, cc] = await Promise.all([
+      farmerProv
+        ? geocodeLocation(farmerProv, farmerDist)
+        : Promise.resolve(PHNOM_PENH),
+      custProv
+        ? geocodeLocation(custProv, custDist, custComm)
+        : geocodeFromAddress(order.value.deliveryAddress),
+    ]);
+
+    // Clamp both points to Cambodia — never show pins outside the country
+    farmerCoords.value  = (fc && withinCambodia(fc.lat, fc.lng))  ? fc  : PHNOM_PENH;
+    customerCoords.value = (cc && withinCambodia(cc.lat, cc.lng)) ? cc  : PHNOM_PENH;
+
+    // Straight-line distance & ETA fallback
+    const km = haversineDistanceKm(
+      farmerCoords.value.lat, farmerCoords.value.lng,
+      customerCoords.value.lat, customerCoords.value.lng,
+    );
+    distanceKm.value = Math.round(km * 10) / 10;
+    etaMinutes.value = Math.round((km / 40) * 60);
+
+    await nextTick();
+    await initMapLibreMap();
+  } finally {
+    mapLoading.value = false;
+    mapReady.value = true;
+  }
+};
+
+const initMapLibreMap = async () => {
+  if (!mapEl.value || !farmerCoords.value || !customerCoords.value) return;
+
+  // Destroy existing map instance if re-rendering
+  if (mlMap) {
+    mlMap.remove();
+    mlMap = null;
+  }
+
+  const fc = farmerCoords.value;
+  const cc = customerCoords.value;
+  const midLng = (fc.lng + cc.lng) / 2;
+  const midLat = (fc.lat + cc.lat) / 2;
+
+  // Dynamically import maplibre-gl (client-side only)
+  const maplibregl = (await import('maplibre-gl')).default;
+
+  mlMap = new maplibregl.Map({
+    container: mapEl.value,
+    // OpenFreeMap "Bright" style — closest look to Google Maps, no API key needed
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    center: [midLng, midLat],
+    zoom: 7,
+    attributionControl: true,
+  });
+
+  // Wait for the map style to fully load before adding layers
+  mlMap.on('load', async () => {
+    // ─── Try OSRM routing for real road path ──────────────────────────────
+    let routeCoords: [number, number][] = [[fc.lng, fc.lat], [cc.lng, cc.lat]];
+    let isRealRoute = false;
+
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fc.lng},${fc.lat};${cc.lng},${cc.lat}?overview=full&geometries=geojson`;
+      const osrmRes = await fetch(osrmUrl);
+      if (osrmRes.ok) {
+        const osrmData = await osrmRes.json();
+        const routeObj = osrmData.routes?.[0];
+        if (routeObj?.geometry?.coordinates) {
+          routeCoords = routeObj.geometry.coordinates as [number, number][];
+          isRealRoute = true;
+          // Update distance & ETA with accurate OSRM values
+          distanceKm.value = Math.round((routeObj.distance / 1000) * 10) / 10;
+          etaMinutes.value = Math.round(routeObj.duration / 60);
+        }
+      }
+    } catch (e) {
+      console.warn('OSRM routing failed, using straight line:', e);
+    }
+
+    // ─── Add route line source & layer ────────────────────────────────────
+    mlMap.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: routeCoords },
+      },
+    });
+
+    // Route shadow (slightly wider, semi-transparent, for depth)
+    mlMap.addLayer({
+      id: 'route-shadow',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#154212',
+        'line-width': 8,
+        'line-opacity': 0.15,
+      },
+    });
+
+    // Main route line
+    mlMap.addLayer({
+      id: 'route-line',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#154212',
+        'line-width': isRealRoute ? 4 : 3,
+        'line-opacity': 0.9,
+        ...(isRealRoute ? {} : { 'line-dasharray': [3, 2] }),
+      },
+    });
+
+    // ─── Custom HTML markers ───────────────────────────────────────────────
+    // Farm marker (green)
+    const farmEl = document.createElement('div');
+    farmEl.className = 'mgl-marker mgl-marker--farm';
+    farmEl.innerHTML = `<span class="material-symbols-outlined">storefront</span>`;
+
+    new maplibregl.Marker({ element: farmEl, anchor: 'bottom' })
+      .setLngLat([fc.lng, fc.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 20 }).setHTML(
+          `<div class="mgl-popup"><strong>🌾 Farm Origin</strong><br>${order.value?.items?.[0]?.farmer?.farmName ?? 'Farmer'}<br><small>${farmerCoords.value ? `${fc.lat.toFixed(4)}, ${fc.lng.toFixed(4)}` : ''}</small></div>`
+        )
+      )
+      .addTo(mlMap);
+
+    // Customer / delivery marker (amber)
+    const homeEl = document.createElement('div');
+    homeEl.className = 'mgl-marker mgl-marker--home';
+    homeEl.innerHTML = `<span class="material-symbols-outlined">home_pin</span>`;
+
+    new maplibregl.Marker({ element: homeEl, anchor: 'bottom' })
+      .setLngLat([cc.lng, cc.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 20 }).setHTML(
+          `<div class="mgl-popup"><strong>🏠 Delivery Destination</strong><br>${order.value?.deliveryAddress ?? 'Customer Address'}</div>`
+        )
+      )
+      .addTo(mlMap);
+
+    // ─── Fit bounds to show both points ───────────────────────────────────
+    const bounds = [
+      [Math.min(fc.lng, cc.lng) - 0.05, Math.min(fc.lat, cc.lat) - 0.05],
+      [Math.max(fc.lng, cc.lng) + 0.05, Math.max(fc.lat, cc.lat) + 0.05],
+    ] as [[number, number], [number, number]];
+    mlMap.fitBounds(bounds, { padding: { top: 60, bottom: 80, left: 60, right: 60 }, duration: 800 });
+  });
+};
+
+onMounted(async () => {
+  await fetchOrder();
+  if (order.value) {
+    await buildMap();
+  }
+});
+
+onUnmounted(() => {
+  if (mlMap) {
+    mlMap.remove();
+    mlMap = null;
+  }
+});
 
 useHead({
 	title: computed(() => order.value ? `Order #${order.value.orderNumber} | FarmLink Cambodia` : 'Order Details | FarmLink Cambodia'),
@@ -78,34 +301,16 @@ const orderItems = computed(() => {
   }));
 });
 
-// ─── Tracking Animation State ───────────────────────────────────────────────
-const TRACKING_STEPS = [
-  { key: 'pending',     label: 'Order Placed',      icon: 'receipt_long',    desc: 'Your order has been received and is awaiting confirmation.' },
-  { key: 'confirmed',   label: 'Farm Confirmed',     icon: 'agriculture',     desc: 'The farm has accepted your order and is beginning harvest.' },
-  { key: 'preparing',  label: 'Packing Harvest',    icon: 'inventory_2',     desc: 'Your produce is being harvested, cleaned, and packed fresh.' },
-  { key: 'in_delivery',label: 'Out for Delivery',   icon: 'local_shipping',  desc: 'A community driver has picked up your order and is on the way.' },
-  { key: 'completed',  label: 'Delivered',          icon: 'task_alt',        desc: 'Your order has been delivered. Enjoy your fresh harvest!' },
-];
-
-const STATUS_STEP_INDEX: Record<string, number> = {
-  pending: 0,
-  confirmed: 1,
-  preparing: 2,
-  in_delivery: 3,
-  completed: 4,
-};
-
-const currentStepIndex = computed(() => {
-  if (!order.value) return 0;
-  return STATUS_STEP_INDEX[order.value.status] ?? 0;
-});
-
-// Truck progress: % along the road from 0–100
-const truckProgress = ref(5);
-let progressTimer: ReturnType<typeof setInterval>;
-
-// ETA countdown (purely decorative based on status)
+// ─── ETA display ──────────────────────────────────────────────────────────────
 const etaLabel = computed(() => {
+  if (etaMinutes.value !== null && distanceKm.value !== null) {
+    if (etaMinutes.value < 60) {
+      return `~${etaMinutes.value} min (${distanceKm.value} km)`;
+    }
+    const h = Math.floor(etaMinutes.value / 60);
+    const m = etaMinutes.value % 60;
+    return `~${h}h ${m}m (${distanceKm.value} km)`;
+  }
   const s = order.value?.status;
   if (s === 'pending') return 'Estimating ETA...';
   if (s === 'confirmed') return 'ETA ~45 min';
@@ -113,25 +318,6 @@ const etaLabel = computed(() => {
   if (s === 'in_delivery') return 'ETA ~10 min';
   if (s === 'completed') return 'Delivered ✓';
   return '';
-});
-
-// Pulse animation for the truck position dot
-const pulseCount = ref(0);
-let pulseTimer: ReturnType<typeof setInterval>;
-onMounted(() => {
-  pulseTimer = setInterval(() => { pulseCount.value++; }, 1000);
-  
-  progressTimer = setInterval(() => {
-    truckProgress.value += 0.15; // Controls the speed of the truck
-    if (truckProgress.value > 100) {
-      truckProgress.value = 5; // Reset back to start
-    }
-  }, 16); // 60fps
-});
-
-onUnmounted(() => {
-  clearInterval(pulseTimer);
-  clearInterval(progressTimer);
 });
 </script>
 
@@ -200,6 +386,81 @@ onUnmounted(() => {
 									<span class="material-symbols-outlined text-sm">check_circle</span>
 									Completed
 								</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- ══════════════════════════════════════════════════════════
+					     REAL MAP SECTION — shown for ALL order statuses
+					     ══════════════════════════════════════════════════════════ -->
+					<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100 mb-8">
+						<!-- Map header -->
+						<div class="p-5 border-b border-zinc-50 flex justify-between items-center">
+							<div class="flex items-center gap-3">
+								<h3 class="font-[Manrope,sans-serif] font-black text-lg text-[#154212]">
+									{{ isTransit ? 'Live Tracking' : 'Delivery Route' }}
+								</h3>
+								<span v-if="isTransit" class="inline-flex items-center gap-1.5 bg-[#94f990]/50 text-[#006e1c] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+									<span class="w-1.5 h-1.5 rounded-full bg-[#006e1c] animate-pulse"></span>
+									Live
+								</span>
+								<span v-else-if="!isCancelled" class="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-500 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+									<span class="material-symbols-outlined text-xs">check_circle</span>
+									Delivered
+								</span>
+							</div>
+							<div class="text-right">
+								<p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{{ isTransit ? 'ETA' : 'Distance' }}</p>
+								<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
+							</div>
+						</div>
+
+						<!-- OpenFreeMap MapLibre GL Container -->
+						<div class="relative">
+							<!-- Loading overlay while geocoding -->
+							<div v-if="mapLoading" class="absolute inset-0 z-10 bg-[#f0faf0] flex flex-col items-center justify-center gap-3" style="height: 400px;">
+								<div class="w-10 h-10 border-4 border-[#154212] border-t-transparent rounded-full animate-spin"></div>
+								<p class="text-sm font-bold text-[#154212]">Loading map...</p>
+							</div>
+
+							<!-- MapLibre GL map element -->
+							<div
+								ref="mapEl"
+								class="ofm-map-container"
+								:class="{ 'opacity-0': mapLoading }"
+							></div>
+
+							<!-- ETA / distance badge overlay (bottom-center) -->
+							<div v-if="mapReady && distanceKm" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2 pointer-events-none">
+								<span class="material-symbols-outlined text-[#006e1c] text-base">route</span>
+								<div>
+									<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Farm → Your Door</p>
+									<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
+								</div>
+							</div>
+						</div>
+
+						<!-- Map legend -->
+						<div v-if="mapReady" class="p-4 border-t border-zinc-50 flex flex-wrap items-center gap-6 text-xs font-bold text-zinc-500">
+							<div class="flex items-center gap-2">
+								<div class="w-4 h-4 rounded-full bg-[#154212] flex items-center justify-center">
+									<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">storefront</span>
+								</div>
+								<span>{{ order.items?.[0]?.farmer?.farmName || 'Farm Origin' }}</span>
+							</div>
+							<div class="flex items-center gap-2">
+								<div class="w-8 h-0.5 bg-[#154212] opacity-70 rounded"></div>
+								<span>Route</span>
+							</div>
+							<div class="flex items-center gap-2">
+								<div class="w-4 h-4 rounded-full bg-[#b45309] flex items-center justify-center">
+									<span class="material-symbols-outlined text-white" style="font-size:10px;font-variation-settings:'FILL' 1;">home</span>
+								</div>
+								<span>Delivery Destination</span>
+							</div>
+							<div class="ml-auto flex items-center gap-1.5 text-[10px] text-zinc-300 font-medium">
+								<span>Map by</span>
+								<a href="https://openfreemap.org" target="_blank" class="text-zinc-400 hover:text-[#154212] transition-colors font-bold">OpenFreeMap</a>
 							</div>
 						</div>
 					</div>
@@ -302,95 +563,14 @@ onUnmounted(() => {
 
 					<!-- IN-TRANSIT LAYOUT -->
 					<div v-else-if="isTransit" class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-						<!-- Left Column: Animated Tracking -->
 						<div class="xl:col-span-8 flex flex-col gap-8">
-							<!-- Live Tracking Card with Animated Route -->
-							<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100">
-								<div class="p-5 border-b border-zinc-50 flex justify-between items-center">
-									<div class="flex items-center gap-3">
-										<h3 class="font-[Manrope,sans-serif] font-black text-lg text-[#154212]">Live Tracking</h3>
-										<span class="inline-flex items-center gap-1.5 bg-[#94f990]/50 text-[#006e1c] text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-											<span class="w-1.5 h-1.5 rounded-full bg-[#006e1c] animate-pulse"></span>
-											Live
-										</span>
-									</div>
-									<div class="text-right">
-										<p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ETA</p>
-										<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
-									</div>
-								</div>
-
-								<!-- Animated Route Map -->
-								<div class="relative p-6 bg-gradient-to-br from-[#f0faf0] to-[#e8f5e9] min-h-[280px] overflow-hidden">
-									<!-- Decorative grid -->
-									<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#0a4d1e 0.8px, transparent 0.8px); background-size: 24px 24px;"></div>
-
-									<!-- Road SVG path -->
-									<svg class="absolute inset-0 w-full h-full" viewBox="0 0 800 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-										<!-- Road shadow -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="#c8d5c8" stroke-width="28" fill="none" stroke-linecap="round"/>
-										<!-- Road base -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="#d4e8d4" stroke-width="22" fill="none" stroke-linecap="round"/>
-										<!-- Road dashes -->
-										<path d="M 60 220 Q 180 180, 280 150 Q 380 120, 460 130 Q 560 140, 660 100 Q 720 80, 750 70" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="20 28" opacity="0.6"/>
-									</svg>
-
-									<!-- Farm origin marker -->
-									<div class="absolute bottom-12 left-8 flex flex-col items-center gap-1">
-										<div class="bg-[#154212] text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#154212]/30">
-											<span class="material-symbols-outlined text-base fill-1">storefront</span>
-										</div>
-										<div class="bg-white/90 backdrop-blur-sm text-[9px] font-black text-[#154212] px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide whitespace-nowrap">Farm Origin</div>
-									</div>
-
-									<!-- Destination marker -->
-									<div class="absolute top-6 right-8 flex flex-col items-center gap-1">
-										<div class="bg-[#563000] text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-[#563000]/30" :class="{ 'animate-bounce': truckProgress >= 95 }">
-											<span class="material-symbols-outlined text-base fill-1">home</span>
-										</div>
-										<div class="bg-white/90 backdrop-blur-sm text-[9px] font-black text-[#563000] px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide whitespace-nowrap">Your Door</div>
-									</div>
-
-									<!-- Animated Truck -->
-									<div
-										class="truck-container absolute"
-										:style="{ '--progress': truckProgress + '%' }"
-									>
-										<div class="truck-bubble bg-[#154212] text-white rounded-2xl px-3 py-2 shadow-xl shadow-[#154212]/30 flex items-center gap-2 relative">
-											<span class="material-symbols-outlined text-xl fill-1">local_shipping</span>
-											<div>
-												<p class="text-[8px] font-black uppercase tracking-widest text-green-300">Driver</p>
-												<p class="text-[11px] font-black leading-tight">Sovan M.</p>
-											</div>
-											<!-- Pointer -->
-											<div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#154212] rotate-45 rounded-sm"></div>
-										</div>
-										<!-- Pulse rings -->
-										<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center">
-											<div class="w-5 h-5 rounded-full bg-[#154212]/20 animate-ping absolute"></div>
-											<div class="w-3 h-3 rounded-full bg-[#154212] relative z-10"></div>
-										</div>
-									</div>
-
-									<!-- ETA badge floating -->
-									<div class="absolute bottom-4 right-1/3 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg border border-zinc-100 flex items-center gap-2">
-										<span class="material-symbols-outlined text-[#006e1c] text-base">timer</span>
-										<div>
-											<p class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Estimated Arrival</p>
-											<p class="text-sm font-black text-[#154212]">{{ etaLabel }}</p>
-										</div>
-									</div>
-								</div>
-							</div>
-
-
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div class="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
 									<div class="flex items-center gap-3 mb-4">
 										<div class="w-10 h-10 rounded-xl bg-[#94f990] flex items-center justify-center text-[#002204]">
 											<span class="material-symbols-outlined fill-1">package_2</span>
 										</div>
-										<h3 class="font-[Manrope,sans-serif] font-black text-[#154212] uppercase tracking-wide text-sm">Harvested & Packed</h3>
+										<h3 class="font-[Manrope,sans-serif] font-black text-[#154212] uppercase tracking-wide text-sm">Harvested &amp; Packed</h3>
 									</div>
 									<p class="text-xs text-zinc-500 leading-relaxed font-medium">Your produce was hand-picked and temperature-controlled within 2 hours.</p>
 									<div class="mt-4">
@@ -539,29 +719,71 @@ onUnmounted(() => {
 	font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-/* ─── Animated Route Progress ──────────────────────────────────────── */
-.route-progress {
-  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+/* ─── OpenFreeMap MapLibre GL map container ─────────────────────────── */
+.ofm-map-container {
+  height: 420px;
+  width: 100%;
+  transition: opacity 0.3s ease;
+}
+</style>
+
+<style>
+/* UNSCOPED: MapLibre GL CSS + custom marker styles must be global */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* Custom map markers */
+.mgl-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  border: 2.5px solid white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ─── Animated Truck Bubble ─────────────────────────────────────────── */
-.truck-container {
-  /* Position along the curved route using CSS trick:
-     We use a mix of left/bottom offsets mapped to truckProgress */
-  bottom: calc(12% + var(--progress, 5%) * 0.6);
-  left: calc(4% + var(--progress, 5%) * 0.86);
-  transform: translate(-50%, -100%);
-  transition: left 1.5s cubic-bezier(0.4, 0, 0.2, 1),
-              bottom 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
+.mgl-marker:hover {
+  transform: rotate(-45deg) scale(1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
 
-.truck-bubble {
-  animation: truckBob 2.5s ease-in-out infinite;
+.mgl-marker .material-symbols-outlined {
+  transform: rotate(45deg);
+  font-size: 18px;
+  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-@keyframes truckBob {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
+.mgl-marker--farm {
+  background: #154212;
+  color: white;
+}
+
+.mgl-marker--home {
+  background: #b45309;
+  color: white;
+}
+
+/* MapLibre popup style */
+.maplibregl-popup-content {
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+
+.mgl-popup strong {
+  color: #154212;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.mgl-popup small {
+  color: #999;
+  font-size: 11px;
 }
 </style>

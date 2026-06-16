@@ -32,6 +32,18 @@ export class CreateFarmerOnboardingDto {
 
   @IsOptional()
   @IsString()
+  province?: string;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @IsOptional()
+  @IsString()
+  commune?: string;
+
+  @IsOptional()
+  @IsString()
   farmName?: string;
 
   @IsOptional()
