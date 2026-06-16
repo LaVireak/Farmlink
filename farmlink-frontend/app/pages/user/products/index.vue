@@ -163,7 +163,6 @@
 </template>
 
 <script setup>
-
 import CommonAppHeader from '~/components/common/AppHeader.vue'
 import CommonAppFooter from '~/components/common/AppFooter.vue'
 import UserProductCard from '~/components/user/UserProductCard.vue'
