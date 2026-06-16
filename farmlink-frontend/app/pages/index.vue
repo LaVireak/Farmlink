@@ -42,41 +42,6 @@
             <div class="stat-bubble"><strong>4.9★</strong><span>{{ t('home.customerRating') }}</span></div>
           </div>
         </div>
-
-        <div class="hero-right-content">
-          <div class="glass-picks-widget">
-            <div class="glass-widget-header">
-              <span class="pulse-indicator"></span>
-              <h3>{{ t('home.todayFreshPicks') }}</h3>
-            </div>
-            <div class="glass-widget-list">
-              <div class="glass-pick-row">
-                <img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=200&q=80" alt="Organic Greens" />
-                <div class="pick-meta">
-                  <strong>{{ t('home.featuredPicks.greens.name') }}</strong>
-                  <p>{{ t('home.featuredPicks.greens.excerpt') }}</p>
-                </div>
-                <span class="pick-price">$6.50</span>
-              </div>
-              <div class="glass-pick-row">
-                <img src="https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=200&q=80" alt="Sweet Mangoes" />
-                <div class="pick-meta">
-                  <strong>{{ t('home.featuredPicks.mangoes.name') }}</strong>
-                  <p>{{ t('home.featuredPicks.mangoes.excerpt') }}</p>
-                </div>
-                <span class="pick-price">$4.20</span>
-              </div>
-              <div class="glass-pick-row">
-                <img src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=200&q=80" alt="Fresh Tomatoes" />
-                <div class="pick-meta">
-                  <strong>{{ t('home.featuredPicks.tomatoes.name') }}</strong>
-                  <p>{{ t('home.featuredPicks.tomatoes.excerpt') }}</p>
-                </div>
-                <span class="pick-price">$3.20</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -168,8 +133,8 @@
             <span class="subtitle">{{ t('common.farm') }}</span>
             <h2>{{ t('home.farmsAcrossCambodia') }}</h2>
           </div>
-          <NuxtLink to="/user/about" class="view-all">
-            <span>{{ t('home.exploreProvinces') }}</span>
+          <NuxtLink to="/user/farm" class="view-all">
+            <span>Explore Farms</span>
             <span class="material-symbols-outlined">map</span>
           </NuxtLink>
         </div>
@@ -196,96 +161,28 @@
         </div>
       </section>
 
-      <!-- COMMITMENT VALUES SECTION -->
-      <section class="section values-section">
-        <div class="section-head">
-          <div>
-            <span class="subtitle">{{ t('about.heroBadge') }}</span>
-            <h2>{{ t('about.heroTitle') }}</h2>
-          </div>
+      <!-- PREMIUM HOW IT WORKS SECTION -->
+      <section class="section how-it-works-section">
+        <div class="section-head center">
+          <span class="subtitle">Simplified Process</span>
+          <h2>How FarmLink Works</h2>
         </div>
-        <div class="values-grid">
-          <div class="value-card">
-            <div class="value-icon bg-green"><span class="material-symbols-outlined">electric_bolt</span></div>
-            <h3>{{ t('about.missions.directConnection.title') }}</h3>
-            <p>{{ t('about.missions.directConnection.description') }}</p>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <h3>Browse Fresh Produce</h3>
+            <p>Explore a dynamic catalog of organic, locally-sourced products directly from our partner farms.</p>
           </div>
-          <div class="value-card">
-            <div class="value-icon bg-yellow"><span class="material-symbols-outlined">handshake</span></div>
-            <h3>{{ t('about.missions.fairPricing.title') }}</h3>
-            <p>{{ t('about.missions.fairPricing.description') }}</p>
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <h3>Place Your Order</h3>
+            <p>Select your items, securely checkout, and track your fresh groceries straight to your doorstep.</p>
           </div>
-          <div class="value-card">
-            <div class="value-icon bg-orange"><span class="material-symbols-outlined">verified_user</span></div>
-            <h3>{{ t('about.missions.transparency.title') }}</h3>
-            <p>{{ t('about.missions.transparency.description') }}</p>
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <h3>Enjoy Quality</h3>
+            <p>Experience the premium taste of organic farming while supporting the local agricultural community.</p>
           </div>
-        </div>
-      </section>
-
-      <!-- DYNAMIC JOURNAL STORIES SECTION -->
-      <section class="section blog-section">
-        <div class="section-head">
-          <div>
-            <span class="subtitle">{{ t('common.about') }}</span>
-            <h2>{{ t('home.latestStories') }}</h2>
-          </div>
-          <NuxtLink to="/user/about" class="view-all">
-            <span>{{ t('home.readJournal') }}</span>
-            <span class="material-symbols-outlined">book</span>
-          </NuxtLink>
-        </div>
-
-        <div class="blog-grid">
-          <article v-for="post in blogPosts" :key="post.keyPrefix" class="blog-card">
-            <div class="blog-img-wrap">
-              <img :src="post.image" :alt="t(post.keyPrefix + '.title')" loading="lazy" />
-              <span class="read-time-badge">
-                <span class="material-symbols-outlined icon-small">schedule</span>
-                {{ post.readTime }}
-              </span>
-            </div>
-            <div class="blog-body">
-              <span class="tag">{{ t(post.keyPrefix + '.tag') }}</span>
-              <h3>{{ t(post.keyPrefix + '.title') }}</h3>
-              <p class="muted-text">{{ t(post.keyPrefix + '.excerpt') }}</p>
-              <div class="blog-footer">
-                <span class="blog-date">{{ post.date }}</span>
-                <NuxtLink to="/user/about" class="read-more-link">
-                  <span>{{ t('success.readStory') }}</span>
-                  <span class="material-symbols-outlined">arrow_right_alt</span>
-                </NuxtLink>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <!-- DYNAMIC COMMUNITY REVIEWS SECTION -->
-      <section class="section reviews-section">
-        <div class="section-head">
-          <div>
-            <span class="subtitle">{{ t('common.popular') }}</span>
-            <h2>{{ t('home.communityReviews') }}</h2>
-          </div>
-          <div class="score-badge">
-            <span class="material-symbols-outlined star-icon-main">star</span>
-            <span>{{ t('home.score') }}</span>
-          </div>
-        </div>
-
-        <div class="reviews-grid">
-          <article v-for="r in reviews" :key="r.name" class="review-card">
-            <div class="review-top">
-              <img :src="r.avatar" :alt="r.name" loading="lazy" />
-              <div>
-                <strong>{{ r.name }}</strong>
-                <p class="muted-text">{{ r.keyPrefix ? t(r.keyPrefix + '.role') : r.role }}</p>
-              </div>
-            </div>
-            <div class="stars">★★★★★</div>
-            <div class="quote">"{{ r.keyPrefix ? t(r.keyPrefix + '.quote') : r.quote }}"</div>
-          </article>
         </div>
       </section>
     </main>
@@ -337,6 +234,7 @@ onMounted(async () => {
   try {
     const farmsRes = await $fetch(`${config.public.apiUrl}/farmer/list`)
     if (Array.isArray(farmsRes)) {
+      const backendBase = config.public.apiUrl.replace('/api', '')
       provinceFarms.value = farmsRes.slice(0, 4).map(f => ({
         id: f.id,
         name: f.farmName || f.user?.fullName || 'Unknown Farm',
@@ -344,7 +242,9 @@ onMounted(async () => {
         description: f.description || 'Fresh organic produce',
         products: f.productTags || 'Vegetables & Herbs',
         rating: f.avgRating || 4.9,
-        image: f.coverImageUrl || 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
+        image: f.coverImageUrl
+          ? (f.coverImageUrl.startsWith('http') ? f.coverImageUrl : `${backendBase}/${f.coverImageUrl}`)
+          : 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
       }))
     }
   } catch (err) {
@@ -612,7 +512,7 @@ const reviews = [
 .hero-dark-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, #FFFDF4 42%, rgba(255, 255, 255, 0.8) 60%, rgba(255, 255, 255, 0.25) 85%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(105deg, #FFFDF4 45%, rgba(255, 253, 244, 0.85) 60%, rgba(255, 253, 244, 0.1) 100%);
   z-index: 1;
 }
 
@@ -643,7 +543,9 @@ const reviews = [
   gap: 60px;
 }
 
-.hero-left-content { color: #132a13; }
+.hero-left-content { 
+  color: #132a13;
+}
 
 .elegant-pill {
   display: inline-flex;
@@ -803,6 +705,62 @@ const reviews = [
   border-radius: 50%;
   box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.15);
 }
+
+.glass-widget-header h3 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2d6a4f;
+}
+
+.stats-glass-widget {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(45, 106, 79, 0.08);
+  padding: 24px;
+  color: #132a13;
+  box-shadow: 0 30px 60px rgba(13, 40, 24, 0.08);
+  animation: floatCard 7s ease-in-out infinite;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #fcfdfb;
+  border: 0.5px solid rgba(19, 42, 19, 0.04);
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.stat-item:hover {
+  background: #f3f9f5;
+  border-color: rgba(45, 106, 79, 0.15);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.stat-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.stat-info { flex: 1; text-align: left; }
+.stat-info strong { display: block; font-size: 1.1rem; font-family: 'Manrope', sans-serif; font-weight: 800; color: #2d6a4f; margin-bottom: 2px; }
+.stat-info p { font-size: 0.75rem; color: #5c6f5c; font-weight: 500; margin: 0; }
 
 .glass-widget-header h3 {
   font-family: 'Manrope', sans-serif;
@@ -1038,19 +996,20 @@ const reviews = [
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr); 
-  gap: 8px;
+  gap: 24px;
 }
 
 .product-card {
-  background-color: #ffffff;
-  border-radius: 22px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(13, 40, 24, 0.02);
-  border: 1px solid rgba(19, 42, 19, 0.04);
+  box-shadow: 0 12px 35px rgba(45, 106, 79, 0.04);
+  border: 1px solid rgba(45, 106, 79, 0.08);
   transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
   flex-direction: column;
-  width: 96%;
+  width: 100%;
 }
 
 .product-card:hover {
@@ -1070,7 +1029,7 @@ const reviews = [
 .product-img-wrap {
   position: relative;
   width: 100%;
-  height: 220px;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
 }
 
@@ -1315,208 +1274,59 @@ const reviews = [
 
 .rating { font-weight: 700; display: flex; align-items: center; }
 
-/* STORIES STATIC GRID LAYOUTS (NO AUTO TRANSITION) */
-.blog-grid {
+/* HOW IT WORKS SECTION */
+.steps-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  margin-top: 24px;
 }
 
-.blog-card {
-  background: #ffffff;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(13, 40, 24, 0.02);
-  border: 1px solid rgba(19, 42, 19, 0.04);
+.step-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 15px 40px rgba(45, 106, 79, 0.03);
+  border: 1px solid rgba(45, 106, 79, 0.08);
   transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  text-align: center;
   position: relative;
+  overflow: hidden;
 }
 
-.blog-card:hover {
+.step-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 25px 50px rgba(13, 40, 24, 0.08);
-  border-color: rgba(45, 106, 79, 0.12);
+  box-shadow: 0 25px 50px rgba(45, 106, 79, 0.08);
+  border-color: rgba(45, 106, 79, 0.15);
 }
 
-.blog-img-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  border-radius: 24px 24px 0 0;
-  background-color: #f7f6f0;
-}
-
-.blog-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.blog-card:hover .blog-img-wrap img {
-  transform: scale(1.06);
-}
-
-.read-time-badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  background: rgba(19, 42, 19, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 12px;
+.step-number {
   font-family: 'Manrope', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  z-index: 2;
+  font-size: 3rem;
+  font-weight: 900;
+  color: #e9f5db;
+  margin-bottom: 16px;
+  line-height: 1;
 }
 
-.icon-small {
-  font-size: 0.85rem !important;
-}
-
-.blog-body {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.tag {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 8px;
+.step-card h3 {
   font-family: 'Manrope', sans-serif;
-  font-size: 0.62rem;
+  font-size: 1.25rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 14px;
-  width: max-content;
-  transition: all 0.3s ease;
-}
-
-/* SEMANTIC COLOR TAGS FOR BLOG */
-.tag-harvest-diary { background-color: #e9f5db; color: #2d6a4f; }
-.tag-chef-notes { background-color: #FFF7DA; color: #b78a00; }
-.tag-spice-route { background-color: #ffe8d6; color: #a54f00; }
-.tag-farmer-voice { background-color: #ffe5ec; color: #c9184a; }
-
-.blog-card h3 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 800;
-  margin-bottom: 10px;
-  line-height: 1.4;
   color: #132a13;
-  transition: color 0.3s ease;
+  margin-bottom: 12px;
 }
 
-.blog-card:hover h3 {
-  color: #2d6a4f;
-}
-
-.blog-card .muted-text {
-  margin-bottom: 20px;
-  flex: 1;
-}
-
-.blog-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(19, 42, 19, 0.05);
-  padding-top: 16px;
-  margin-top: auto;
-}
-
-.blog-date {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.72rem;
-  color: #88998f;
-  font-weight: 500;
-}
-
-.read-more-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #2d6a4f;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.read-more-link span {
-  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.read-more-link:hover {
-  color: #1b4332;
-}
-
-.read-more-link:hover span:last-child {
-  transform: translateX(4px);
-}
-
-/* REVIEWS GRID LAYOUT */
-.reviews-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-.review-card {
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(13, 40, 24, 0.02);
-  border: 1px solid rgba(19, 42, 19, 0.04);
-  transition: all 0.35s ease;
-  padding: 26px;
-}
-.review-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.review-top img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
-.review-top strong { display: block; font-size: 0.85rem; font-weight: 700; }
-.review-top p { font-size: 0.7rem; }
-.quote { font-size: 0.82rem; line-height: 1.55; font-style: italic; color: #44554b; }
-
-.score-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #FFF7DA;
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 0.7rem;
-  text-transform: uppercase;
+.step-card p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #5c6f5c;
 }
 
 /* RESPONSIVE BREAKPOINT INTERFACES */
 @media (max-width: 1280px) {
   .products-grid { grid-template-columns: repeat(3, 1fr); }
-  .blog-grid, .reviews-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 1024px) {
@@ -1532,14 +1342,13 @@ const reviews = [
   .categories-grid { grid-template-columns: repeat(2, 1fr); }
   .products-grid { grid-template-columns: repeat(2, 1fr); }
   .province-grid { grid-template-columns: repeat(2, 1fr); }
-  .blog-grid, .reviews-grid { grid-template-columns: repeat(2, 1fr); }
-  .values-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 680px) {
   .home-main { padding: 0 16px; gap: 80px; }
   .hero-inner-container { padding: 40px 16px; }
-  .categories-grid, .products-grid, .province-grid, .blog-grid, .reviews-grid { grid-template-columns: 1fr; }
+  .categories-grid, .products-grid, .province-grid, .steps-grid { grid-template-columns: 1fr; }
   .hero-right-content { display: none; }
   .hero-cta-actions { flex-direction: column; width: 100%; }
   .btn-elegant { justify-content: center; width: 100%; }
