@@ -107,6 +107,10 @@
   <CommonAppFooter />
 </template>
 <script setup>
+definePageMeta({
+  middleware: 'user'
+})
+
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRuntimeConfig } from '#app'
@@ -179,9 +183,9 @@ function chatWithFarmer() {
  * CART + FAVORITES
  */
 import { useCart } from '~/composables/useCart'
+import { useFavorites } from '~/composables/useFavorites'
 const { addToCart: addToCartComposable } = useCart()
-
-const favorites = ref(new Set())
+const { isFavorite, toggleFavorite: toggleFavoriteInStore } = useFavorites()
 
 function addToCart(prod, event) {
   if (!prod || prod.stock <= 0) return
@@ -190,18 +194,13 @@ function addToCart(prod, event) {
   addToCartComposable(prod, 1, event)
 }
 
-function toggleFavorite(prod) {
+function toggleFavorite(prod, event) {
   if (!prod) return
-
-  if (favorites.value.has(prod.id)) {
-    favorites.value.delete(prod.id)
-  } else {
-    favorites.value.add(prod.id)
-  }
+  toggleFavoriteInStore(prod, event)
 }
 
 function prodFavorited(prod) {
-  return prod && favorites.value.has(prod.id)
+  return prod && isFavorite(prod.id)
 }
 
 function formatPrice(p) {

@@ -50,6 +50,7 @@ export class FarmersService {
         district: true,
         isVerified: true,
         coverImageUrl: true,
+        farmPhotoUrls: true,
         user: {
           id: true,
           firstName: true,
@@ -727,6 +728,28 @@ export class FarmersService {
         },
         'farmers',
       );
+    }
+
+    if (
+      dto.farmPhotoUrls !== undefined ||
+      dto.farmPhotoDataUrls !== undefined
+    ) {
+      const existingUrls = dto.farmPhotoUrls ?? [];
+      const uploadedUrls = await Promise.all(
+        (dto.farmPhotoDataUrls ?? []).map((dataUrl, index) =>
+          this.saveImage(
+            {
+              dataUrl,
+              name: `farm-photo-${index + 1}.jpg`,
+              type: 'image/jpeg',
+            },
+            'farmers',
+          ),
+        ),
+      );
+
+      profile.farmPhotoUrls = [...existingUrls, ...uploadedUrls];
+      profile.coverImageUrl = profile.farmPhotoUrls[0] ?? null;
     }
 
     return this.farmerProfiles.save(profile);

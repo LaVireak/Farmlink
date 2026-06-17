@@ -159,88 +159,8 @@ const { t } = useI18n()
 const sortBy = ref('default');
 const toastVisible = ref(false);
 const toastMessage = ref('');
-
-// --- Mock Favorites Data (replace with API/store later) ---
-const favorites = ref([
-  {
-    id: 1,
-    name: 'Heirloom Tomatoes',
-    farmName: 'Chrey Bak Community Farm',
-    origin: 'Kampong Chhnang',
-    price: 4.50,
-    unit: 'kg',
-    rating: 4.8,
-    reviews: 132,
-    organic: true,
-    discount: null,
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'Organic Curly Kale',
-    farmName: 'Battambang Organic Collective',
-    origin: 'Battambang',
-    price: 3.20,
-    unit: 'bunch',
-    rating: 4.5,
-    reviews: 87,
-    organic: true,
-    discount: 10,
-    image: 'https://images.unsplash.com/photo-1524179091875-bf99a9a6af57?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Baby Dutch Carrots',
-    farmName: 'Mekong Riverside Gardens',
-    origin: 'Kandal',
-    price: 4.25,
-    unit: 'pack',
-    rating: 4.7,
-    reviews: 64,
-    organic: false,
-    discount: null,
-    image: 'https://images.unsplash.com/photo-1447175008436-054170c2e979?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 4,
-    name: 'Kampot Pepper (Premium)',
-    farmName: 'Kampot Pepper Co-op',
-    origin: 'Kampot',
-    price: 12.00,
-    unit: '100g',
-    rating: 5.0,
-    reviews: 211,
-    organic: true,
-    discount: 15,
-    image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 5,
-    name: 'Phka Rumduol Jasmine Rice',
-    farmName: 'Battambang Organic Collective',
-    origin: 'Battambang',
-    price: 18.00,
-    unit: '5kg',
-    rating: 4.9,
-    reviews: 305,
-    organic: true,
-    discount: null,
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 6,
-    name: 'Sun-Dried Prawns',
-    farmName: 'Sihanoukville Sea Harvest',
-    origin: 'Sihanoukville',
-    price: 9.50,
-    unit: '200g',
-    rating: 4.6,
-    reviews: 49,
-    organic: false,
-    discount: null,
-    image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&auto=format&fit=crop',
-  },
-]);
+import { useFavorites } from '~/composables/useFavorites';
+const { favorites, removeFavorite: removeFavoriteFromStore, clearFavorites: clearFavoritesFromStore } = useFavorites()
 
 // --- Sorted Favorites ---
 const sortedFavorites = computed(() => {
@@ -267,22 +187,22 @@ const sortedFavorites = computed(() => {
 
 // --- Actions ---
 function removeFavorite(id: number) {
-  favorites.value = favorites.value.filter(f => f.id !== id);
-  showToast(t('favorites.removed'));
+  removeFavoriteFromStore(id)
+  showToast(t('favorites.removed'))
 }
 
 function clearAll() {
-  favorites.value = [];
-  showToast(t('favorites.cleared'));
+  clearFavoritesFromStore()
+  showToast(t('favorites.cleared'))
 }
 
 import { useCart } from '~/composables/useCart';
 const { addToCart: addToCartComposable } = useCart();
 
 function addToCart(item: any, event?: MouseEvent) {
-  addToCartComposable(item, 1, event);
-  favorites.value = favorites.value.filter(f => f.id !== item.id);
-  showToast(t('favorites.addedToCart', { name: item.name }));
+  addToCartComposable(item, 1, event)
+  removeFavorite(item.id)
+  showToast(t('favorites.addedToCart', { name: item.name }))
 }
 
 function showToast(msg: string) {

@@ -118,8 +118,8 @@
           <div v-show="farmOpen" class="absolute left-0 mt-0 w-[780px] bg-white border border-gray-200 rounded-md shadow-lg z-50 p-6">
                 <div class="text-xs font-bold text-gray-700 mb-2">{{ t('common.featuredFarms') }}</div>
             <div class="flex gap-4">
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm1.png" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/battambang.jpg" alt="Farm 1" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm1Title') }}</div>
@@ -127,8 +127,8 @@
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm2.png" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/kampongcham.jpg" alt="Farm 2" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm2Title') }}</div>
@@ -136,12 +136,21 @@
                 </div>
               </NuxtLink>
 
-              <NuxtLink to="#" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
-                <img src="/assets/images/farm3.png" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/mondulkiri.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
                 <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
                   <div class="font-semibold">{{ t('common.farm3Title') }}</div>
                   <div class="text-xs">{{ t('common.farm3Desc') }}</div>
+                </div>
+              </NuxtLink>
+
+              <NuxtLink to="/user/farm" class="relative block w-[250px] h-[350px] rounded overflow-hidden border group">
+                <img src="/assets/images/preyveng.jpg" alt="Farm 3" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                <div class="absolute left-0 right-0 bottom-0 p-3 text-white">
+                  <div class="font-semibold">{{ t('common.farm4Title') }}</div>
+                  <div class="text-xs">{{ t('common.farm4Desc') }}</div>
                 </div>
               </NuxtLink>
             </div>
@@ -217,8 +226,11 @@
         </div>
 
         <div class="flex items-center space-x-5 text-on-surface gap-3">
-          <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center">
+          <NuxtLink to="/user/favorites" aria-label="Favorites" class="flex items-center relative">
             <Heart class="w-6 h-6 text-on-surface" />
+            <span v-if="totalFavorites > 0" class="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center transition-transform duration-300" :class="{ 'scale-110': isFavoriteBouncing }">
+              {{ totalFavorites }}
+            </span>
           </NuxtLink>
           <button aria-label="Shopping Cart" class="flex items-center" id="header-cart-icon">
             <NuxtLink to="/user/checkout/cart" class="flex items-center relative transition-transform duration-300" :class="{ 'badge-bounce': isCartBouncing }">
@@ -231,6 +243,18 @@
 
           <!-- Teleported Container for Fly-to-Cart Particles -->
           <teleport to="body">
+            <div
+              v-for="p in flyingFavoriteParticles"
+              :key="`fav-${p.id}`"
+              class="flying-favorite-particle"
+              :style="{
+                '--start-x': `${p.startX}px`,
+                '--start-y': `${p.startY}px`,
+                '--end-x': `${p.endX}px`,
+                '--end-y': `${p.endY}px`,
+                backgroundImage: `url(${p.image})`
+              }"
+            ></div>
             <div
               v-for="p in flyingParticles"
               :key="p.id"
@@ -284,14 +308,15 @@
           <!-- Avatar button: photo → initials → person icon -->
           <button
             @click.stop="toggleUserMenu"
-            class="bg-[#1f7a2e] text-white px-[6px] py-[6px] ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+            class="bg-[#1f7a2e] text-white ml-4 mr-8 rounded-full border-2 border-black nav-link uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all overflow-hidden"
+            :class="userAvatar ? 'p-0' : 'px-[6px] py-[6px]'"
           >
             <!-- Social login: real profile photo -->
             <img
               v-if="userAvatar"
               :src="userAvatar"
               alt="Profile"
-              class="w-7 h-7 rounded-full object-cover"
+              class="w-10 h-10 rounded-full object-cover block"
               referrerpolicy="no-referrer"
             />
             <!-- Email/password login: initials -->
@@ -394,7 +419,7 @@ import {
   ShoppingCart
 } from 'lucide-vue-next'
 
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '#imports'
 import { useAuthStore } from '../../stores/auth.store'
 import { useRouter } from 'vue-router'
@@ -590,6 +615,7 @@ const goToDashboard = () => {
 }
 
 import { useCart } from '~/composables/useCart'
+import { useFavorites } from '~/composables/useFavorites'
 
 const handleSignOut = async () => {
   userMenuOpen.value = false
@@ -599,6 +625,9 @@ const handleSignOut = async () => {
 
 // ── Cart Flying Animation ──────────────────────────────
 const { totalItems, triggerAnimation } = useCart()
+const { totalFavorites, favoriteAnimationTrigger } = useFavorites()
+const flyingFavoriteParticles = ref([])
+const isFavoriteBouncing = ref(false)
 const flyingParticles = ref([])
 const isCartBouncing = ref(false)
 
@@ -627,6 +656,34 @@ watch(triggerAnimation, (newVal) => {
     isCartBouncing.value = true
     setTimeout(() => {
       isCartBouncing.value = false
+    }, 400)
+  }, 800)
+})
+
+watch(favoriteAnimationTrigger, (newVal) => {
+  if (!newVal) return
+
+  const favLink = document.querySelector('a[href="/user/favorites"]')
+  if (!favLink) return
+
+  const rect = favLink.getBoundingClientRect()
+  const endX = rect.left + rect.width / 2
+  const endY = rect.top + rect.height / 2
+
+  flyingFavoriteParticles.value.push({
+    id: newVal.id,
+    image: newVal.image,
+    startX: newVal.x,
+    startY: newVal.y,
+    endX,
+    endY
+  })
+
+  setTimeout(() => {
+    flyingFavoriteParticles.value = flyingFavoriteParticles.value.filter(p => p.id !== newVal.id)
+    isFavoriteBouncing.value = true
+    setTimeout(() => {
+      isFavoriteBouncing.value = false
     }, 400)
   }, 800)
 })
@@ -665,6 +722,36 @@ watch(triggerAnimation, (newVal) => {
   pointer-events: none;
   z-index: 99999;
   animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.flying-favorite-particle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #16a34a;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.25);
+  pointer-events: none;
+  z-index: 99999;
+  animation: flyToFavorite 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes flyToFavorite {
+  0% {
+    transform: translate(calc(var(--start-x) - 21px), calc(var(--start-y) - 21px)) scale(1);
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--end-x) - 21px), calc(var(--end-y) - 21px)) scale(0.15);
+    opacity: 0;
+  }
 }
 
 .badge-bounce {

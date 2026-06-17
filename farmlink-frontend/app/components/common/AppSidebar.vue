@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '../../stores/auth.store';
+import { useChat } from '~/composables/useChat';
 
 type SidebarKey = 'profile' | 'edit' | 'payment' | 'address' | 'purchaseHistory' | 'chat';
 
@@ -14,10 +15,23 @@ const props = withDefaults(
 );
 
 const auth = useAuthStore();
+const { totalUnread, fetchConversations, startPolling } = useChat();
 
 onMounted(() => {
 	void auth.hydrate();
 });
+
+// Watch authentication to load chat updates in real-time
+watch(
+	() => auth.isAuthenticated,
+	async (isAuthenticated) => {
+		if (isAuthenticated) {
+			await fetchConversations();
+			startPolling();
+		}
+	},
+	{ immediate: true }
+);
 
 const user = computed(() => auth.user);
 
@@ -98,6 +112,9 @@ const menuItems: Array<{
 				>
 					<span class="material-symbols-outlined text-[20px]">{{ item.icon }}</span>
 					{{ item.label }}
+					<span v-if="item.key === 'chat' && totalUnread > 0" class="ml-auto bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+						{{ totalUnread }}
+					</span>
 				</NuxtLink>
 			</nav>
 		</div>

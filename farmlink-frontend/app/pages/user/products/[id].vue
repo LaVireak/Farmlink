@@ -378,6 +378,11 @@
         <p>Loading product...</p>
       </div>
 
+      <div v-if="fetchError" class="p-4 bg-red-50 border border-red-200 text-red-700 rounded max-w-3xl mx-auto my-4">
+        <strong>Failed to load product:</strong>
+        <div style="word-break:break-word">{{ fetchError }}</div>
+      </div>
+
       <!-- Not Found -->
       <div
         v-if="!loading && !product"
@@ -400,6 +405,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'user'
+})
+
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -411,6 +420,7 @@ const router = useRouter()
 const config = useRuntimeConfig()
 
 const product = ref(null)
+const fetchError = ref('')
 
 const reviews = ref([
   { name: 'Sokha Rith', comment: 'Extremely fresh and well packaged. Best organic produce in Cambodia!' },
@@ -454,6 +464,7 @@ const fetchProduct = async () => {
 
   } catch (err) {
     console.error('Failed to fetch product:', err)
+    fetchError.value = err?.message || String(err)
     product.value = null
   } finally {
     loading.value = false

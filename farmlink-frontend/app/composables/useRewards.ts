@@ -118,9 +118,52 @@ export const useRewards = () => {
     rewardPoints.value = 0
   }
 
+  // Redeem points
+  async function redeemPoints(points: number, description?: string) {
+    if (!auth.hydrated) {
+      await auth.hydrate()
+    }
+
+    if (auth.isAuthenticated) {
+      isSyncing.value = true;
+      try {
+        const token = await getAccessToken();
+        const response = await fetch(`${config.public.apiUrl}/rewards/redeem-points`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ points, description }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          rewardPoints.value = data.pointsBalance || 0;
+          return true;
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || 'Failed to redeem points');
+        }
+      } catch (e: any) {
+        console.error('Failed to redeem points on backend:', e);
+        throw e;
+      } finally {
+        isSyncing.value = false;
+      }
+    } else {
+      // Fallback/Guest local update
+      if (rewardPoints.value < points) {
+        throw new Error('Insufficient points balance');
+      }
+      rewardPoints.value -= points;
+      return true;
+    }
+  }
+
   return {
     rewardPoints,
     awardPoints,
+    redeemPoints,
     getPoints,
     resetPoints,
     isSyncing,

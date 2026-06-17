@@ -1,14 +1,21 @@
 import { ref, computed } from 'vue'
 import { chatService } from '../services/chat.service'
 import { useChatStore } from '../stores/chat.store'
+import { useAuthStore } from '../stores/auth.store'
+import { supabase } from '../services/auth.service'
 import type { Conversation, Message } from '../types/chat.type'
+
+// ── Module-level singletons ───────────────────────────────────────────────────
+let chatChannel: any = null
+let subscribedUserId: string | null = null
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const useChat = () => {
   const store = useChatStore()
+  const authStore = useAuthStore()
   const loading = ref(false)
   const error = ref<string | null>(null)
   const isTyping = ref(false)
-  let pollInterval: ReturnType<typeof setInterval> | null = null
 
   const fetchConversations = async (page: number = 1, limit: number = 10) => {
     loading.value = true
@@ -60,19 +67,47 @@ export const useChat = () => {
     }
   }
 
-  const startPolling = (conversationId: string) => {
-    if (pollInterval) clearInterval(pollInterval)
+  const startPolling = (conversationId?: string) => {
+    const currentUserId = authStore.user?.id
+    if (!currentUserId) return
 
-    pollInterval = setInterval(() => {
-      fetchMessages(conversationId, 1, 20, true)
-    }, 2000)
+    // If user changed, clean up previous channel
+    if (chatChannel && subscribedUserId !== currentUserId) {
+      supabase.removeChannel(chatChannel)
+      chatChannel = null
+      subscribedUserId = null
+    }
+
+    if (!chatChannel) {
+      subscribedUserId = currentUserId
+      chatChannel = supabase.channel(`chat_realtime_${currentUserId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+          },
+          (payload) => {
+            const msg = payload.new
+            const activeId = store.activeConversationId
+
+            if (msg.sender_id === currentUserId || msg.receiver_id === currentUserId) {
+              if (msg.sender_id !== currentUserId) {
+                if (activeId && (msg.sender_id === activeId || msg.receiver_id === activeId)) {
+                  fetchMessages(activeId, 1, 20, true)
+                }
+              }
+              fetchConversations()
+            }
+          }
+        )
+        .subscribe()
+    }
   }
 
   const stopPolling = () => {
-    if (pollInterval) {
-      clearInterval(pollInterval)
-      pollInterval = null
-    }
+    // Keep subscription active so that we receive unread message updates/badges globally.
   }
 
   const sendMessage = async (receiverId: string, content: string, currentUserId: string) => {

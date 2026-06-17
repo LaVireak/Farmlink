@@ -1,14 +1,93 @@
-import { ref, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from '../stores/auth.store';
+import { supabase } from '../services/auth.service';
 
-let eventSource: EventSource | null = null;
+// ── Module-level singletons ───────────────────────────────────────────────────
+// These refs are created ONCE for the entire app lifetime. Every call to
+// useNotifications() returns references to the same objects, so Realtime updates
+// received on any page are immediately visible everywhere (header badge, etc.).
+const notifications = ref<any[]>([]);
+const unreadCount = ref(0);
+const isLoading = ref(false);
+let realtimeChannel: any = null;
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const useNotifications = () => {
-    const notifications = ref<any[]>([]);
-    const unreadCount = ref(0);
-    const isLoading = ref(false);
     const authStore = useAuthStore();
     const config = useRuntimeConfig();
+
+    const initRealtime = () => {
+        if (!authStore.isAuthenticated || realtimeChannel) return;
+
+        const currentUserId = authStore.user?.id;
+        if (!currentUserId) return;
+
+        realtimeChannel = supabase.channel(`notifications_realtime_${currentUserId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${currentUserId}`
+                },
+                (payload) => {
+                    try {
+                        const data = payload.new;
+                        if (data && data.id) {
+                            const newNotification = {
+                                id: data.id,
+                                title: data.title,
+                                body: data.body,
+                                time: new Date(data.created_at).toLocaleDateString() + ' ' + new Date(data.created_at).toLocaleTimeString(),
+                                read: data.is_read,
+                                type: data.type,
+                                refId: data.ref_id,
+                                refType: data.ref_type
+                            };
+
+                            // Avoid duplicates
+                            if (!notifications.value.find(n => n.id === newNotification.id)) {
+                                notifications.value.unshift(newNotification);
+                                unreadCount.value++;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Failed to parse realtime message:', err);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${currentUserId}`
+                },
+                (payload) => {
+                    try {
+                        const data = payload.new;
+                        if (data && data.id) {
+                            const note = notifications.value.find(n => n.id === data.id);
+                            if (note) {
+                                const wasRead = note.read;
+                                note.read = data.is_read;
+                                if (!wasRead && data.is_read) {
+                                    unreadCount.value = Math.max(0, unreadCount.value - 1);
+                                } else if (wasRead && !data.is_read) {
+                                    unreadCount.value++;
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Failed to parse realtime update:', err);
+                    }
+                }
+            )
+            .subscribe();
+    };
+
     const fetchNotifications = async () => {
         if (!authStore.isAuthenticated) return;
         isLoading.value = true;
@@ -30,8 +109,8 @@ export const useNotifications = () => {
                     refType: n.refType
                 }));
                 unreadCount.value = data.unreadCount;
-                
-                // Initialize realtime updates after fetching initial list
+
+                // Start Realtime stream if not already open
                 initRealtime();
             }
         } catch (error) {
@@ -40,6 +119,7 @@ export const useNotifications = () => {
             isLoading.value = false;
         }
     };
+
     const markAsRead = async (id: string) => {
         if (!authStore.isAuthenticated) return;
         try {
@@ -58,6 +138,7 @@ export const useNotifications = () => {
             console.error('Failed to mark notification as read:', error);
         }
     };
+
     const markAllAsRead = async () => {
         if (!authStore.isAuthenticated) return;
         try {
@@ -73,53 +154,28 @@ export const useNotifications = () => {
             console.error('Failed to mark all notifications as read:', error);
         }
     };
-    const initRealtime = () => {
-        if (!authStore.isAuthenticated || eventSource) return;
-        
-        const token = authStore.accessToken;
-        const url = `${config.public.apiUrl}/notifications/stream?token=${token}`;
-        
-        eventSource = new EventSource(url);
-        
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data && data.id) {
-                    const newNotification = {
-                        id: data.id,
-                        title: data.title,
-                        body: data.body,
-                        time: new Date(data.createdAt).toLocaleDateString() + ' ' + new Date(data.createdAt).toLocaleTimeString(),
-                        read: data.isRead,
-                        type: data.type,
-                        refId: data.refId,
-                        refType: data.refType
-                    };
-                    
-                    // Avoid duplicates
-                    if (!notifications.value.find(n => n.id === newNotification.id)) {
-                        notifications.value.unshift(newNotification);
-                        unreadCount.value++;
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to parse SSE message:', err);
-            }
-        };
-
-        eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            eventSource?.close();
-            eventSource = null;
-        };
-    };
 
     const closeRealtime = () => {
-        if (eventSource) {
-            eventSource.close();
-            eventSource = null;
+        if (realtimeChannel) {
+            supabase.removeChannel(realtimeChannel);
+            realtimeChannel = null;
         }
     };
+
+    // Watch authentication state to automatically subscribe/unsubscribe
+    watch(
+        () => authStore.isAuthenticated,
+        (isAuthenticated) => {
+            if (isAuthenticated) {
+                fetchNotifications();
+            } else {
+                closeRealtime();
+                notifications.value = [];
+                unreadCount.value = 0;
+            }
+        },
+        { immediate: true }
+    );
 
     return {
         notifications,

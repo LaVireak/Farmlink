@@ -41,10 +41,12 @@
             {{ loading ? 'Verifying...' : 'Verify Code' }}
           </button>
 
-          <p class="resend-copy">Didn't receive code?</p>
-          <button type="button" class="resend-btn" :disabled="loading || resending" @click="resendCode">
-            {{ resending ? 'Resending...' : 'Resend code' }}
-          </button>
+          <div class="resend-wrap">
+            <p class="resend-copy">Didn't receive code?</p>
+            <button type="button" class="resend-btn" :disabled="loading || resending" @click="resendCode">
+              {{ resending ? 'Resending...' : 'Resend code' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -552,12 +554,19 @@ onMounted(() => {
 	font-size: 13px;
 }
 
+.resend-wrap {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 24px;
+}
+
 .resend-copy {
-	margin: 24px 0 6px;
+	margin: 0;
 
 	color: #6f746b;
 
-	font-size: 13px;
+	font-size: 14px;
 }
 
 .resend-btn {
