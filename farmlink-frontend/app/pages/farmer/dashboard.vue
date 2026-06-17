@@ -7,7 +7,7 @@
     <div v-if="globalError" class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl text-sm flex items-center justify-between">
       <span class="flex items-center gap-2">
         <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Failed to sync dashboard modules. Displaying cached offline operational records.
+        {{ globalErrorMessage || 'Failed to sync dashboard modules. Displaying cached offline operational records.' }}
       </span>
       <button @click="refreshDashboardData" class="underline font-bold hover:text-rose-700 transition">Retry Pipeline Link</button>
     </div>
@@ -327,7 +327,9 @@ definePageMeta({
   layout: 'farmer'
 })
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api') + '/farmer'
+const config = useRuntimeConfig()
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL || config.public.apiUrl || 'http://localhost:3001/api')
+const API_BASE = `${API_ROOT.replace(/\/$/, '')}/farmer`
 
 const { user, ensureHydrated } = useAuth()
 
@@ -343,8 +345,17 @@ const storageAlert = ref(null)
 const pendingMetrics = ref(true)
 const pendingData = ref(true)
 const globalError = ref(false)
+const globalErrorMessage = ref('')
 const actionLoading = ref(null)
 let weatherPollInterval = null
+
+function unwrapApiData(payload) {
+  return payload?.data ?? payload
+}
+
+function getErrorMessage(err, fallback) {
+  return err?.data?.message || err?.message || fallback
+}
 
 async function fetchDashboardMetrics() {
   try {
@@ -357,12 +368,15 @@ async function fetchDashboardMetrics() {
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       }
     })
-    metrics.value = response.data.metrics
-    registry.value = response.data.registry
+    const data = unwrapApiData(response)
+    metrics.value = data.metrics
+    registry.value = data.registry
     weather.value = { temp: 24, condition: 'Clear Skies' } // Hardcoded mock weather info
     globalError.value = false
+    globalErrorMessage.value = ''
   } catch (err) {
     console.error('Error establishing metrics hook:', err)
+    globalErrorMessage.value = getErrorMessage(err, 'Unable to connect to the backend dashboard API.')
     weather.value = { temp: 24, condition: 'Clear Skies' } // Hardcoded mock weather info fallback
     globalError.value = true
   } finally {
@@ -386,10 +400,10 @@ async function fetchOperationalLogs() {
       $fetch(`${API_BASE}/yields/matrix`, { headers })
     ])
 
-    transactions.value = txResponse.data
-    alerts.value = alertResponse.data
-    incomingOrders.value = orderResponse.data
-    topCrops.value = yieldResponse.data
+    transactions.value = unwrapApiData(txResponse) || []
+    alerts.value = unwrapApiData(alertResponse) || []
+    incomingOrders.value = unwrapApiData(orderResponse) || []
+    topCrops.value = unwrapApiData(yieldResponse) || []
     
     // Check if system alerts require rendering the critical layout flag
     const storageCheck = alerts.value.find(a => a.metaKey === 'low_stock_critical')
@@ -398,6 +412,8 @@ async function fetchOperationalLogs() {
     }
   } catch (err) {
     console.error('Error sync log pipelines:', err)
+    globalErrorMessage.value = getErrorMessage(err, 'Unable to load dashboard operational records.')
+    globalError.value = true
   } finally {
     pendingData.value = false
   }

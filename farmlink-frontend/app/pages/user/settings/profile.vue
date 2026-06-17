@@ -92,8 +92,8 @@ onMounted(() => {
 const currentUser = computed(() => {
 	if (profile.value) {
 		return {
-			...profile.value,
 			...auth.user,
+			...profile.value,
 		};
 	}
 
@@ -141,13 +141,15 @@ const getAuthHeaders = async () => {
 	return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 };
 
+const unwrapApiData = <T = any>(payload: any): T => (payload?.data ?? payload) as T;
+
 const loadProfileData = async () => {
 	try {
 		const headers = await getAuthHeaders();
 		const response = await fetch(`${config.public.apiUrl}/users/profile`, { headers });
 		if (!response.ok) return;
 
-		const data = await response.json().catch(() => null);
+		const data = unwrapApiData(await response.json().catch(() => null));
 		if (data?.id && data?.email) {
 			profile.value = data;
 		}
@@ -447,4 +449,3 @@ const memberSince = computed(() => {
 	animation: fadeIn 0.2s ease-out forwards;
 }
 </style>
-

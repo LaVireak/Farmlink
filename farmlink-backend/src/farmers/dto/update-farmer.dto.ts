@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsNumber, Length } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  MaxLength,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UpdateFarmerProfileDto {
   @IsOptional()
@@ -15,12 +22,12 @@ export class UpdateFarmerProfileDto {
 
   @IsOptional()
   @IsString()
-  @Length(1, 100)
+  @MaxLength(100)
   province?: string;
 
   @IsOptional()
   @IsString()
-  @Length(1, 100)
+  @MaxLength(100)
   district?: string;
 
   @IsOptional()
@@ -39,4 +46,16 @@ export class UpdateFarmerProfileDto {
   @IsOptional()
   @IsString()
   coverImageDataUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @IsString({ each: true })
+  farmPhotoDataUrls?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @IsString({ each: true })
+  farmPhotoUrls?: string[];
 }

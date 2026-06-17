@@ -378,12 +378,13 @@ export const authService = {
         });
 
         const result = await res.json().catch(() => ({}));
+        const profile = result?.data ?? result;
 
         if (!res.ok) throw new Error(result?.message || 'Failed to fetch profile');
 
-        console.log('[fetchProfile] DB profile returned:', result); // Remove after debugging
+        console.log('[fetchProfile] DB profile returned:', profile); // Remove after debugging
 
-        return result;
+        return profile;
     },
 
     async signOut(): Promise<void> {
