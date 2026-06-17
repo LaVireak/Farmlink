@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from '../stores/auth.store';
 import { supabase } from '../services/auth.service';
 
@@ -161,6 +161,21 @@ export const useNotifications = () => {
             realtimeChannel = null;
         }
     };
+
+    // Watch authentication state to automatically subscribe/unsubscribe
+    watch(
+        () => authStore.isAuthenticated,
+        (isAuthenticated) => {
+            if (isAuthenticated) {
+                fetchNotifications();
+            } else {
+                closeRealtime();
+                notifications.value = [];
+                unreadCount.value = 0;
+            }
+        },
+        { immediate: true }
+    );
 
     return {
         notifications,

@@ -24,6 +24,9 @@
         >
           <component :is="item.icon" class="icon" />
           <span>{{ item.label }}</span>
+          <span v-if="item.label === 'Chat' && totalUnread > 0" class="ml-auto bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            {{ totalUnread }}
+          </span>
         </NuxtLink>
       </nav>
     </aside>
@@ -31,7 +34,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useAuthStore } from '../../stores/auth.store'
+import { useChat } from '~/composables/useChat'
 import {
   LayoutGrid,
   ShoppingCart,
@@ -46,6 +51,20 @@ import {
 } from 'lucide-vue-next'
 
 const isOpen = ref(false)
+const auth = useAuthStore()
+const { totalUnread, fetchConversations, startPolling } = useChat()
+
+// Watch authentication to load chat updates in real-time
+watch(
+  () => auth.isAuthenticated,
+  async (isAuthenticated) => {
+    if (isAuthenticated) {
+      await fetchConversations()
+      startPolling()
+    }
+  },
+  { immediate: true }
+)
 
 const navItems = [
   { label: 'Dashboard', to: '/farmer/dashboard', icon: LayoutGrid },

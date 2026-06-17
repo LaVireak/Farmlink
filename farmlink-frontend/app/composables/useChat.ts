@@ -67,7 +67,7 @@ export const useChat = () => {
     }
   }
 
-  const startPolling = (conversationId: string) => {
+  const startPolling = (conversationId?: string) => {
     const currentUserId = authStore.user?.id
     if (!currentUserId) return
 
@@ -93,8 +93,10 @@ export const useChat = () => {
             const activeId = store.activeConversationId
 
             if (msg.sender_id === currentUserId || msg.receiver_id === currentUserId) {
-              if (activeId && (msg.sender_id === activeId || msg.receiver_id === activeId)) {
-                fetchMessages(activeId, 1, 20, true)
+              if (msg.sender_id !== currentUserId) {
+                if (activeId && (msg.sender_id === activeId || msg.receiver_id === activeId)) {
+                  fetchMessages(activeId, 1, 20, true)
+                }
               }
               fetchConversations()
             }
