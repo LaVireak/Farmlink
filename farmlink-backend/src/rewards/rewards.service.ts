@@ -82,4 +82,33 @@ export class RewardsService {
     // Refresh relations
     return this.getOrCreateReward(consumerId);
   }
+
+  async redeemPoints(
+    consumerId: string,
+    pointsToRedeem: number,
+    description?: string,
+  ): Promise<Reward> {
+    const reward = await this.getOrCreateReward(consumerId);
+
+    if (reward.pointsBalance < pointsToRedeem) {
+      throw new Error('Insufficient points balance');
+    }
+
+    reward.pointsBalance -= pointsToRedeem;
+    reward.totalRedeemed += pointsToRedeem;
+
+    const savedReward = await this.rewardRepository.save(reward);
+
+    const tx = this.transactionRepository.create({
+      rewardId: savedReward.id,
+      consumerId,
+      event: RewardEvent.REDEEMED,
+      points: pointsToRedeem,
+      description: description || `Redeemed ${pointsToRedeem} points`,
+    });
+    await this.transactionRepository.save(tx);
+
+    return this.getOrCreateReward(consumerId);
+  }
 }
+

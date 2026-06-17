@@ -54,14 +54,17 @@
     "organicSoils": "Organic Soils",
     "irrigationGear": "Irrigation Gear",
 
-    "farm1Title": "Farm 1",
-    "farm1Desc": "Organic vegetables & seasonal produce.",
+    "farm1Title": "Battambang",
+    "farm1Desc": "Fresh vegetables grown on fertile farmland.",
 
-    "farm2Title": "Farm 2",
-    "farm2Desc": "Family-run orchard and beekeeping.",
+    "farm2Title": "Kampong Cham",
+    "farm2Desc": "Sweet and fresh fruits picked at harvest.",
 
-    "farm3Title": "Farm 3",
-    "farm3Desc": "Hydroponics and greenhouse-grown greens."
+    "farm3Title": "Mondulkiri",
+    "farm3Desc": "Leafy greens and vegetables grown with care.",
+
+    "farm4Title": "Prey Veng",
+    "farm4Desc": "Quality fruits and vegetables delivered fresh."
   },
 
   "home": {

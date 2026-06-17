@@ -39,4 +39,27 @@ export class RewardsController {
       body.description,
     );
   }
+
+  @Post('redeem-points')
+  async redeemPoints(
+    @CurrentUser() user: any,
+    @Body() body: { points: number; description?: string },
+  ) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User ID not found in request');
+    }
+    if (typeof body.points !== 'number' || body.points <= 0) {
+      throw new BadRequestException('Points must be a positive number');
+    }
+    try {
+      return await this.rewardsService.redeemPoints(
+        user.id,
+        body.points,
+        body.description,
+      );
+    } catch (e: any) {
+      throw new BadRequestException(e.message || 'Failed to redeem points');
+    }
+  }
 }
+

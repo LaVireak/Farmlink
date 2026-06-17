@@ -15,7 +15,41 @@ useHead({
 
 const config = useRuntimeConfig();
 const auth = useAuthStore();
-const { rewardPoints } = useRewards();
+const { rewardPoints, redeemPoints } = useRewards();
+
+const showRedeemOptions = ref(false);
+const redeemStatusMessage = ref<string | null>(null);
+const redeemStatusType = ref<'success' | 'error' | null>(null);
+
+const handleRedeem = async (points: number, amountDollars: number) => {
+	redeemStatusMessage.value = null;
+	redeemStatusType.value = null;
+
+	if (rewardPoints.value < points) {
+		redeemStatusMessage.value = 'Insufficient points balance!';
+		redeemStatusType.value = 'error';
+		return;
+	}
+
+	try {
+		const success = await redeemPoints(points, `Redeemed ${points} points for $${amountDollars} cash discount`);
+		if (success) {
+			redeemStatusMessage.value = `Successfully redeemed ${points} points for $${amountDollars}!`;
+			redeemStatusType.value = 'success';
+			showRedeemOptions.value = false;
+			
+			// Auto clear message after 5 seconds
+			setTimeout(() => {
+				redeemStatusMessage.value = null;
+				redeemStatusType.value = null;
+			}, 5000);
+		}
+	} catch (err: any) {
+		redeemStatusMessage.value = err.message || 'Failed to redeem rewards.';
+		redeemStatusType.value = 'error';
+	}
+};
+
 const profile = ref<{
 	id: string;
 	email: string;
@@ -333,10 +367,63 @@ const memberSince = computed(() => {
 								</div>
 							</div>
 
-							<div class="bg-[#ffdcbe] p-6 rounded-2xl border border-[#f0c99f] shadow-[0_2px_0_0_rgba(0,0,0,1)]">
+							<div class="bg-[#ffdcbe] p-6 rounded-2xl border border-[#f0c99f] shadow-[0_2px_0_0_rgba(0,0,0,1)] relative">
 								<p class="text-[10px] font-extrabold text-[#693c00] uppercase tracking-widest mb-2">Reward Balance</p>
-								<h4 class="text-4xl font-black text-[#2c1600] font-[Manrope,sans-serif] tracking-tight mb-5">{{ formatCount(rewardPoints) }} <span class="text-sm font-bold uppercase">Points</span></h4>
-								<button class="w-full py-3 rounded-xl bg-[#2c1600] text-white text-xs font-black uppercase tracking-widest">Redeem Rewards</button>
+								<h4 class="text-4xl font-black text-[#2c1600] font-[Manrope,sans-serif] tracking-tight mb-5">
+									{{ formatCount(rewardPoints) }} <span class="text-sm font-bold uppercase">Points</span>
+								</h4>
+								
+								<button 
+									@click="showRedeemOptions = !showRedeemOptions" 
+									class="w-full py-3 rounded-xl bg-[#2c1600] text-white text-xs font-black uppercase tracking-widest hover:bg-[#1a0c00] transition-colors flex items-center justify-center gap-2"
+								>
+									<span>Redeem Rewards</span>
+									<span class="material-symbols-outlined text-sm transition-transform duration-300" :class="{ 'rotate-180': showRedeemOptions }">expand_more</span>
+								</button>
+
+								<!-- Dropdown Options -->
+								<div 
+									v-if="showRedeemOptions" 
+									class="mt-4 bg-white border border-[#f0c99f] rounded-xl p-3 shadow-md space-y-2 animate-fadeIn"
+								>
+									<p class="text-[10px] font-black text-[#693c00] uppercase tracking-wider mb-2">Select Reward Offer:</p>
+									<button 
+										@click="handleRedeem(100, 1)"
+										:disabled="rewardPoints < 100"
+										class="w-full text-left px-3 py-2.5 rounded-lg border text-xs font-bold transition-all flex justify-between items-center"
+										:class="rewardPoints >= 100 ? 'border-zinc-200 hover:border-[#2c1600] hover:bg-zinc-50 text-zinc-800' : 'border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed'"
+									>
+										<span>100 Points</span>
+										<span class="text-[#2c1600] font-black">$1 Discount</span>
+									</button>
+									<button 
+										@click="handleRedeem(500, 5)"
+										:disabled="rewardPoints < 500"
+										class="w-full text-left px-3 py-2.5 rounded-lg border text-xs font-bold transition-all flex justify-between items-center"
+										:class="rewardPoints >= 500 ? 'border-zinc-200 hover:border-[#2c1600] hover:bg-zinc-50 text-zinc-800' : 'border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed'"
+									>
+										<span>500 Points</span>
+										<span class="text-[#2c1600] font-black">$5 Discount</span>
+									</button>
+									<button 
+										@click="handleRedeem(800, 10)"
+										:disabled="rewardPoints < 800"
+										class="w-full text-left px-3 py-2.5 rounded-lg border text-xs font-bold transition-all flex justify-between items-center"
+										:class="rewardPoints >= 800 ? 'border-zinc-200 hover:border-[#2c1600] hover:bg-zinc-50 text-zinc-800' : 'border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed'"
+									>
+										<span>800 Points</span>
+										<span class="text-[#2c1600] font-black">$10 Discount</span>
+									</button>
+								</div>
+
+								<!-- Feedback Messages -->
+								<div 
+									v-if="redeemStatusMessage" 
+									class="mt-3 p-3 rounded-lg text-xs font-bold text-center transition-all animate-fadeIn"
+									:class="redeemStatusType === 'success' ? 'bg-[#94f990]/25 text-[#002204] border border-[#94f990]' : 'bg-red-50 text-red-700 border border-red-200'"
+								>
+									{{ redeemStatusMessage }}
+								</div>
 							</div>
 						</aside>
 					</div>
@@ -351,6 +438,13 @@ const memberSince = computed(() => {
 <style scoped>
 .material-symbols-outlined {
 	font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+	animation: fadeIn 0.2s ease-out forwards;
 }
 </style>
 
