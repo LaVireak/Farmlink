@@ -7,6 +7,7 @@ export interface CartItem {
   price: number
   quantity: number
   stock?: number
+  farmerId?: number | string
 }
 export interface Qrcode {
   
