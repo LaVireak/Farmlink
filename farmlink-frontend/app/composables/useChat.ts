@@ -17,8 +17,8 @@ export const useChat = () => {
   const error = ref<string | null>(null)
   const isTyping = ref(false)
 
-  const fetchConversations = async (page: number = 1, limit: number = 10) => {
-    loading.value = true
+  const fetchConversations = async (page: number = 1, limit: number = 10, isBackground: boolean = false) => {
+    if (!isBackground) loading.value = true
     error.value = null
 
     try {
@@ -30,7 +30,7 @@ export const useChat = () => {
       error.value = err instanceof Error ? err.message : 'Failed to fetch conversations'
       console.error('Error fetching conversations:', err)
     } finally {
-      loading.value = false
+      if (!isBackground) loading.value = false
     }
   }
 
@@ -67,7 +67,7 @@ export const useChat = () => {
     }
   }
 
-  const startPolling = (conversationId?: string) => {
+  const startPolling = () => {
     const currentUserId = authStore.user?.id
     if (!currentUserId) return
 
@@ -98,7 +98,7 @@ export const useChat = () => {
                   fetchMessages(activeId, 1, 20, true)
                 }
               }
-              fetchConversations()
+              fetchConversations(1, 10, true)
             }
           }
         )
@@ -109,6 +109,24 @@ export const useChat = () => {
   const stopPolling = () => {
     // Keep subscription active so that we receive unread message updates/badges globally.
   }
+
+  // Watch authentication state to automatically subscribe/unsubscribe to global chat updates
+  watch(
+    () => authStore.isAuthenticated,
+    (isAuthenticated) => {
+      if (isAuthenticated) {
+        startPolling();
+        fetchConversations(1, 10, true);
+      } else {
+        if (chatChannel) {
+          supabase.removeChannel(chatChannel);
+          chatChannel = null;
+          subscribedUserId = null;
+        }
+      }
+    },
+    { immediate: true }
+  )
 
   const sendMessage = async (receiverId: string, content: string, currentUserId: string) => {
     error.value = null
@@ -148,7 +166,7 @@ export const useChat = () => {
     store.setActiveConversation(conversationId)
 
     if (conversationId) {
-      startPolling(conversationId)
+      startPolling()
     } else {
       stopPolling()
     }
