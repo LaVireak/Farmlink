@@ -370,12 +370,7 @@
                     </div>
                   </div>
                 </li>
-                <li>
-                  <button @click="toggleDarkMode" class="flex items-center gap-2 w-full text-left px-2 py-1 hover:bg-gray-100 rounded">
-                    <Moon class="w-4 h-4 text-gray-600" />
-                    <span class="text-sm">Dark Mode</span>
-                  </button>
-                </li>
+
                 <li class="border-t mt-1 pt-1">
                   <!-- Logged in → Log Out -->
                   <button
@@ -412,7 +407,6 @@
 import {
   Users,
   Settings,
-  Moon,
   Globe,
   Bell,
   Heart,
@@ -556,13 +550,6 @@ function markAllRead() {
   markAllAsRead()
 }
 
-function toggleDarkMode() {
-  const colorMode = useColorMode()
-
-  const toggleDarkMode = () => {
-    colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
-  }
-}
 
 const onClickOutside = (e) => {
   const farmEl = document.getElementById('farm-menu')

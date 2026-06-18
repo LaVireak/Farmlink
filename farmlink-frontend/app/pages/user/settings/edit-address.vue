@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
+import { useAddress } from '~/composables/useAddress';
+import { useCambodiaLocations } from '~/composables/useCambodiaLocations';
+import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+
 definePageMeta({
   middleware: 'user',
   layout: 'user',
@@ -8,6 +13,65 @@ definePageMeta({
 useHead({
   title: 'Edit Address | FarmLink Cambodia',
 });
+
+const router = useRouter();
+
+const { addressData, fetchAddress, saveAddress, deleteAddress, saving } = useAddress();
+const { selectedProvince, selectedDistrict, selectedCommune, provinces, districts, communes } = useCambodiaLocations();
+
+const formData = ref({
+  firstName: '',
+  lastName: '',
+  phoneNumber: '',
+  address: '',
+  deliveryInstructions: '',
+});
+
+onMounted(async () => {
+  await fetchAddress();
+  formData.value.firstName = addressData.value.firstName;
+  formData.value.lastName = addressData.value.lastName;
+  formData.value.phoneNumber = addressData.value.phoneNumber;
+  formData.value.address = addressData.value.address;
+  
+  if (addressData.value.province) {
+    selectedProvince.value = addressData.value.province;
+    setTimeout(() => {
+      selectedDistrict.value = addressData.value.district;
+      setTimeout(() => {
+        selectedCommune.value = addressData.value.commune;
+      }, 50);
+    }, 50);
+  }
+});
+
+async function handleSave() {
+  const ok = await saveAddress({
+    firstName: formData.value.firstName,
+    lastName: formData.value.lastName,
+    phoneNumber: formData.value.phoneNumber,
+    province: selectedProvince.value,
+    district: selectedDistrict.value,
+    commune: selectedCommune.value,
+    address: formData.value.address,
+  });
+
+  if (ok) {
+    router.push('/user/settings/address');
+  } else {
+    alert('Failed to save address');
+  }
+}
+
+async function handleDelete() {
+  if (!confirm('Are you sure you want to remove this address?')) return;
+  const ok = await deleteAddress();
+  if (ok) {
+    router.push('/user/settings/address');
+  } else {
+    alert('Failed to remove address');
+  }
+}
 </script>
 
 <template>
@@ -34,63 +98,81 @@ useHead({
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div class="lg:col-span-7 space-y-8">
               <div class="bg-white p-8 rounded-xl shadow-sm border border-zinc-100">
-                <form class="space-y-6">
+                <form class="space-y-6" @submit.prevent="handleSave">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                      <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Recipient Name</label>
-                      <input class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" value="Sok Samnang" />
+                      <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">First Name</label>
+                      <input v-model="formData.firstName" required class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" />
                     </div>
                     <div class="space-y-2">
+                      <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Last Name</label>
+                      <input v-model="formData.lastName" required class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" />
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
                       <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Phone Number</label>
-                      <input class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="tel" value="+855 12 345 678" />
+                      <input v-model="formData.phoneNumber" required class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="tel" />
                     </div>
                   </div>
 
                   <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Province/City</label>
-                    <select class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all appearance-none">
-                      <option>Phnom Penh</option>
-                      <option>Siem Reap</option>
-                      <option>Battambang</option>
-                      <option>Kampot</option>
-                    </select>
+                    <div class="relative">
+                      <select v-model="selectedProvince" required class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all appearance-none pr-10">
+                        <option value="" disabled>Select Province</option>
+                        <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
+                      </select>
+                      <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                       <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">District / Khan</label>
-                      <input class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" value="Chamkar Mon" />
+                      <div class="relative">
+                        <select v-model="selectedDistrict" required :disabled="!selectedProvince" class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all appearance-none pr-10 disabled:opacity-50">
+                          <option value="" disabled>Select District</option>
+                          <option v-for="dist in districts" :key="dist" :value="dist">{{ dist }}</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
+                      </div>
                     </div>
                     <div class="space-y-2">
                       <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Sangkat / Commune</label>
-                      <input class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" value="Tonle Bassac" />
+                      <div class="relative">
+                        <select v-model="selectedCommune" required :disabled="!selectedDistrict" class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all appearance-none pr-10 disabled:opacity-50">
+                          <option value="" disabled>Select Commune</option>
+                          <option v-for="comm in communes" :key="comm" :value="comm">{{ comm }}</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
+                      </div>
                     </div>
                   </div>
 
                   <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Street Name & House Number</label>
-                    <input class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" value="No. 123, Street 456" />
+                    <input v-model="formData.address" required class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all" type="text" />
                   </div>
 
                   <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-[#72796e] block">Delivery Instructions</label>
-                    <textarea class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all resize-none" rows="3">Leave at the front desk or call before arrival.</textarea>
+                    <textarea v-model="formData.deliveryInstructions" class="w-full bg-[#e9e8e5] border-none rounded-lg p-3 text-[#1b1c1a] focus:ring-2 focus:ring-[#154212]/20 transition-all resize-none" rows="3"></textarea>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-4 pt-4">
+                    <button :disabled="saving" class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white font-bold py-4 px-10 rounded-lg shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 disabled:opacity-70" type="submit">
+                      <span>{{ saving ? 'Saving...' : 'Save Changes' }}</span>
+                      <span class="material-symbols-outlined text-sm">check_circle</span>
+                    </button>
+                    <NuxtLink class="bg-transparent border-[1.5px] border-[#154212]/20 text-[#154212] font-bold py-4 px-10 rounded-lg hover:bg-[#e9e8e5] transition-all" to="/user/settings/address">
+                      Cancel
+                    </NuxtLink>
+                    <button type="button" @click="handleDelete" class="bg-[#ba1a1a] text-white font-bold py-4 px-10 rounded-lg shadow-md hover:bg-[#8f1010] transition-all">
+                      Delete Address
+                    </button>
                   </div>
                 </form>
               </div>
 
-              <div class="flex flex-wrap items-center gap-4 pt-2">
-                <button class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white font-bold py-4 px-10 rounded-lg shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2" type="button">
-                  <span>Save Changes</span>
-                  <span class="material-symbols-outlined text-sm">check_circle</span>
-                </button>
-                <NuxtLink class="bg-transparent border-[1.5px] border-[#154212]/20 text-[#154212] font-bold py-4 px-10 rounded-lg hover:bg-[#e9e8e5] transition-all" to="/user/settings/address">
-                  Cancel
-                </NuxtLink>
-                <NuxtLink class="bg-[#ba1a1a] text-white font-bold py-4 px-10 rounded-lg shadow-md hover:bg-[#8f1010] transition-all" to="/user/settings/remove-address">
-                  Delete Address
-                </NuxtLink>
-              </div>
             </div>
 
             <div class="lg:col-span-5 flex flex-col gap-6">
