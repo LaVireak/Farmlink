@@ -50,6 +50,7 @@ export class FarmersService {
         district: true,
         isVerified: true,
         coverImageUrl: true,
+        farmerPhoto: true,
         farmPhotoUrls: true,
         user: {
           id: true,
@@ -125,6 +126,7 @@ export class FarmersService {
       const avatarUrl = await this.saveImage(dto.profilePhoto, 'avatars');
       user.avatarUrl = avatarUrl;
       profile.coverImageUrl = avatarUrl;
+      profile.farmerPhoto = avatarUrl;
     }
 
     await this.users.save(user);

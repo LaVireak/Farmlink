@@ -41,7 +41,18 @@
             </div>
             <div class="relative" id="profile-menu">
                 <button @click.stop="toggleProfile" class="flex items-center space-x-1 cursor-pointer group focus:outline-none">
-                    <img src="https://i.pravatar.cc/100?img=12" class="w-10 h-10 rounded-full border-2 border-outline-variant shadow-md" />
+                    <img
+                        v-if="avatarUrl"
+                        :src="avatarUrl"
+                        class="w-10 h-10 rounded-full border-2 border-outline-variant shadow-md object-cover"
+                        alt="avatar"
+                    />
+                    <div
+                        v-else
+                        class="w-10 h-10 rounded-full border-2 border-outline-variant shadow-md bg-secondary flex items-center justify-center text-white text-sm font-bold"
+                    >
+                        {{ initials }}
+                    </div>
                     <div class="text-left">
                         <p class="text-sm font-black text-on-surface flex items-center gap-1">
                             {{ fullName }}
@@ -64,7 +75,7 @@
     </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '../../stores/auth.store'
 import { useRouter } from 'vue-router'
@@ -83,14 +94,31 @@ const { title } = props
 
 const auth = useAuthStore()
 const router = useRouter()
+const config = useRuntimeConfig()
 
 const user = computed(() => auth.user)
 const fullName = computed(() => {
-  if (!user.value) return 'Channary Sok'
+  if (!user.value) return ''
   const first = user.value.firstName || ''
   const last = user.value.lastName || user.value.lastname || ''
   const name = `${first} ${last}`.trim()
-  return name || user.value.email || 'Channary Sok'
+  return name || user.value.email || ''
+})
+
+const initials = computed(() => {
+  const f = user.value?.firstName?.[0] ?? ''
+  const l = (user.value?.lastName || user.value?.lastname || '')?.[0] ?? ''
+  if (f || l) return (f + l).toUpperCase()
+  return user.value?.email?.[0]?.toUpperCase() ?? '?'
+})
+
+// Resolve relative upload paths to full URLs (same logic as profile.vue)
+const STATIC_BASE = (import.meta.env.VITE_API_BASE_URL || config.public?.apiUrl || 'http://localhost:3001/api').replace('/api', '')
+const avatarUrl = computed(() => {
+  const url = user.value?.avatarUrl
+  if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('data:')) return url
+  return `${STATIC_BASE}/${url}`
 })
 
 const profileOpen = ref(false)

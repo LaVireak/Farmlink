@@ -364,7 +364,7 @@ export const authService = {
         });
     },
 
-    async fetchProfile(): Promise<{ role: string; firstName?: string; lastName?: string; email?: string }> {
+    async fetchProfile(): Promise<{ role: string; firstName?: string; lastName?: string; email?: string; avatarUrl?: string; phoneNumber?: string }> {
         const token = await getAccessToken();
 
         if (!token) throw new Error('No active session for fetchProfile');

@@ -48,6 +48,9 @@ export class FarmerProfile {
   @Column({ name: 'cover_image_url', length: 500, nullable: true })
   coverImageUrl!: string;
 
+  @Column({ name: 'farmer_photo', length: 500, nullable: true })
+  farmerPhoto!: string;
+
   @Column({ name: 'farm_photo_urls', type: 'simple-json', nullable: true })
   farmPhotoUrls!: string[] | null;
 

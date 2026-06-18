@@ -158,6 +158,7 @@
               :src="farm.image"
               :alt="farm.name"
               class="w-full h-56 object-cover"
+              @error="onFarmImgError($event, farm.originalFallback)"
             />
 
             <div class="p-5">
@@ -262,14 +263,21 @@ const fetchFarms = async () => {
   try {
     const res = await $fetch(`${config.public.apiUrl}/farmer/list`)
     if (res && Array.isArray(res)) {
-      farms.value = res.map(f => ({
-        id: f.id,
-        name: f.farmName || (f.user ? `${f.user.firstName} ${f.user.lastName}` : 'Unknown Farm'),
-        rating: 5.0, // Default rating for now
-        province: f.province || 'Other',
-        description: f.user?.bio || 'Local farm providing fresh produce directly to consumers.',
-        image: f.coverImageUrl || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
-      }))
+      const backendBase = config.public.apiUrl.replace('/api', '')
+      farms.value = res.map(f => {
+        const imgPath = f.user?.avatarUrl || f.farmerPhoto || f.coverImageUrl
+        return {
+          id: f.id,
+          name: f.farmName || (f.user ? `${f.user.firstName} ${f.user.lastName}` : 'Unknown Farm'),
+          rating: 5.0, // Default rating for now
+          province: f.province || 'Other',
+          description: f.user?.bio || 'Local farm providing fresh produce directly to consumers.',
+          image: imgPath
+            ? (imgPath.startsWith('http') ? imgPath : `${backendBase}/${imgPath}`)
+            : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop',
+          originalFallback: f.coverImageUrl ? (f.coverImageUrl.startsWith('http') ? f.coverImageUrl : `${backendBase}/${f.coverImageUrl}`) : ''
+        }
+      })
     }
   } catch (err) {
     console.error('Failed to fetch farms:', err)
@@ -279,6 +287,19 @@ const fetchFarms = async () => {
 onMounted(() => {
   fetchFarms()
 })
+
+const FALLBACK_FARM_IMAGE = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
+
+function onFarmImgError(event, fallbackUrl) {
+  const img = event.target
+  if (img) {
+    if (fallbackUrl && img.src !== fallbackUrl && img.src !== FALLBACK_FARM_IMAGE) {
+      img.src = fallbackUrl
+    } else if (img.src !== FALLBACK_FARM_IMAGE) {
+      img.src = FALLBACK_FARM_IMAGE
+    }
+  }
+}
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()

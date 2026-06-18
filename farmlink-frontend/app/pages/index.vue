@@ -140,9 +140,9 @@
         </div>
 
         <div class="province-grid">
-          <article v-for="farm in provinceFarms" :key="farm.id || farm.name" class="province-card">
+          <NuxtLink v-for="farm in provinceFarms" :key="farm.id || farm.name" :to="`/user/farm/${farm.id}`" class="province-card">
             <div class="province-img-wrap">
-              <img :src="farm.image" :alt="farm.name" loading="lazy" @error="onFarmImgError($event)" />
+              <img :src="farm.image" :alt="farm.name" loading="lazy" @error="onFarmImgError($event, farm.originalFallback)" />
             </div>
             <div class="province-overlay"></div>
             <div class="province-content">
@@ -157,7 +157,7 @@
                 <span class="rating"><span class="star-icon">★</span> {{ farm.rating }}</span>
               </div>
             </div>
-          </article>
+          </NuxtLink>
         </div>
       </section>
 
@@ -235,17 +235,21 @@ onMounted(async () => {
     const farmsRes = await $fetch(`${config.public.apiUrl}/farmer/list`)
     if (Array.isArray(farmsRes)) {
       const backendBase = config.public.apiUrl.replace('/api', '')
-      provinceFarms.value = farmsRes.slice(0, 4).map(f => ({
-        id: f.id,
-        name: f.farmName || f.user?.fullName || 'Unknown Farm',
-        province: f.province || 'Cambodia',
-        description: f.description || 'Fresh organic produce',
-        products: f.productTags || 'Vegetables & Herbs',
-        rating: f.avgRating || 4.9,
-        image: f.coverImageUrl
-          ? (f.coverImageUrl.startsWith('http') ? f.coverImageUrl : `${backendBase}/${f.coverImageUrl}`)
-          : 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80'
-      }))
+      provinceFarms.value = farmsRes.slice(0, 4).map(f => {
+        const imgPath = f.user?.avatarUrl || f.farmerPhoto || f.coverImageUrl
+        return {
+          id: f.id,
+          name: f.farmName || f.user?.fullName || 'Unknown Farm',
+          province: f.province || 'Cambodia',
+          description: f.description || 'Fresh organic produce',
+          products: f.productTags || 'Vegetables & Herbs',
+          rating: f.avgRating || 4.9,
+          image: imgPath
+            ? (imgPath.startsWith('http') ? imgPath : `${backendBase}/${imgPath}`)
+            : 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1200&q=80',
+          originalFallback: f.coverImageUrl ? (f.coverImageUrl.startsWith('http') ? f.coverImageUrl : `${backendBase}/${f.coverImageUrl}`) : ''
+        }
+      })
     }
   } catch (err) {
     console.error('Failed to fetch farms:', err)
@@ -281,10 +285,14 @@ const blogPosts = [
 
 const FALLBACK_FARM_IMAGE = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop'
 
-function onFarmImgError(event: Event) {
+function onFarmImgError(event: Event, fallbackUrl?: string) {
   const img = event.target as HTMLImageElement
-  if (img && img.src !== FALLBACK_FARM_IMAGE) {
-    img.src = FALLBACK_FARM_IMAGE
+  if (img) {
+    if (fallbackUrl && img.src !== fallbackUrl && img.src !== FALLBACK_FARM_IMAGE) {
+      img.src = fallbackUrl
+    } else if (img.src !== FALLBACK_FARM_IMAGE) {
+      img.src = FALLBACK_FARM_IMAGE
+    }
   }
 }
 

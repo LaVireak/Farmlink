@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import CommonAppSidebar from '../../../components/common/AppSidebar.vue';
+import { useAddress } from '~/composables/useAddress';
+import { useCambodiaLocations } from '~/composables/useCambodiaLocations';
+import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+
 definePageMeta({
   middleware: 'user',
   layout: 'user',
 });
-
-import { useRoute, useRouter } from 'vue-router';
 
 useHead({
   title: 'Add New Address | FarmLink Cambodia',
@@ -15,14 +18,56 @@ const route = useRoute();
 const router = useRouter();
 
 const isCheckout = route.query.returnTo === 'checkout';
-
 const cancelRoute = isCheckout ? '/user/checkout/address' : '/user/settings/address';
 
-function saveAndReturn() {
-  if (isCheckout) {
-    router.push('/user/checkout/address?new=1');
+const { addressData, fetchAddress, saveAddress, saving } = useAddress();
+const { selectedProvince, selectedDistrict, selectedCommune, provinces, districts, communes } = useCambodiaLocations();
+
+const formData = ref({
+  firstName: '',
+  lastName: '',
+  phoneNumber: '',
+  address: '',
+  deliveryInstructions: '',
+});
+
+onMounted(async () => {
+  await fetchAddress();
+  formData.value.firstName = addressData.value.firstName;
+  formData.value.lastName = addressData.value.lastName;
+  formData.value.phoneNumber = addressData.value.phoneNumber;
+  formData.value.address = addressData.value.address;
+  
+  if (addressData.value.province) {
+    selectedProvince.value = addressData.value.province;
+    setTimeout(() => {
+      selectedDistrict.value = addressData.value.district;
+      setTimeout(() => {
+        selectedCommune.value = addressData.value.commune;
+      }, 50);
+    }, 50);
+  }
+});
+
+async function handleSave() {
+  const ok = await saveAddress({
+    firstName: formData.value.firstName,
+    lastName: formData.value.lastName,
+    phoneNumber: formData.value.phoneNumber,
+    province: selectedProvince.value,
+    district: selectedDistrict.value,
+    commune: selectedCommune.value,
+    address: formData.value.address,
+  });
+
+  if (ok) {
+    if (isCheckout) {
+      router.push('/user/checkout/address?new=1');
+    } else {
+      router.push('/user/settings/address');
+    }
   } else {
-    router.push('/user/settings/address');
+    alert('Failed to save address');
   }
 }
 </script>
@@ -48,26 +93,28 @@ function saveAndReturn() {
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div class="lg:col-span-7">
               <div class="bg-white p-8 rounded-xl shadow-sm border border-zinc-100">
-                <form class="space-y-8">
+                <form class="space-y-8" @submit.prevent="handleSave">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                      <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Recipient Name</label>
-                      <input class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="e.g. Sophal Meas" type="text" />
+                      <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">First Name</label>
+                      <input v-model="formData.firstName" required class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="e.g. Sophal" type="text" />
                     </div>
                     <div class="space-y-2">
+                      <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Last Name</label>
+                      <input v-model="formData.lastName" required class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="e.g. Meas" type="text" />
+                    </div>
+                    <div class="space-y-2 md:col-span-2">
                       <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Phone Number</label>
-                      <input class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="+855 000 000 000" type="tel" />
+                      <input v-model="formData.phoneNumber" required class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="+855 000 000 000" type="tel" />
                     </div>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Province / City</label>
                     <div class="relative">
-                      <select class="w-full appearance-none bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 text-[#1b1c1a] pr-10">
-                        <option>Phnom Penh</option>
-                        <option>Siem Reap</option>
-                        <option>Battambang</option>
-                        <option>Kampot</option>
+                      <select v-model="selectedProvince" required class="w-full appearance-none bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 text-[#1b1c1a] pr-10">
+                        <option value="" disabled>Select Province</option>
+                        <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
                       </select>
                       <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
                     </div>
@@ -76,27 +123,39 @@ function saveAndReturn() {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                       <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">District</label>
-                      <input class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="e.g. Daun Penh" type="text" />
+                      <div class="relative">
+                        <select v-model="selectedDistrict" required :disabled="!selectedProvince" class="w-full appearance-none bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 text-[#1b1c1a] pr-10 disabled:opacity-50">
+                          <option value="" disabled>Select District</option>
+                          <option v-for="dist in districts" :key="dist" :value="dist">{{ dist }}</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
+                      </div>
                     </div>
                     <div class="space-y-2">
                       <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Sangkat / Commune</label>
-                      <input class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="e.g. Phsar Thmei" type="text" />
+                      <div class="relative">
+                        <select v-model="selectedCommune" required :disabled="!selectedDistrict" class="w-full appearance-none bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 text-[#1b1c1a] pr-10 disabled:opacity-50">
+                          <option value="" disabled>Select Commune</option>
+                          <option v-for="comm in communes" :key="comm" :value="comm">{{ comm }}</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-[#72796e]">expand_more</span>
+                      </div>
                     </div>
                   </div>
 
                   <div class="space-y-2">
                     <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Street Name & House Number</label>
-                    <input class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="House 123, St 51 (Pasteur)" type="text" />
+                    <input v-model="formData.address" required class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a]" placeholder="House 123, St 51 (Pasteur)" type="text" />
                   </div>
 
                   <div class="space-y-2">
                     <label class="block font-[Inter,sans-serif] text-[11px] font-semibold uppercase tracking-wider text-[#72796e] px-1">Delivery Instructions (Optional)</label>
-                    <textarea class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a] resize-none" placeholder="e.g. Leave at the gate, building with the green roof..." rows="3"></textarea>
+                    <textarea v-model="formData.deliveryInstructions" class="w-full bg-[#efeeea] border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#006e1c]/20 transition-shadow text-[#1b1c1a] resize-none" placeholder="e.g. Leave at the gate, building with the green roof..." rows="3"></textarea>
                   </div>
 
                   <div class="flex items-center gap-4 pt-4">
-                    <button class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white px-10 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-lg shadow-lg shadow-[#154212]/10 hover:shadow-[#154212]/20 transition-all active:scale-[0.98]" type="button" @click="saveAndReturn">
-                      Save Address
+                    <button :disabled="saving" class="bg-gradient-to-br from-[#154212] to-[#2d5a27] text-white px-10 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-lg shadow-lg shadow-[#154212]/10 hover:shadow-[#154212]/20 transition-all active:scale-[0.98] disabled:opacity-70" type="submit">
+                      {{ saving ? 'Saving...' : 'Save Address' }}
                     </button>
                     <NuxtLink class="px-8 py-4 rounded-lg font-[Manrope,sans-serif] font-bold text-[#154212] hover:bg-[#e9e8e5] transition-colors" :to="cancelRoute">
                       Cancel
@@ -133,11 +192,6 @@ function saveAndReturn() {
                 <div class="absolute -bottom-4 -right-4 opacity-10">
                   <span class="material-symbols-outlined text-[120px]">local_shipping</span>
                 </div>
-              </div>
-
-              <div class="flex flex-wrap gap-2">
-                <span class="bg-[#91f78e] text-[#00731e] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">Primary Hub: Phnom Penh</span>
-                <span class="bg-[#e3e2df] text-[#42493e] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">Rural Express</span>
               </div>
             </div>
           </div>

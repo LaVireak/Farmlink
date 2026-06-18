@@ -181,6 +181,7 @@ import { ref, computed, h, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useCart } from '@/composables/useCart';
+import { useAddress } from '~/composables/useAddress';
 const { t } = useI18n();
 definePageMeta({
   middleware: 'user',
@@ -205,16 +206,15 @@ const{
 
 const route = useRoute();
 
-const selectedAddress = ref(1);
+const { addressData, hasAddress, recipientName, fetchAddress, deleteAddress: apiDeleteAddress } = useAddress();
+
+const selectedAddress = ref<number | null>(1);
 const selectedPayment = ref('aba_qr');
 
-function deleteAddress(id: number) {
-  const index = savedAddresses.value.findIndex(a => a.id === id);
-  if (index !== -1) {
-    savedAddresses.value.splice(index, 1);
-    if (selectedAddress.value === id && savedAddresses.value.length > 0) {
-      selectedAddress.value = savedAddresses.value[0].id;
-    }
+async function deleteAddress(id: number) {
+  if (confirm('Are you sure you want to delete this address?')) {
+    await apiDeleteAddress();
+    selectedAddress.value = null;
   }
 }
 
@@ -242,42 +242,28 @@ const checkoutRoute = computed(() => {
   return '/user/checkout/payment';
 });
 
-const savedAddresses = ref([
-  {
-    id: 1,
-    title: 'Home',
-    icon: 'home',
-    name: 'Sok Samnang',
-    street: 'No. 123, Street 456, Sangkat Boeng Keng Kang I',
-    city: 'Khan Chamkarmon, Phnom Penh 120102',
-    phone: '+855 12 345 678',
-    isDefault: true
-  },
-  {
-    id: 2,
-    title: 'Work',
-    icon: 'work',
-    name: 'Sok Samnang (Harvest Trust HQ)',
-    street: 'Exchange Square, Level 15, Street 106',
-    city: 'Wat Phnom, Daun Penh, Phnom Penh 120211',
-    phone: '+855 98 765 432',
-    isDefault: false
-  }
-]);
+const savedAddresses = computed(() => {
+  if (!hasAddress.value) return [];
+  return [
+    {
+      id: 1,
+      title: 'Default Address',
+      icon: 'home',
+      name: recipientName.value,
+      street: addressData.value.address,
+      city: `${addressData.value.commune}, ${addressData.value.district}, ${addressData.value.province}`,
+      phone: addressData.value.phoneNumber,
+      isDefault: true
+    }
+  ];
+});
 
-onMounted(() => {
-  if (route.query.new === '1') {
-    savedAddresses.value.push({
-      id: 3,
-      title: 'Newly Added Address',
-      icon: 'location_on',
-      name: 'Johnathan Doe',
-      street: '123 Orchard Lane',
-      city: 'Greenville, Ontario, K1A 0B1',
-      phone: '+1 (555) 000-0000',
-      isDefault: false
-    });
-    selectedAddress.value = 3;
+onMounted(async () => {
+  await fetchAddress();
+  if (hasAddress.value) {
+    selectedAddress.value = 1;
+  } else {
+    selectedAddress.value = null;
   }
 });
 
